@@ -1,0 +1,18 @@
+﻿CREATE TABLE [sec].[UserRoles]
+(
+    [UserId] UNIQUEIDENTIFIER NOT NULL,
+    [RoleId] UNIQUEIDENTIFIER NOT NULL
+);
+GO
+ALTER TABLE [sec].[UserRoles]
+ADD CONSTRAINT [PK_UserRoles] PRIMARY KEY ([UserId], [RoleId]);
+GO
+ALTER TABLE [sec].[UserRoles]
+ADD CONSTRAINT [FK_UserRoles_Users]
+FOREIGN KEY ([UserId]) REFERENCES [sec].[Users] ([Id])
+ON DELETE CASCADE;
+GO
+ALTER TABLE [sec].[UserRoles]
+ADD CONSTRAINT [FK_UserRoles_Roles]
+FOREIGN KEY ([RoleId]) REFERENCES [sec].[Roles] ([Id])
+ON DELETE CASCADE;
