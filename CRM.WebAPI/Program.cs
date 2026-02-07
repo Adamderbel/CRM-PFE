@@ -1,6 +1,11 @@
 ﻿using CRM.DAL;
+using CRM.DAL.DBContexts;
+using CRM.DAL.GenericRepository;
+using CRM.DAL.RepositoriesDapper;
+using CRM.DAL.RepositoriesDupper;
 using CRM.Entities.Security;
 using CRM.Services;
+using CRM.WebAPI.Middlewares;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -15,6 +20,10 @@ builder.Services.AddDbContext<SecurityDbContext>(options =>
 {
     options.UseSqlServer(builder.Configuration.GetConnectionString("CRM"));
 });
+builder.Services.AddDbContext<DataContext>(options =>
+{
+    options.UseSqlServer(builder.Configuration.GetConnectionString("CRM"));
+});
 
 // Identity 
 
@@ -26,12 +35,16 @@ builder.Services
 // injection Repositories
 
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
+builder.Services.AddScoped(typeof(IProspectRepositoryDapper), typeof(ProspectRepositoryDapper));
 
 
 // injection Services
 builder.Services.AddScoped<IAdminSeeder,AdminSeeder>();
 builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddHostedService<AdminSeederHostedService>();
+
+builder.Services.AddScoped<IProspectService, ProspectService>();
+//builder.Services.AddHostedService<AdminSeederHostedService>();
 
 
 
@@ -94,6 +107,7 @@ if (app.Environment.IsDevelopment())
 
 
 // Configure the HTTP request pipeline.
+app.UseMiddleware<ExceptionMiddleware>();
 
 app.UseHttpsRedirection();
 app.UseAuthentication();

@@ -11,37 +11,43 @@ namespace CRM.DAL.GenericRepository
     public class GenericRepository<T> : IGenericRepository<T> where T : class
     {
         private readonly DataContext _context;
-        private DbSet<T> table = null;
+        private readonly DbSet<T> _table;
+
         public GenericRepository(DataContext context)
         {
             _context = context;
-            table = _context.Set<T>();
-        }
-        public void Delete(object id)
-        {
-            T existing = GetById(id);
-            table.Remove(existing);
+            _table = _context.Set<T>();
         }
 
-        public  IEnumerable<T> GetAll()
+        public async Task<IEnumerable<T>> GetAllAsync()
         {
-            return   table.ToList();
+            return await _table.ToListAsync();
         }
 
-        public T GetById(object id)
+        public async Task<T?> GetByIdAsync(object id)
         {
-            return table.Find(id);
+            return await _table.FindAsync(id);
         }
 
-        public void Insert(T entity)
+        public async Task InsertAsync(T entity)
         {
-            table.Add(entity);
+            await _table.AddAsync(entity);
         }
 
-        public void Update(T entity)
+        public Task UpdateAsync(T entity)
         {
-            table.Attach(entity);
+            _table.Attach(entity);
             _context.Entry(entity).State = EntityState.Modified;
+            return Task.CompletedTask;
+        }
+
+        public async Task DeleteAsync(object id)
+        {
+            var existing = await GetByIdAsync(id);
+            if (existing != null)
+            {
+                _table.Remove(existing);
+            }
         }
     }
 }

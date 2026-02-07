@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using CRM.Entities.Crm;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,8 +10,10 @@ namespace CRM.DAL.DBContexts
 {
     public class DataContext: DbContext
     {
+        public DbSet<Prospect> Prospects { get; set; }
         public DataContext()
         {
+            
 
         }
         public DataContext(DbContextOptions<DataContext> options) : base(options)

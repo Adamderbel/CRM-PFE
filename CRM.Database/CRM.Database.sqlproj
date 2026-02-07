@@ -65,6 +65,7 @@
     <Folder Include="Scripts\PostDeploy" />
     <Folder Include="Scripts\PreDeploy" />
     <Folder Include="Scripts\Referential" />
+    <Folder Include="Stored Procedures" />
   </ItemGroup>
   <ItemGroup>
     <Build Include="Schemas\sec.sql" />
@@ -75,6 +76,9 @@
     <Build Include="Tables\RoleClaims.sql" />
     <Build Include="Tables\DeploymentHistory.sql" />
     <Build Include="Schemas\comm.sql" />
+    <Build Include="Tables\prospect.sql" />
+    <Build Include="Schemas\crm.sql" />
+    <Build Include="Stored Procedures\GetAllProspect.sql" />
   </ItemGroup>
   <ItemGroup>
     <PreDeploy Include="Script.PreDeployment.sql" />
