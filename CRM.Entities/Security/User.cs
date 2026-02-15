@@ -17,6 +17,8 @@ namespace CRM.Entities.Security
         public string NormalizedEmail { get; set; } = null!;
 
         public bool EmailConfirmed { get; set; }
+        public string Nom { get; set; } = null!;
+        public string Prenom { get; set; } = null!;
 
         public string PasswordHash { get; set; } = null!;
 

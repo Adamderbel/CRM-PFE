@@ -1,7 +1,9 @@
 ﻿CREATE TABLE [sec].[Users]
 (
     [Id] UNIQUEIDENTIFIER NOT NULL DEFAULT NEWSEQUENTIALID(),
-    [UserName] NVARCHAR(256) NOT NULL,
+    [UserName] NVARCHAR(256) ,
+    [Nom] NVARCHAR(50) , 
+    [Prenom] NVARCHAR(50) , 
     [NormalizedUserName] NVARCHAR(256) NULL,
     [Email] NVARCHAR(256) NOT NULL,
     [NormalizedEmail] NVARCHAR(256) NOT NULL,
