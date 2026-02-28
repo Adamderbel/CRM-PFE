@@ -1,0 +1,104 @@
+<div class="login-container">
+  <!-- Left Panel -->
+  <div class="left-panel">
+    <div class="left-content">
+      <div class="brand">
+        <span class="material-icons brand-icon">hub</span>
+        <h1 class="brand-name">CRM Hub</h1>
+      </div>
+
+      <p class="brand-tagline">
+        Gérez vos prospects, employés et produits — le tout sur une seule plateforme.
+      </p>
+
+      <div class="features">
+        <div class="feature-item">
+          <span class="material-icons feature-icon">trending_up</span>
+          <span>Suivez +1 250 prospects en temps réel</span>
+        </div>
+        <div class="feature-item">
+          <span class="material-icons feature-icon">groups</span>
+          <span>Collaborez avec toute votre équipe</span>
+        </div>
+        <div class="feature-item">
+          <span class="material-icons feature-icon">inventory_2</span>
+          <span>Gérez votre catalogue produits complet</span>
+        </div>
+        <div class="feature-item">
+          <span class="material-icons feature-icon">shield</span>
+          <span>Sécurité de niveau entreprise</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Panel -->
+  <div class="right-panel">
+    <div class="login-card">
+      <h2 class="login-title">Bon Retour 👋</h2>
+      <p class="login-subtitle">Connectez-vous à votre compte CRM Hub</p>
+
+      <!-- Form -->
+      <form (ngSubmit)="onSubmit()">
+        <!-- Error Message -->
+        @if (errorMessage()) {
+          <div class="error-message">
+            <span class="material-icons">error_outline</span>
+            {{ errorMessage() }}
+          </div>
+        }
+        <!-- Email -->
+        <div class="form-group">
+          <label class="form-label">Adresse Email</label>
+          <div class="input-wrapper">
+            <span class="material-icons input-icon">mail_outline</span>
+            <input
+              type="email"
+              class="form-input"
+              placeholder="olivia.davis@company.com"
+              [ngModel]="email()"
+              (ngModelChange)="email.set($event)"
+              name="email"
+              required
+            />
+          </div>
+        </div>
+
+        <!-- Password -->
+        <div class="form-group">
+          <label class="form-label">Mot de passe</label>
+          <div class="input-wrapper">
+            <span class="material-icons input-icon">lock_outline</span>
+            <input
+              [type]="showPassword() ? 'text' : 'password'"
+              class="form-input"
+              placeholder="••••••••"
+              [ngModel]="password()"
+              (ngModelChange)="password.set($event)"
+              name="password"
+              required
+            />
+            <button type="button" class="toggle-password" (click)="togglePassword()">
+              <span class="material-icons">
+                {{ showPassword() ? 'visibility_off' : 'visibility' }}
+              </span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Submit -->
+        <button type="submit" class="submit-btn" [disabled]="isLoading()">
+          @if (isLoading()) {
+            <span class="spinner"></span>
+          } @else {
+            Se Connecter
+          }
+        </button>
+      </form>
+
+      <p class="signup-link">
+        Pas encore de compte ? <a routerLink="/register">S'inscrire</a>
+      </p>
+    </div>
+  </div>
+</div>

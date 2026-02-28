@@ -11,6 +11,7 @@ using System.Text;
 
 namespace CRM.WebAPI.Controllers
 {
+    [ApiController]
     public class AuthController : ControllerBase
     {
         private readonly UserManager<SecUser> _userManager;
@@ -27,7 +28,7 @@ namespace CRM.WebAPI.Controllers
 
        // [Authorize(Roles = "ADMIN")]
         [HttpPost("users")]
-        public async Task<IActionResult> CreateUser(CreateUserDto request)
+        public async Task<IActionResult> CreateUser([FromBody] CreateUserDto request)
         {
             var user = new SecUser
             {
@@ -49,7 +50,7 @@ namespace CRM.WebAPI.Controllers
 
       
         [HttpPost("login")]
-        public async Task<IActionResult> Login(LoginDto loginDto)
+        public async Task<IActionResult> Login([FromBody] LoginDto loginDto)
         {
             try
             {

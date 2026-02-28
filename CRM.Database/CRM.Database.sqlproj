@@ -79,6 +79,7 @@
     <Build Include="Tables\prospect.sql" />
     <Build Include="Schemas\crm.sql" />
     <Build Include="Stored Procedures\GetAllProspect.sql" />
+    <Build Include="Tables\DomaineActivites.sql" />
   </ItemGroup>
   <ItemGroup>
     <PreDeploy Include="Script.PreDeployment.sql" />

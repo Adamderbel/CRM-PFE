@@ -1,4 +1,5 @@
-﻿using CRM.Entities.Crm;
+﻿using CRM.Entities.Common;
+using CRM.Entities.Crm;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -11,6 +12,7 @@ namespace CRM.DAL.DBContexts
     public class DataContext: DbContext
     {
         public DbSet<Prospect> Prospects { get; set; }
+        public DbSet<DomaineActivites> DomaineActivites { get; set; }
         public DataContext()
         {
             

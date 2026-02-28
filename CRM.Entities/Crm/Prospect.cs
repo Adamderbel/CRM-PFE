@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CRM.Entities.Common;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
@@ -10,7 +11,7 @@ namespace CRM.Entities.Crm
     [Table("Prospect", Schema = "crm")]
     public class Prospect
     {
-        public int Id { get; set; }
+        public Guid Id { get; set; }
 
         public string? Nom { get; set; }
 
@@ -25,5 +26,13 @@ namespace CRM.Entities.Crm
         public DateTime? DateCreation { get; set; }
 
         public string? Notes { get; set; }
+
+        public int idDomaineActivitee { get; set; }
+
+        [ForeignKey("idDomaineActivitee")]
+        public DomaineActivites? DomaineActivite { get; set; }
+
+
+
     }
 }

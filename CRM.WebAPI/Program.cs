@@ -37,13 +37,14 @@ builder.Services
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 builder.Services.AddScoped(typeof(IProspectRepositoryDapper), typeof(ProspectRepositoryDapper));
-
+builder.Services.AddScoped<IDomaineRespositoryDapper, DomaineRespositoryDapper>();
 
 // injection Services
 builder.Services.AddScoped<IAdminSeeder,AdminSeeder>();
 builder.Services.AddScoped<IUserService, UserService>();
 
 builder.Services.AddScoped<IProspectService, ProspectService>();
+builder.Services.AddScoped<IDomaineActiviteService, DomaineActiviteService>();
 //builder.Services.AddHostedService<AdminSeederHostedService>();
 
 
