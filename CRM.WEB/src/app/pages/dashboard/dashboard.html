@@ -1,0 +1,148 @@
+<div class="dashboard">
+  <!-- Welcome -->
+  <h1 class="welcome-title">Welcome, {{ userName() }}!</h1>
+
+  <!-- Overview Metrics -->
+  <section class="section">
+    <h2 class="section-title">Overview Metrics</h2>
+    <div class="metrics-grid">
+      @for (metric of metrics; track metric.label) {
+        <div class="metric-card">
+          <div class="metric-header">
+            <span class="metric-label">{{ metric.label }}</span>
+            <span class="material-icons metric-icon">{{ metric.icon }}</span>
+          </div>
+          <div class="metric-value">{{ metric.value }}</div>
+          <div class="metric-change">
+            <span class="material-icons trend-icon">trending_up</span>
+            {{ metric.change }}
+          </div>
+        </div>
+      }
+    </div>
+  </section>
+
+  <!-- Recent Prospects -->
+  <section class="section">
+    <div class="section-header">
+      <h2 class="section-title">Recent Prospects</h2>
+      <div class="section-actions">
+        <div class="search-box-sm">
+          <span class="material-icons">search</span>
+          <input type="text" placeholder="Search prospects..." />
+        </div>
+        <button class="filter-btn">
+          <span class="material-icons">tune</span>
+          Filter
+        </button>
+      </div>
+    </div>
+    <div class="table-card">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Company</th>
+            <th>Status</th>
+            <th>Last Contact</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (prospect of prospects; track prospect.name) {
+            <tr>
+              <td>{{ prospect.name }}</td>
+              <td>{{ prospect.company }}</td>
+              <td>
+                <span [class]="getStatusClass(prospect.status)">{{ prospect.status }}</span>
+              </td>
+              <td>{{ prospect.lastContact }}</td>
+              <td class="actions-cell">
+                <button class="table-action-btn">
+                  <span class="material-icons">chat_bubble_outline</span>
+                </button>
+                <button class="table-action-btn">
+                  <span class="material-icons">visibility</span>
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+      <div class="table-footer">
+        <a href="#" class="view-all-link">View All Prospects</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Team Quick Contacts -->
+  <section class="section">
+    <div class="section-header">
+      <h2 class="section-title">Team Quick Contacts</h2>
+      <button class="outline-btn">View All Employees</button>
+    </div>
+    <div class="team-grid">
+      @for (member of teamMembers; track member.name) {
+        <div class="team-card">
+          <div class="team-avatar">{{ member.initials }}</div>
+          <div class="team-info">
+            <span class="team-name">{{ member.name }}</span>
+            <span class="team-role">{{ member.role }}</span>
+          </div>
+        </div>
+      }
+    </div>
+  </section>
+
+  <!-- Product Catalog Preview -->
+  <section class="section">
+    <div class="section-header">
+      <h2 class="section-title">Product Catalog Preview</h2>
+      <button class="outline-btn">Browse Full Catalog</button>
+    </div>
+    <div class="products-grid">
+      @for (product of products; track product.name) {
+        <div class="product-card">
+          <div class="product-image" [style.background]="getProductColor(product.category)">
+            <span class="material-icons product-img-icon">
+              @switch (product.category) {
+                @case ('Software') { computer }
+                @case ('Services') { support_agent }
+                @case ('Hardware') { headphones }
+              }
+            </span>
+          </div>
+          <div class="product-details">
+            <span class="product-name">{{ product.name }}</span>
+            <span [class]="getCategoryClass(product.category)">{{ product.category }}</span>
+            <span class="product-price">${{ product.price.toFixed(2) }}</span>
+          </div>
+        </div>
+      }
+    </div>
+  </section>
+
+  <!-- Recent Actions Feed -->
+  <section class="section">
+    <h2 class="section-title">Recent Actions Feed</h2>
+    <div class="actions-feed">
+      @for (action of actions; track action.text) {
+        <div class="action-item">
+          <div class="action-icon-wrapper">
+            <span class="material-icons">{{ action.icon }}</span>
+          </div>
+          <div class="action-content">
+            <p class="action-text">{{ action.text }}</p>
+            <span class="action-time">{{ action.time }}</span>
+          </div>
+        </div>
+      }
+    </div>
+  </section>
+</div>
+
+<!-- Floating Add Button -->
+<button class="fab-button">
+  <span class="material-icons">add</span>
+  Add New Prospect
+</button>

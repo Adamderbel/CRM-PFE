@@ -1,13 +1,15 @@
-<div class="bg-light sidebar p-3">
-  <ul class="nav flex-column">
-    <li class="nav-item">
-      <a class="nav-link" routerLink="/dashboard">Dashboard</a>
-    </li>
-    <li class="nav-item">
-      <a class="nav-link" routerLink="/prospection">Prospection</a>
-    </li>
-    <li class="nav-item">
-      <a class="nav-link" routerLink="/clients">Clients</a>
-    </li>
-  </ul>
-</div>
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <span class="material-icons brand-icon">hub</span>
+    <span class="brand-text">CRM Hub</span>
+  </div>
+
+  <nav class="sidebar-nav">
+    @for (item of menuItems; track item.route) {
+      <a class="nav-item" [routerLink]="item.route" routerLinkActive="active">
+        <span class="material-icons">{{ item.icon }}</span>
+        <span class="nav-label">{{ item.label }}</span>
+      </a>
+    }
+  </nav>
+</aside>

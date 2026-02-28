@@ -1,5 +1,7 @@
-﻿using CRM.Entities.Crm;
+﻿using CRM.Entities.Common;
+using CRM.Entities.Crm;
 using CRM.Services;
+using CRM.WebAPI.DTOs;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CRM.WebAPI.Controllers
@@ -9,10 +11,12 @@ namespace CRM.WebAPI.Controllers
     public class ProspectController : ControllerBase
     {
         private readonly IProspectService _prospectService;
+        private readonly IDomaineActiviteService _domaineActiviteService;
 
-        public ProspectController(IProspectService prospectService)
+        public ProspectController(IProspectService prospectService, IDomaineActiviteService domaineActiviteService)
         {
             _prospectService = prospectService;
+            _domaineActiviteService = domaineActiviteService;
         }
 
         // GET: api/prospect
@@ -20,6 +24,11 @@ namespace CRM.WebAPI.Controllers
         public async Task<IActionResult> GetAll()
         {
             var prospects = await _prospectService.GetAllAsync();
+            foreach (var item in prospects)
+            {
+                 item.DomaineActivite = await _domaineActiviteService.GetByIdAsync(item.idDomaineActivitee);
+
+            }
             return Ok(prospects);
         }
         // GET: api/prospect
@@ -33,32 +42,61 @@ namespace CRM.WebAPI.Controllers
 
         // GET: api/prospect/5
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetById(int id)
+        public async Task<IActionResult> GetById(Guid id)
         {
-            var prospect = await _prospectService.GetByIdAsync(id);
-
+            Prospect prospect = await _prospectService.GetByIdAsync(id);
+           
             if (prospect == null)
                 return NotFound();
+
+            prospect.DomaineActivite = await _domaineActiviteService.GetByIdAsync(prospect.idDomaineActivitee);
+
+
+
 
             return Ok(prospect);
         }
 
-        // POST: api/prospect
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] Prospect prospect)
+        public async Task<IActionResult> Create([FromBody] CreateProspectDTO prospectDto)
         {
-            if (prospect == null)
-                return BadRequest();
+            try
+            {
+                if (prospectDto == null)
+                    return BadRequest("Invalid data.");
 
-            await _prospectService.CreateAsync(prospect);
-            return Ok();
+                var domaine = await _domaineActiviteService.GetByIdAsync(prospectDto.idDomaineActivitee);
+
+                if (domaine == null)
+                    return NotFound("DomaineActivite not found.");
+
+                var prospect = new Prospect
+                {   
+                    Nom = prospectDto.Nom,
+                    Prenom = prospectDto.Prenom,
+                    Email = prospectDto.Email,
+                    Telephone = prospectDto.Telephone,
+                    Source = prospectDto.Source,
+                    DateCreation = prospectDto.DateCreation ?? DateTime.Now,
+                    Notes = prospectDto.Notes,
+                    idDomaineActivitee = prospectDto.idDomaineActivitee
+                };
+
+                await _prospectService.CreateAsync(prospect);
+
+                return Ok("Prospect created successfully.");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
         }
 
         // PUT: api/prospect
         [HttpPut]
         public async Task<IActionResult> Update([FromBody] Prospect prospect)
         {
-            if (prospect == null || prospect.Id == 0)
+            if (prospect == null )
                 return BadRequest();
 
             await _prospectService.UpdateAsync(prospect);

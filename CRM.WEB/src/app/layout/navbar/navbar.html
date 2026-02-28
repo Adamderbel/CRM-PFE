@@ -1,21 +1,31 @@
-<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-  <a class="navbar-brand" href="#">Mon App</a>
-  <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
-    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-    <span class="navbar-toggler-icon"></span>
-  </button>
+<nav class="top-navbar">
+  <div class="navbar-left">
+    <span class="material-icons brand-icon">hub</span>
+    <span class="brand-text">CRM Hub</span>
+  </div>
 
-  <div class="collapse navbar-collapse" id="navbarNav">
-    <ul class="navbar-nav ms-auto">
-      <li class="nav-item">
-        <a class="nav-link" routerLink="/dashboard">Dashboard</a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" routerLink="/prospection">Prospection</a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" routerLink="/clients">Clients</a>
-      </li>
-    </ul>
+  <div class="navbar-center">
+    <div class="search-box">
+      <span class="material-icons search-icon">search</span>
+      <input type="text" placeholder="Search..." class="search-input" />
+    </div>
+  </div>
+
+  <div class="navbar-right">
+    <button class="icon-btn">
+      <span class="material-icons">notifications_none</span>
+    </button>
+    <button class="icon-btn">
+      <span class="material-icons">settings</span>
+    </button>
+    <button class="icon-btn" (click)="logout()" title="Se déconnecter">
+      <span class="material-icons">logout</span>
+    </button>
+    <div class="user-profile">
+      <div class="avatar">
+        <span class="material-icons">person</span>
+      </div>
+      <span class="user-name">{{ userName() }}</span>
+    </div>
   </div>
 </nav>

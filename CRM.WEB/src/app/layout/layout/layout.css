@@ -1,0 +1,11 @@
+:host {
+  display: block;
+}
+
+.main-content {
+  margin-left: 220px;
+  margin-top: 64px;
+  padding: 28px 32px;
+  background: #f7f7fa;
+  min-height: calc(100vh - 64px);
+}

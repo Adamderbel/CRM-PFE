@@ -1,0 +1,211 @@
+<div class="register-container">
+  <!-- Left Panel -->
+  <div class="left-panel">
+    <div class="left-content">
+      <div class="brand">
+        <span class="material-icons brand-icon">hub</span>
+        <h1 class="brand-name">CRM Hub</h1>
+      </div>
+
+      <p class="brand-tagline">
+        Rejoignez des milliers d'équipes qui gèrent leur activité plus efficacement.
+      </p>
+
+      <!-- Stats -->
+      <div class="stats-row">
+        <div class="stat">
+          <span class="stat-value">10K+</span>
+          <span class="stat-label">UTILISATEURS</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value">98%</span>
+          <span class="stat-label">DISPONIBILITÉ</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value">4.9<span class="material-icons star-icon">star</span></span>
+          <span class="stat-label">NOTE</span>
+        </div>
+      </div>
+
+      <!-- Testimonial -->
+      <div class="testimonial">
+        <p class="testimonial-text">
+          "CRM Hub a transformé le fonctionnement de notre équipe commerciale. Nous avons conclu
+          35% de contrats en plus au premier trimestre."
+        </p>
+        <div class="testimonial-author">
+          <div class="testimonial-avatar">
+            <span class="material-icons">person</span>
+          </div>
+          <div>
+            <span class="author-name">Sarah Lee</span>
+            <span class="author-role">Directrice Commerciale, Global Solutions</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Panel -->
+  <div class="right-panel">
+    <div class="register-card">
+      <h2 class="register-title">Créer un Compte ✨</h2>
+      <p class="register-subtitle">Commencez gratuitement avec CRM Hub</p>
+
+      <!-- Divider -->
+      <div class="divider">
+        <span>Créer un compte avec email</span>
+      </div>
+
+      <!-- Role Toggle -->
+      <div class="role-toggle">
+        <button
+          class="role-btn"
+          [class.active]="selectedRole() === 'ADMIN'"
+          (click)="selectRole('ADMIN')"
+        >
+          <span class="material-icons">admin_panel_settings</span>
+          Admin
+        </button>
+        <button
+          class="role-btn"
+          [class.active]="selectedRole() === 'COMMERCIAL'"
+          (click)="selectRole('COMMERCIAL')"
+        >
+          <span class="material-icons">business_center</span>
+          Commercial
+        </button>
+      </div>
+
+      <!-- Form -->
+      <form (ngSubmit)="onSubmit()">
+        <!-- Messages -->
+        @if (errorMessage()) {
+          <div class="error-message">
+            <span class="material-icons">error_outline</span>
+            {{ errorMessage() }}
+          </div>
+        }
+        @if (successMessage()) {
+          <div class="success-message">
+            <span class="material-icons">check_circle_outline</span>
+            {{ successMessage() }}
+          </div>
+        }
+
+        <!-- UserName -->
+        <div class="form-group">
+          <label class="form-label">Nom d'utilisateur</label>
+          <div class="input-wrapper">
+            <span class="material-icons input-icon">person_outline</span>
+            <input
+              type="text"
+              class="form-input"
+              placeholder="olivia_davis"
+              [ngModel]="userName()"
+              (ngModelChange)="userName.set($event)"
+              name="userName"
+              required
+            />
+          </div>
+        </div>
+
+        <!-- Nom + Prenom -->
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Nom</label>
+            <div class="input-wrapper">
+              <span class="material-icons input-icon">person</span>
+              <input
+                type="text"
+                class="form-input"
+                placeholder="Davis"
+                [ngModel]="nom()"
+                (ngModelChange)="nom.set($event)"
+                name="nom"
+                required
+              />
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Prénom</label>
+            <div class="input-wrapper">
+              <span class="material-icons input-icon">person</span>
+              <input
+                type="text"
+                class="form-input"
+                placeholder="Olivia"
+                [ngModel]="prenom()"
+                (ngModelChange)="prenom.set($event)"
+                name="prenom"
+                required
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- Email -->
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <div class="input-wrapper">
+            <span class="material-icons input-icon">mail_outline</span>
+            <input
+              type="email"
+              class="form-input"
+              placeholder="olivia.davis@company.com"
+              [ngModel]="email()"
+              (ngModelChange)="email.set($event)"
+              name="email"
+              required
+            />
+          </div>
+        </div>
+
+        <!-- Password -->
+        <div class="form-group">
+          <label class="form-label">Mot de passe</label>
+          <div class="input-wrapper">
+            <span class="material-icons input-icon">lock_outline</span>
+            <input
+              [type]="showPassword() ? 'text' : 'password'"
+              class="form-input"
+              placeholder="••••••••"
+              [ngModel]="password()"
+              (ngModelChange)="password.set($event)"
+              name="password"
+              required
+            />
+            <button type="button" class="toggle-password" (click)="togglePassword()">
+              <span class="material-icons">
+                {{ showPassword() ? 'visibility_off' : 'visibility' }}
+              </span>
+            </button>
+          </div>
+          <!-- Strength Bar -->
+          <div class="strength-bar">
+            @for (i of [1, 2, 3, 4]; track i) {
+              <div class="strength-segment" [class.active]="getPasswordStrength() >= i"
+                [class.weak]="getPasswordStrength() === 1 && i === 1"
+                [class.medium]="getPasswordStrength() === 2"
+                [class.strong]="getPasswordStrength() >= 3"
+              ></div>
+            }
+          </div>
+        </div>
+
+        <!-- Submit -->
+        <button type="submit" class="submit-btn" [disabled]="isLoading()">
+          @if (isLoading()) {
+            <span class="spinner"></span>
+          } @else {
+            Créer un Compte
+          }
+        </button>
+      </form>
+
+      <p class="login-link">
+        Vous avez déjà un compte ? <a routerLink="/login">Se Connecter</a>
+      </p>
+    </div>
+  </div>
+</div>

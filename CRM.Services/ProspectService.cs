@@ -33,7 +33,7 @@ namespace CRM.Services
             return await _prospectRepository.GetAllAsync();
         }
 
-        public async Task<Prospect?> GetByIdAsync(int id)
+        public async Task<Prospect?> GetByIdAsync(Guid id)
         {
             var prospect = await _prospectRepository.GetByIdAsync(id);
             if (prospect == null)
