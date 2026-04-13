@@ -1,0 +1,127 @@
+<div class="prospect-detail-page">
+  <div class="page-header">
+    <a routerLink="/prospects" class="back-link">
+      <span class="material-icons">arrow_back</span>
+      Retour aux prospects
+    </a>
+  </div>
+
+  <!-- Error -->
+  @if (errorMessage()) {
+    <div class="alert alert-error">
+      <span class="material-icons">error</span>
+      {{ errorMessage() }}
+    </div>
+  }
+
+  <!-- Loading -->
+  @if (isLoading()) {
+    <div class="loading-container">
+      <div class="spinner"></div>
+      <p>Chargement du prospect...</p>
+    </div>
+  }
+
+  @if (!isLoading() && prospect()) {
+    <div class="detail-header">
+      <div class="prospect-avatar">
+        {{ prospect()!.prenom.charAt(0) }}{{ prospect()!.nom.charAt(0) }}
+      </div>
+      <div class="prospect-identity">
+        <h1 class="prospect-name">{{ prospect()!.prenom }} {{ prospect()!.nom }}</h1>
+        @if (prospect()!.domaineActivite?.activitee) {
+          <span class="domaine-badge">{{ prospect()!.domaineActivite!.activitee }}</span>
+        }
+      </div>
+      <div class="header-actions">
+        <button class="btn-outline" (click)="editProspect()">
+          <span class="material-icons">edit</span>
+          Modifier
+        </button>
+        <button class="btn-danger-outline" (click)="confirmDelete()">
+          <span class="material-icons">delete</span>
+          Supprimer
+        </button>
+      </div>
+    </div>
+
+    <div class="detail-grid">
+      <div class="detail-card">
+        <h2 class="card-title">
+          <span class="material-icons">contact_mail</span>
+          Coordonnées
+        </h2>
+        <div class="info-list">
+          <div class="info-item">
+            <span class="info-label">Email</span>
+            <a class="info-value email-link" [href]="'mailto:' + prospect()!.email">
+              {{ prospect()!.email || '-' }}
+            </a>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Téléphone</span>
+            <span class="info-value">{{ prospect()!.telephone || '-' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="detail-card">
+        <h2 class="card-title">
+          <span class="material-icons">info</span>
+          Informations
+        </h2>
+        <div class="info-list">
+          <div class="info-item">
+            <span class="info-label">Source</span>
+            <span class="info-value">
+              @if (prospect()!.source) {
+                <span class="source-badge">{{ prospect()!.source }}</span>
+              } @else {
+                -
+              }
+            </span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Date de création</span>
+            <span class="info-value">{{ formatDate(prospect()!.dateCreation) }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Domaine d'activité</span>
+            <span class="info-value">{{ prospect()!.domaineActivite?.activitee || '-' }}</span>
+          </div>
+        </div>
+      </div>
+
+      @if (prospect()!.notes) {
+        <div class="detail-card full-width">
+          <h2 class="card-title">
+            <span class="material-icons">notes</span>
+            Notes
+          </h2>
+          <p class="notes-text">{{ prospect()!.notes }}</p>
+        </div>
+      }
+    </div>
+  }
+</div>
+
+<!-- Delete Confirmation Modal -->
+@if (showDeleteConfirm()) {
+  <div class="modal-overlay" (click)="cancelDelete()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <span class="material-icons modal-icon">warning</span>
+        <h3>Confirmer la suppression</h3>
+      </div>
+      <p class="modal-text">
+        Voulez-vous vraiment supprimer le prospect
+        <strong>{{ prospect()!.prenom }} {{ prospect()!.nom }}</strong> ?
+        Cette action est irréversible.
+      </p>
+      <div class="modal-actions">
+        <button class="btn-outline" (click)="cancelDelete()">Annuler</button>
+        <button class="btn-danger-fill" (click)="deleteProspect()">Supprimer</button>
+      </div>
+    </div>
+  </div>
+}

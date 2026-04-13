@@ -58,7 +58,7 @@ namespace CRM.Services
             await _context.SaveChangesAsync();
         }
 
-        public async Task DeleteAsync(int id)
+        public async Task DeleteAsync(Guid id)
         {
             await _prospectRepository.DeleteAsync(id);
             await _context.SaveChangesAsync();

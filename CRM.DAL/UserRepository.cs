@@ -37,5 +37,10 @@ namespace CRM.DAL
         {
             return await _securityDbContext.UserRoles.Where(ur => ur.RoleId == roleId).ToListAsync();
         }
+
+        public Task<SecUser> GetByIdAsync(Guid id)
+        {
+            return _securityDbContext.Users.FirstOrDefaultAsync(u => u.Id == id);
+        }
     }
 }

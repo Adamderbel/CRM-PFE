@@ -13,5 +13,7 @@ namespace CRM.DAL.GenericRepository
         Task InsertAsync(T entity);
         Task UpdateAsync(T entity);
         Task DeleteAsync(object id);
+        
+
     }
 }

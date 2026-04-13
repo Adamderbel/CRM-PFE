@@ -16,5 +16,6 @@ namespace CRM.DAL
         Task SaveAsync();
         Task<SecRole?> GetRoleByNameAsync(string roleName);
         Task<IEnumerable<UserRole>> GetRolesByRoleIdAsync(Guid roleId);
+        Task<SecUser> GetByIdAsync(Guid id);
     }
 }

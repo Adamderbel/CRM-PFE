@@ -13,7 +13,7 @@ namespace CRM.Services
         Task<Prospect?> GetByIdAsync(Guid id);
         Task CreateAsync(Prospect prospect);
         Task UpdateAsync(Prospect prospect);
-        Task DeleteAsync(int id);
+        Task DeleteAsync(Guid id);
         Task<IEnumerable<Prospect>> GetAllAsyncDapper();
     }
 }
