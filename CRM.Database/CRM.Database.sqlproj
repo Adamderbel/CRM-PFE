@@ -102,6 +102,11 @@
   </ItemGroup>
   <ItemGroup>
     <PostDeploy Include="Script.PostDeployment1.sql" />
+    <None Include="Scripts\Referential\02_DomaineActivitee.sql" />
+    <None Include="Scripts\Referential\03_FamilleProduit.sql" />
+    <None Include="Scripts\Referential\04_SuppProduit.sql" />
+    <None Include="Scripts\Referential\05_StatutProspection.sql" />
+    <None Include="Scripts\Referential\06_Societee.sql" />
   </ItemGroup>
   <ItemGroup>
     <RefactorLog Include="CRM.Database.refactorlog" />

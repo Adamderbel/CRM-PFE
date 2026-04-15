@@ -1,5 +1,5 @@
 ﻿CREATE TABLE [comm].[DomaineActivites]
 (
 	[Id] INT NOT NULL PRIMARY KEY, 
-    [activitee] NCHAR(10) NULL
+    [activitee] NVARCHAR(50) NULL
 )
