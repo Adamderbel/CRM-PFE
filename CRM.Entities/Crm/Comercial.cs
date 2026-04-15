@@ -9,6 +9,7 @@ namespace CRM.Entities.Crm
 {
     public class Comercial:User
     {
+        
         public string Nom { get; set; }
         public string Prenom { get; set; }
     }

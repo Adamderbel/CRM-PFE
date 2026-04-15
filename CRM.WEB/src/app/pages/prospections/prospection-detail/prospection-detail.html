@@ -1,0 +1,88 @@
+<div class="prospection-detail-page">
+  <div class="page-header">
+    <a routerLink="/prospections" class="back-link">
+      <span class="material-icons">arrow_back</span>
+      Retour aux prospections
+    </a>
+    <div class="header-content">
+      <div>
+        <h1 class="page-title">Détails de la Prospection</h1>
+        <p class="page-subtitle">Consultez les informations complètes sur cette prospection</p>
+      </div>
+      @if (prospection()) {
+        <a [routerLink]="['/prospections/edit', prospection()?.id]" class="btn-primary">
+          <span class="material-icons">edit</span>
+          Modifier
+        </a>
+      }
+    </div>
+  </div>
+
+  @if (errorMessage()) {
+    <div class="alert alert-error">
+      <span class="material-icons">error</span>
+      {{ errorMessage() }}
+    </div>
+  }
+
+  @if (isLoading()) {
+    <div class="loading-container">
+      <div class="spinner"></div>
+      <p>Chargement des détails...</p>
+    </div>
+  }
+
+  @if (!isLoading() && prospection()) {
+    <div class="detail-card">
+      <div class="detail-header">
+        <div class="detail-title-group">
+          <h2>Prospection chez {{ prospection()?.prospect?.nom }} {{ prospection()?.prospect?.prenom }}</h2>
+          <span class="status-badge">{{ prospection()?.statut?.libelle || 'Inconnu' }}</span>
+        </div>
+      </div>
+
+      <div class="detail-body">
+
+        <div class="detail-section">
+          <h3><span class="material-icons">person</span> Prospect</h3>
+          <div class="info-group">
+            <span class="info-label">Nom</span>
+            <span class="info-value">{{ prospection()?.prospect?.nom }} {{ prospection()?.prospect?.prenom }}</span>
+          </div>
+        </div>
+
+        <div class="detail-section">
+          <h3><span class="material-icons">event</span> Planification</h3>
+          <div class="info-grid">
+            <div class="info-group">
+              <span class="info-label">Date de début</span>
+              <span class="info-value">{{ prospection()?.dateDebut | date:'dd/MM/yyyy HH:mm' }}</span>
+            </div>
+            <div class="info-group">
+              <span class="info-label">Date de fin</span>
+              <span class="info-value">{{ prospection()?.dateFin | date:'dd/MM/yyyy HH:mm' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="detail-section">
+          <h3><span class="material-icons">assignment_ind</span> Utilisateur Assigné</h3>
+          <div class="info-group">
+            <span class="info-label">Utilisateur</span>
+            <span class="info-value">
+              {{ prospection()?.user ? (prospection()?.user?.nom + ' ' + prospection()?.user?.prenom) : 'Non assigné' }}
+            </span>
+          </div>
+        </div>
+
+        <div class="detail-section full-width">
+          <h3><span class="material-icons">notes</span> Notes</h3>
+          <div class="notes-content">
+            {{ prospection()?.notes || 'Aucune note ajoutée pour cette prospection.' }}
+          </div>
+        </div>
+
+      </div>
+    </div>
+  }
+</div>

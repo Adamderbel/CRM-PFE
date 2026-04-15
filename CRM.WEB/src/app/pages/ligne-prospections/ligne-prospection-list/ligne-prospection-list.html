@@ -1,0 +1,97 @@
+<div class="ligne-prospection-list-page">
+  <div class="back-link-container" style="margin-bottom: 20px;">
+    <a routerLink="/prospections" class="back-link">
+      <span class="material-icons">arrow_back</span>
+      Retour aux prospections
+    </a>
+  </div>
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Lignes de Prospection</h1>
+      <p class="page-subtitle">Gérez les détails de vos campagnes</p>
+    </div>
+    <a [routerLink]="['/ligne-prospections/create']" [queryParams]="prospectionId() ? { prospectionId: prospectionId() } : null" class="btn-primary">
+      <span class="material-icons">add_task</span>
+      Nouvelle Ligne
+    </a>
+  </div>
+
+  @if (ligneProspectionService.errorMessage()) {
+    <div class="alert alert-error">
+      <span class="material-icons">error</span>
+      {{ ligneProspectionService.errorMessage() }}
+    </div>
+  }
+
+  <div class="filters-bar">
+    <div class="search-box">
+      <span class="material-icons">search</span>
+      <input
+        type="text"
+        placeholder="Rechercher par désignation..."
+        [ngModel]="searchQuery()"
+        (ngModelChange)="searchQuery.set($event)"
+      />
+    </div>
+    <span class="results-count">{{ filteredLignes().length }} ligne(s)</span>
+  </div>
+
+  @if (ligneProspectionService.isLoading()) {
+    <div class="loading-container">
+      <div class="spinner"></div>
+      <p>Chargement des lignes...</p>
+    </div>
+  }
+
+  @if (!ligneProspectionService.isLoading()) {
+    <div class="content-container">
+      @if (filteredLignes().length === 0) {
+        <div class="table-card">
+          <div class="empty-state">
+            <span class="material-icons empty-icon">list_alt</span>
+            <h3>Aucune ligne de prospection trouvée</h3>
+            <p>Ajoutez une ligne pour détailler votre prospection.</p>
+            <a [routerLink]="['/ligne-prospections/create']" [queryParams]="prospectionId() ? { prospectionId: prospectionId() } : null" class="btn-primary">
+              <span class="material-icons">add_task</span>
+              Nouvelle Ligne
+            </a>
+          </div>
+        </div>
+      } @else {
+        <div class="cards-grid">
+          @for (ligne of filteredLignes(); track ligne.id) {
+            <div class="ligne-card">
+              <div class="ligne-card-header">
+                <span class="status-badge" [class.status-encours]="ligne.statut?.libelle?.toLowerCase().includes('cours')" [class.status-termine]="ligne.statut?.libelle?.toLowerCase().includes('clôturé')">{{ ligne.statut?.libelle || 'Inconnu' }}</span>
+                <div class="actions-cell">
+                  <a [routerLink]="['/ligne-prospections/edit', ligne.id]" class="card-action-btn" title="Modifier">
+                    <span class="material-icons">edit</span>
+                  </a>
+                </div>
+              </div>
+              <div class="ligne-card-body">
+                <h3 class="ligne-designation">{{ ligne.designation || 'Sans désignation' }}</h3>
+
+                <div class="info-row">
+                  <span class="material-icons info-icon">calendar_today</span>
+                  <span class="info-text">{{ formatDate(ligne.date) }}</span>
+                </div>
+
+                <div class="info-row">
+                  <span class="material-icons info-icon">category</span>
+                  <span class="info-text">{{ ligne.familleProduit?.libelle || '-' }}</span>
+                </div>
+
+                <div class="info-row">
+                  <span class="material-icons info-icon">business</span>
+                  <span class="info-text">{{ ligne.societee?.nom || '-' }}</span>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+</div>

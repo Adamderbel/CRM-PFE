@@ -1,0 +1,131 @@
+<div class="prospection-list-page">
+  <div class="back-link-container" style="margin-bottom: 20px;">
+    <a routerLink="/prospects" class="back-link">
+      <span class="material-icons">arrow_back</span>
+      Retour aux prospects
+    </a>
+  </div>
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Prospections</h1>
+      <p class="page-subtitle">Gérez vos campagnes de prospection</p>
+    </div>
+    <a [routerLink]="['/prospections/create']" [queryParams]="prospectId() ? { prospectId: prospectId() } : null" class="btn-primary">
+      <span class="material-icons">add_task</span>
+      Nouvelle Prospection
+    </a>
+  </div>
+
+  @if (successMessage()) {
+    <div class="alert alert-success">
+      <span class="material-icons">check_circle</span>
+      {{ successMessage() }}
+    </div>
+  }
+
+  @if (prospectionService.errorMessage()) {
+    <div class="alert alert-error">
+      <span class="material-icons">error</span>
+      {{ prospectionService.errorMessage() }}
+    </div>
+  }
+
+  <div class="filters-bar">
+    <div class="search-box">
+      <span class="material-icons">search</span>
+      <input
+        type="text"
+        placeholder="Rechercher par prospect, statut..."
+        [ngModel]="searchQuery()"
+        (ngModelChange)="searchQuery.set($event)"
+      />
+    </div>
+    <span class="results-count">{{ filteredProspections().length }} prospection(s)</span>
+  </div>
+
+  @if (prospectionService.isLoading()) {
+    <div class="loading-container">
+      <div class="spinner"></div>
+      <p>Chargement des prospections...</p>
+    </div>
+  }
+
+  @if (!prospectionService.isLoading()) {
+    <div class="table-card">
+      @if (filteredProspections().length === 0) {
+        <div class="empty-state">
+          <span class="material-icons empty-icon">assignment</span>
+          <h3>Aucune prospection trouvée</h3>
+          <p>Créez votre première prospection pour commencer.</p>
+          <a routerLink="/prospections/create" class="btn-primary">
+            <span class="material-icons">add_task</span>
+            Nouvelle Prospection
+          </a>
+        </div>
+      } @else {
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Prospect</th>
+              <th>Date Début</th>
+              <th>Date Fin</th>
+              <th>Statut</th>
+              <th>Utilisateur</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (prospection of filteredProspections(); track prospection.id) {
+              <tr>
+                <td>{{ prospection.prospect?.nom }} {{ prospection.prospect?.prenom }}</td>
+                <td>{{ formatDate(prospection.dateDebut) }}</td>
+                <td>{{ formatDate(prospection.dateFin) }}</td>
+                <td>
+                  <span class="status-badge">{{ prospection.statut?.libelle || 'Inconnu' }}</span>
+                </td>
+                <td>{{ prospection.user?.nom }} {{ prospection.user?.prenom }}</td>
+                <td>
+                  <div class="actions-cell">
+                    <button class="table-action-btn" title="Lignes Prospection" (click)="viewLignes(prospection.id)">
+                      <span class="material-icons">list_alt</span>
+                    </button>
+                    <button class="table-action-btn" title="Détails" (click)="viewProspection(prospection.id)">
+                      <span class="material-icons">visibility</span>
+                    </button>
+                    <button class="table-action-btn" title="Modifier" (click)="editProspection(prospection.id)">
+                      <span class="material-icons">edit</span>
+                    </button>
+                    <button class="table-action-btn btn-danger" title="Supprimer" (click)="confirmDelete(prospection)">
+                      <span class="material-icons">delete</span>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </div>
+  }
+</div>
+
+@if (showDeleteConfirm()) {
+  <div class="modal-overlay" (click)="cancelDelete()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <span class="material-icons modal-icon">warning</span>
+        <h3>Confirmer la suppression</h3>
+      </div>
+      <p class="modal-text">
+        Voulez-vous vraiment supprimer cette prospection pour le prospect
+        <strong>{{ prospectionToDelete()?.prospect?.prenom }} {{ prospectionToDelete()?.prospect?.nom }}</strong> ?
+        Cette action est irréversible.
+      </p>
+      <div class="modal-actions">
+        <button class="btn-outline" (click)="cancelDelete()">Annuler</button>
+        <button class="btn-danger-fill" (click)="deleteProspection()">Supprimer</button>
+      </div>
+    </div>
+  </div>
+}

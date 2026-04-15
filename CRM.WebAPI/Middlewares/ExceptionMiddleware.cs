@@ -36,7 +36,9 @@ namespace CRM.WebAPI.Middlewares
                 context.Response.ContentType = "application/json";
                 await context.Response.WriteAsJsonAsync(new
                 {
-                    message = "Une erreur interne est survenue"
+                    message = "Une erreur interne est survenue",
+                    details = ex.Message,
+                    innerDetails = ex.InnerException?.Message
                 });
             }
          }   

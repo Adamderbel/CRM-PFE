@@ -92,23 +92,38 @@ namespace CRM.WebAPI.Controllers
             }
         }
 
-        // PUT: api/prospect
-        [HttpPut]
-        public async Task<IActionResult> Update([FromBody] Prospect prospect)
+        [HttpPut("{id:guid}")]
+        public async Task<IActionResult> Update(Guid id, [FromBody] UpdateProspectDTO dto)
         {
-            if (prospect == null )
-                return BadRequest();
+            if (dto == null)
+                return BadRequest("Invalid data.");
 
-            await _prospectService.UpdateAsync(prospect);
-            return Ok();
+            var existingProspect = await _prospectService.GetByIdAsync(id);
+
+            if (existingProspect == null)
+                return NotFound("Prospect not found.");
+
+            // Update fields
+            existingProspect.Nom = dto.Nom;
+            existingProspect.Prenom = dto.Prenom;
+            existingProspect.Email = dto.Email;
+            existingProspect.Telephone = dto.Telephone;
+            existingProspect.Source = dto.Source;
+            existingProspect.Notes = dto.Notes;
+            existingProspect.idDomaineActivitee = dto.idDomaineActivitee;
+
+            await _prospectService.UpdateAsync(existingProspect);
+
+            return NoContent(); // 204 (better than Ok)
         }
 
         // DELETE: api/prospect/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
+        public async Task<IActionResult> Delete(Guid id)
         {
             await _prospectService.DeleteAsync(id);
             return Ok();
         }
+
     }
 }

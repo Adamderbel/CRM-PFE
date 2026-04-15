@@ -13,32 +13,32 @@ namespace CRM.Services
     public class UserService : IUserService
     {
         private readonly IUserRepository _userRepository;
-        private readonly PasswordHasher<SecUser> _passwordHasher= new();
+        private readonly PasswordHasher<SecUser> _passwordHasher = new();
 
         public UserService(IUserRepository userRepository)
         {
-            _userRepository = userRepository;        
+            _userRepository = userRepository;
         }
-        public async Task CreateUserAsync(SecUser user , string plainPassword ,string roleName)
+        public async Task CreateUserAsync(SecUser user, string plainPassword, string roleName)
         {
-            user.PasswordHash = _passwordHasher.HashPassword(user,plainPassword);
-           _userRepository.AddAsync(user);
-            var  role = await _userRepository.GetRoleByNameAsync(roleName);
-            if(role != null)
+            user.PasswordHash = _passwordHasher.HashPassword(user, plainPassword);
+            _userRepository.AddAsync(user);
+            var role = await _userRepository.GetRoleByNameAsync(roleName);
+            if (role != null)
             {
-              await  _userRepository.AddUserRoleAsync(new UserRole
+                await _userRepository.AddUserRoleAsync(new UserRole
                 {
                     UserId = user.Id,
                     RoleId = role.Id
                 });
 
             }
-           
+
             await _userRepository.SaveAsync();
 
         }
 
-        public async  Task<SecRole?> GetRoleByRoleName(string roleName)
+        public async Task<SecRole?> GetRoleByRoleName(string roleName)
         {
             return await _userRepository.GetRoleByNameAsync(roleName);
         }
@@ -46,6 +46,14 @@ namespace CRM.Services
         public async Task<IEnumerable<UserRole>> GetRolesByRoleIdAsync(Guid roleId)
         {
             return await GetRolesByRoleIdAsync(roleId);
+        }
+        public async Task<SecUser?> GetUserByEmailAsync(string email)
+        {
+            return await _userRepository.GetByEmailAsync(email);
+        }
+        public async Task<SecUser?> GetByIdAsync(Guid id)
+        {
+            return await _userRepository.GetByIdAsync(id);
         }
     }
 }

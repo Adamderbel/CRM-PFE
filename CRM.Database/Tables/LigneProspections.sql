@@ -1,0 +1,27 @@
+﻿CREATE TABLE [crm].[LigneProspections]
+(
+	[Id] UNIQUEIDENTIFIER NOT NULL PRIMARY KEY, 
+    [Designation] NVARCHAR(MAX) NULL, 
+    [DateDemandeOffre] DATETIME NULL, 
+    [NumeroDevis] NVARCHAR(50) NULL, 
+    [DateDevis] DATETIME NULL, 
+    [NumeroCommande] NVARCHAR(MAX) NULL, 
+    [DateCommande] DATETIME NULL, 
+    [BatEnvoyee] BIT NOT NULL, 
+    [DateEnvoiBat] DATETIME NULL, 
+    [Concretisee] BIT  NOT NULL, 
+    [CauseEchecId] INT NULL, 
+    [RefArt] NVARCHAR(MAX) NULL, 
+    [FamilleProduitId] INT NOT NULL, 
+    [SupportProduitId] INT NULL, 
+    [ProspectionId] UNIQUEIDENTIFIER  NOT NULL, 
+    [SocieteeId] INT NULL, 
+    [StatutId] INT NULL, 
+    [date] DATE NOT NULL
+
+    constraint FK_LigneProspections_CauseEchec FOREIGN KEY (CauseEchecId) REFERENCES [comm].CauseEchecs(Id),
+    constraint FK_LigneProspections_FamilleProduit FOREIGN KEY (FamilleProduitId) REFERENCES [comm].FamilleProduits(Id),
+    constraint FK_LigneProspections_SupportProduit FOREIGN KEY (SupportProduitId) REFERENCES [comm].SupportProduits(Id),
+    constraint FK_LigneProspections_Prospection FOREIGN KEY (ProspectionId) REFERENCES [crm].Prospection(Id),
+    constraint FK_LigneProspections_Societee FOREIGN KEY (SocieteeId) REFERENCES [comm].Societees(Id),
+)
