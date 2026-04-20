@@ -18,13 +18,23 @@ namespace CRM.Worker.workers
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
+            Console.WriteLine("🚀 Worker START");
+
             while (!stoppingToken.IsCancellationRequested)
             {
-                await _sync.SyncClientsAsync();
+                Console.WriteLine("🔄 BEFORE SYNC");
 
-                Console.WriteLine("Sync OK");
+                try
+                {
+                    await _sync.SyncClientsAsync();
+                    Console.WriteLine("✅ AFTER SYNC");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("❌ WORKER ERROR: " + ex.Message);
+                }
 
-                await Task.Delay(TimeSpan.FromMinutes(5), stoppingToken);
+                await Task.Delay(5000, stoppingToken);
             }
         }
     }

@@ -47,5 +47,34 @@ namespace CRM.Worker.services
 
             return clients;
         }
+        public async Task<List<ProduitCerm>> GetProduitsAsync(DateTime lastSyncDate)
+        {
+            var produits = new List<ProduitCerm>();
+
+            using var conn = new SqlConnection(_connectionString);
+            await conn.OpenAsync();
+
+            string query = @"
+        SELECT afg__ref, afg_oms1, wij__dat
+        FROM afgart__
+        WHERE wij__dat > @LastSyncDate";
+
+            using var cmd = new SqlCommand(query, conn);
+            cmd.Parameters.AddWithValue("@LastSyncDate", lastSyncDate);
+
+            using var reader = await cmd.ExecuteReaderAsync();
+
+            while (await reader.ReadAsync())
+            {
+                produits.Add(new ProduitCerm
+                {
+                    RefProduit = reader.GetInt32(0),
+                    Designation = reader.IsDBNull(1) ? null : reader.GetString(1).Trim(),
+                    LastModifiedDate = reader.IsDBNull(2) ? null : reader.GetDateTime(2)
+                });
+            }
+
+            return produits;
+        }
     }
 }

@@ -11,6 +11,7 @@ namespace CRM.Entities.Common
         public int RefProduit { get; set; }
 
         public string? Designation { get; set; }
+        public DateTime? LastModifiedDate { get; set; }
 
         public DateTime? LastSyncDate { get; set; }
     

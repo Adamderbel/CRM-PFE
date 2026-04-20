@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace CRM.Worker.services
@@ -17,9 +15,10 @@ namespace CRM.Worker.services
             _crm = crm;
         }
 
+        // ===================== CLIENTS =====================
         public async Task SyncClientsAsync()
         {
-            var lastSyncDate = await _crm.GetLastSyncDateAsync();
+            var lastSyncDate = await _crm.GetLastSyncDateAsync("Clients");
 
             var clients = await _cerm.GetClientsAsync(lastSyncDate);
 
@@ -34,7 +33,28 @@ namespace CRM.Worker.services
                 .DefaultIfEmpty(lastSyncDate)
                 .Max();
 
-            await _crm.UpdateLastSyncDateAsync(maxDate);
+            await _crm.UpdateLastSyncDateAsync("Clients", maxDate);
+        }
+
+        // ===================== PRODUITS =====================
+        public async Task SyncProduitsAsync()
+        {
+            var lastSyncDate = await _crm.GetLastSyncDateAsync("Produits");
+
+            var produits = await _cerm.GetProduitsAsync(lastSyncDate);
+
+            if (produits == null || produits.Count == 0)
+                return;
+
+            await _crm.UpsertProduitsAsync(produits);
+
+            var maxDate = produits
+                .Where(x => x.LastModifiedDate.HasValue)
+                .Select(x => x.LastModifiedDate.Value)
+                .DefaultIfEmpty(lastSyncDate)
+                .Max();
+
+            await _crm.UpdateLastSyncDateAsync("Produits", maxDate);
         }
     }
 }
