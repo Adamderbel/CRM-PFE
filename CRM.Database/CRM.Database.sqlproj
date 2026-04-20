@@ -88,6 +88,9 @@
     <Build Include="Tables\CauseEchecs.sql" />
     <Build Include="Tables\produit.sql" />
     <Build Include="Tables\LigneProspections.sql" />
+    <Build Include="Tables\ClientCerm.sql" />
+    <Build Include="Tables\ProduitCerm.sql" />
+    <Build Include="Tables\SyncMetadata.sql" />
   </ItemGroup>
   <ItemGroup>
     <PreDeploy Include="Script.PreDeployment.sql" />

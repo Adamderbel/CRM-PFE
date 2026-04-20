@@ -7,4 +7,18 @@
     <Property Name="ParentElementType" Value="SqlTable" />
     <Property Name="NewName" Value="Nom" />
   </Operation>
+  <Operation Name="Rename Refactor" Key="cddd2ff8-f98f-4bc0-8366-c962314e384f" ChangeDateTime="04/20/2026 21:01:42">
+    <Property Name="ElementName" Value="[comm].[ClientCerm].[Id]" />
+    <Property Name="ElementType" Value="SqlSimpleColumn" />
+    <Property Name="ParentElementName" Value="[comm].[ClientCerm]" />
+    <Property Name="ParentElementType" Value="SqlTable" />
+    <Property Name="NewName" Value="RefClient" />
+  </Operation>
+  <Operation Name="Rename Refactor" Key="21e96903-f745-4cd8-b02b-d45dbb310d4b" ChangeDateTime="04/20/2026 21:07:22">
+    <Property Name="ElementName" Value="[comm].[ProduitCerm].[Id]" />
+    <Property Name="ElementType" Value="SqlSimpleColumn" />
+    <Property Name="ParentElementName" Value="[comm].[ProduitCerm]" />
+    <Property Name="ParentElementType" Value="SqlTable" />
+    <Property Name="NewName" Value="RefProduit" />
+  </Operation>
 </Operations>
