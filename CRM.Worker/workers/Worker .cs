@@ -27,6 +27,7 @@ namespace CRM.Worker.workers
                 try
                 {
                     await _sync.SyncClientsAsync();
+                    await _sync.SyncProduitsAsync();
                     Console.WriteLine("✅ AFTER SYNC");
                 }
                 catch (Exception ex)

@@ -18,6 +18,7 @@ namespace CRM.Worker.services
         // ===================== CLIENTS =====================
         public async Task SyncClientsAsync()
         {
+            Console.WriteLine("syncClient");
             var lastSyncDate = await _crm.GetLastSyncDateAsync("Clients");
 
             var clients = await _cerm.GetClientsAsync(lastSyncDate);
@@ -39,6 +40,7 @@ namespace CRM.Worker.services
         // ===================== PRODUITS =====================
         public async Task SyncProduitsAsync()
         {
+            Console.WriteLine("Product");
             var lastSyncDate = await _crm.GetLastSyncDateAsync("Produits");
 
             var produits = await _cerm.GetProduitsAsync(lastSyncDate);

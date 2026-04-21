@@ -37,9 +37,11 @@ namespace CRM.Worker.services
 
             while (await reader.ReadAsync())
             {
+                var refValue = reader.GetValue(0)?.ToString();
+
                 clients.Add(new ClientCerm
                 {
-                    RefClient = reader.GetInt32(0),
+                    RefClient = int.TryParse(refValue, out var id) ? id : 0,
                     Nom = reader.IsDBNull(1) ? null : reader.GetString(1).Trim(),
                     LastModifiedDate = reader.IsDBNull(2) ? null : reader.GetDateTime(2)
                 });
@@ -68,7 +70,7 @@ namespace CRM.Worker.services
             {
                 produits.Add(new ProduitCerm
                 {
-                    RefProduit = reader.GetInt32(0),
+                    RefProduit = int.Parse(reader.GetValue(0).ToString()),
                     Designation = reader.IsDBNull(1) ? null : reader.GetString(1).Trim(),
                     LastModifiedDate = reader.IsDBNull(2) ? null : reader.GetDateTime(2)
                 });

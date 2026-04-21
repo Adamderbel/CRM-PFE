@@ -22,7 +22,7 @@ namespace CRM.Worker.services
 
             var cmd = new SqlCommand(@"
                 SELECT LastSyncDate 
-                FROM SyncMetadata 
+                FROM comm.SyncMetadata 
                 WHERE EntityName = @EntityName", conn);
 
             cmd.Parameters.AddWithValue("@EntityName", entityName);
@@ -41,7 +41,7 @@ namespace CRM.Worker.services
             await conn.OpenAsync();
 
             var cmd = new SqlCommand(@"
-                UPDATE SyncMetadata 
+                UPDATE comm.SyncMetadata 
                 SET LastSyncDate = @date 
                 WHERE EntityName = @EntityName", conn);
 
