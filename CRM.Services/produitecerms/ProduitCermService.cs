@@ -32,5 +32,10 @@ namespace CRM.Services.produitecerms
 
 
         }
+        public async Task<IEnumerable<ProduitCerm>> RechercherProduitCerm(String Recherche)
+        {
+            return await _produitCermRepositoryDapper.RechercherProduitCerm(Recherche);
+        }
+
     }
 }

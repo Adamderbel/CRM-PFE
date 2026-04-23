@@ -1,4 +1,5 @@
 ﻿using CRM.Entities.Common;
+using CRM.Entities.Crm;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,6 +10,6 @@ namespace CRM.DAL.RepositoriesDapper
 {
     public interface IProduitCermRespositoryDapper
     {
-       
+        public Task<IEnumerable<ProduitCerm>> RechercherProduitCerm(String Recherche);
     }
 }

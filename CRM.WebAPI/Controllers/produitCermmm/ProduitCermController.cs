@@ -64,5 +64,28 @@ namespace CRM.WebAPI.Controllers.produitCermmm
                 return StatusCode(500, new { error = ex.Message, details = innerMessage });
             }
         }
+        [HttpGet("/recherche")]
+        public async Task<IActionResult> RechercheProduit([FromQuery] string? recherche)
+        {
+            try
+            {
+                // If neither search criteria is provided, return an empty list to avoid loading data on init
+                if (string.IsNullOrWhiteSpace(recherche) )
+                {
+                    return Ok(new List<ProduitCerm>());
+                }
+
+                var produits = await _produitCermService.RechercherProduitCerm(recherche);
+
+               
+
+                return Ok(produits);
+            }
+            catch (Exception ex)
+            {
+                var innerMessage = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
+                return StatusCode(500, new { error = ex.Message, details = innerMessage });
+            }
+        }
     }
 }

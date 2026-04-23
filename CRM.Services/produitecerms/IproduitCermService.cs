@@ -11,5 +11,6 @@ namespace CRM.Services.produitecerms
     {
         Task<IEnumerable<ProduitCerm>> GetAllAsync();
         Task<ProduitCerm?> GetByIdAsync(int id);
+        public Task<IEnumerable<ProduitCerm>> RechercherProduitCerm(String Recherche);
     }
 }

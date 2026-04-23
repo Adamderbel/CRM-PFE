@@ -16,6 +16,9 @@ namespace CRM.DAL
     public static class SP
     {
         // Prospect 
-        public const string GetAllProspect = $"{Schema.crm}.{nameof(GetAllProspect)}"; 
+        public const string GetAllProspect = $"{Schema.crm}.{nameof(GetAllProspect)}";
+
+        //Produit
+        public const string sp_RechercherProduitCerm = $"{Schema.comm}.{nameof(sp_RechercherProduitCerm)}";
     }
 }
