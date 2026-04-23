@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentation des Cas d'Utilisation - CRM ALPHA</title>
+    <link rel="stylesheet" href="usecase-documentation.css">
+</head>
+<body>
+    <nav class="sidebar">
+        <div class="sidebar-logo">
+            <div class="logo-icon">C</div>
+            <div>
+                <h2>CRM ALPHA</h2>
+                <span>UML Documentation</span>
+            </div>
+        </div>
+        <div class="nav-section">
+            <div class="nav-section-title">Navigation</div>
+            <a href="#intro" class="nav-link"><span class="nav-num">01</span> Introduction</a>
+            <a href="#acteurs" class="nav-link"><span class="nav-num">02</span> Acteurs du Système</a>
+            <a href="#general" class="nav-link"><span class="nav-num">03</span> Diagramme Général</a>
+            <a href="#sub-prospect" class="nav-link"><span class="nav-num">04</span> Gestion Prospects</a>
+            <a href="#sub-prospection" class="nav-link"><span class="nav-num">05</span> Prospections</a>
+        </div>
+    </nav>
+
+    <main class="main">
+        <section id="intro" class="cover">
+            <h1>Modélisation UML : Cas d'Utilisation</h1>
+            <div class="subtitle">Projet CRM ALPHA - Méthodologie StarUML / PlantUML</div>
+            <div class="cover-meta">
+                <div>Auteur <strong>Équipe Dev</strong></div>
+                <div>Version <strong>1.0.0</strong></div>
+                <div>Date <strong>2026</strong></div>
+            </div>
+        </section>
+
+        <section id="acteurs" class="section">
+            <div class="section-header">
+                <div class="section-num">02</div>
+                <h2>Acteurs du Système</h2>
+            </div>
+            <div class="actors-grid">
+                <div class="actor-card">
+                    <div class="actor-icon admin">👑</div>
+                    <div>
+                        <h4>Administrateur</h4>
+                        <p>Super-utilisateur. Gère les comptes (création, rôles), la configuration globale, et a un accès total aux données CRM.</p>
+                    </div>
+                </div>
+                <div class="actor-card">
+                    <div class="actor-icon commercial">💼</div>
+                    <div>
+                        <h4>Commercial</h4>
+                        <p>Utilisateur principal. Gère ses propres prospects, mène des prospections, crée des lignes de prospection et génère des devis.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="general" class="section">
+            <div class="section-header">
+                <div class="section-num">03</div>
+                <h2>Diagramme de Cas d'Utilisation Général</h2>
+            </div>
+            <div class="diagram-desc">
+                <h4>Aperçu Global</h4>
+                <p>Ce diagramme représente les grandes fonctionnalités du CRM ALPHA et les interactions principales des acteurs avec le système.</p>
+            </div>
+            
+            <div class="code-block">
+                <div class="code-header">
+                    <span>diagramme_general.puml</span>
+                    <span class="lang">PlantUML</span>
+                </div>
+                <pre>
+<span class="kw">@startuml</span> CRM_General
+
+<span class="cm">' Configuration visuelle</span>
+<span class="kw">skinparam</span> <span class="st">actorStyle</span> awesome
+<span class="kw">skinparam</span> <span class="st">usecase</span> {
+  BackgroundColor #ece7ff
+  BorderColor #7c5cfc
+  ArrowColor #4a1fb8
+}
+
+<span class="cm">' Définition des acteurs</span>
+<span class="kw">actor</span> <span class="ac">"Commercial"</span> as Comm
+<span class="kw">actor</span> <span class="ac">"Administrateur"</span> as Admin
+
+<span class="cm">' Frontière du système</span>
+<span class="kw">package</span> <span class="st">"CRM ALPHA System"</span> {
+    
+    <span class="cm">' Cas d'utilisation</span>
+    <span class="kw">usecase</span> <span class="uc">"S'authentifier"</span> as UC_Login
+    <span class="kw">usecase</span> <span class="uc">"Gérer son profil"</span> as UC_Profile
+    <span class="kw">usecase</span> <span class="uc">"Gérer les Comptes"</span> as UC_Comptes
+    <span class="kw">usecase</span> <span class="uc">"Gérer les Prospects"</span> as UC_Prospects
+    <span class="kw">usecase</span> <span class="uc">"Gérer les Prospections"</span> as UC_Prospections
+    <span class="kw">usecase</span> <span class="uc">"Consulter le Dashboard"</span> as UC_Dash
+
+    <span class="cm">' Relations Includes (Inclusion)</span>
+    UC_Prospects <span class="rel">..></span> UC_Login : <span class="kw"><<include>></span>
+    UC_Prospections <span class="rel">..></span> UC_Login : <span class="kw"><<include>></span>
+    UC_Dash <span class="rel">..></span> UC_Login : <span class="kw"><<include>></span>
+}
+
+<span class="cm">' Associations Acteurs -> Cas</span>
+Comm <span class="rel">--></span> UC_Login
+Comm <span class="rel">--></span> UC_Profile
+Comm <span class="rel">--></span> UC_Dash
+Comm <span class="rel">--></span> UC_Prospects
+Comm <span class="rel">--></span> UC_Prospections
+
+Admin <span class="rel">--></span> UC_Login
+Admin <span class="rel">--></span> UC_Profile
+Admin <span class="rel">--></span> UC_Dash
+Admin <span class="rel">--></span> UC_Comptes
+
+<span class="kw">@enduml</span>
+                </pre>
+            </div>
+        </section>
+
+        <section id="sub-prospect" class="section">
+            <div class="section-header">
+                <div class="section-num">04</div>
+                <h2>Diagramme Détaillé : Gestion des Prospects</h2>
+            </div>
+            <p>Raffinement du cas d'utilisation "Gérer les Prospects", montrant les opérations CRUD et les relations d'extension.</p>
+            
+            <div class="code-block">
+                <div class="code-header">
+                    <span>prospects_detail.puml</span>
+                    <span class="lang">PlantUML</span>
+                </div>
+                <pre>
+<span class="kw">@startuml</span> CRM_Prospects_Detail
+
+<span class="kw">left to right direction</span>
+
+<span class="kw">actor</span> <span class="ac">"Commercial"</span> as Comm
+
+<span class="kw">package</span> <span class="st">"Module Prospects"</span> {
+    <span class="kw">usecase</span> <span class="uc">"Gérer les Prospects"</span> as UC_Main
+    
+    <span class="cm">' Sous-cas (Généralisation de cas d'utilisation)</span>
+    <span class="kw">usecase</span> <span class="uc">"Ajouter un Prospect"</span> as UC_Add
+    <span class="kw">usecase</span> <span class="uc">"Modifier un Prospect"</span> as UC_Edit
+    <span class="kw">usecase</span> <span class="uc">"Consulter un Prospect"</span> as UC_View
+    <span class="kw">usecase</span> <span class="uc">"Supprimer un Prospect"</span> as UC_Del
+    
+    <span class="cm">' Extensions</span>
+    <span class="kw">usecase</span> <span class="uc">"Assigner Domaine Activité"</span> as UC_Domaine
+    <span class="kw">usecase</span> <span class="uc">"Créer Prospection Initiale"</span> as UC_ProspectionInitiale
+
+    <span class="cm">' Relations de Généralisation (héritage de Use Case)</span>
+    UC_Add <span class="rel">-up-|></span> UC_Main
+    UC_Edit <span class="rel">-up-|></span> UC_Main
+    UC_View <span class="rel">-up-|></span> UC_Main
+    UC_Del <span class="rel">-up-|></span> UC_Main
+
+    <span class="cm">' Relations Extend (Extension)</span>
+    UC_Domaine <span class="rel">..></span> UC_Add : <span class="kw"><<extend>></span>
+    UC_Domaine <span class="rel">..></span> UC_Edit : <span class="kw"><<extend>></span>
+    UC_ProspectionInitiale <span class="rel">..></span> UC_Add : <span class="kw"><<extend>>\nCondition: Qualification élevée</span>
+}
+
+Comm <span class="rel">--></span> UC_Main
+
+<span class="kw">@enduml</span>
+                </pre>
+            </div>
+        </section>
+
+        <section id="sub-prospection" class="section">
+            <div class="section-header">
+                <div class="section-num">05</div>
+                <h2>Diagramme Détaillé : Campagnes de Prospection</h2>
+            </div>
+            
+            <div class="code-block">
+                <div class="code-header">
+                    <span>prospections_detail.puml</span>
+                    <span class="lang">PlantUML</span>
+                </div>
+                <pre>
+<span class="kw">@startuml</span> CRM_Prospections_Detail
+
+<span class="kw">actor</span> <span class="ac">"Commercial"</span> as Comm
+
+<span class="kw">package</span> <span class="st">"Module Prospections"</span> {
+    <span class="kw">usecase</span> <span class="uc">"Créer une Campagne"</span> as UC_CreateCamp
+    <span class="kw">usecase</span> <span class="uc">"Gérer Ligne de Prospection"</span> as UC_Ligne
+    <span class="kw">usecase</span> <span class="uc">"Changer Statut"</span> as UC_Status
+    <span class="kw">usecase</span> <span class="uc">"Clôturer (Échec)"</span> as UC_Echec
+    <span class="kw">usecase</span> <span class="uc">"Générer Devis/Commande"</span> as UC_Devis
+    
+    <span class="cm">' Includes commun</span>
+    <span class="kw">usecase</span> <span class="uc">"Sélectionner Prospect"</span> as UC_SelectProspect
+
+    UC_CreateCamp <span class="rel">..></span> UC_SelectProspect : <span class="kw"><<include>></span>
+    
+    <span class="cm">' Extend</span>
+    UC_Devis <span class="rel">..></span> UC_Ligne : <span class="kw"><<extend>>\nCond: Concrétisée = vrai</span>
+    UC_Echec <span class="rel">..></span> UC_Status : <span class="kw"><<extend>>\nCond: Statut = Perdu</span>
+    
+    <span class="cm">' Include for failure</span>
+    <span class="kw">usecase</span> <span class="uc">"Saisir Cause Échec"</span> as UC_Cause
+    UC_Echec <span class="rel">..></span> UC_Cause : <span class="kw"><<include>></span>
+}
+
+Comm <span class="rel">--></span> UC_CreateCamp
+Comm <span class="rel">--></span> UC_Ligne
+Comm <span class="rel">--></span> UC_Status
+
+<span class="kw">@enduml</span>
+                </pre>
+            </div>
+        </section>
+
+    </main>
+</body>
+</html>

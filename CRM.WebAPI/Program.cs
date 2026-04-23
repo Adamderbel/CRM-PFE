@@ -7,6 +7,7 @@ using CRM.Entities.Security;
 using CRM.Services;
 using CRM.Services.FamilleProduits;
 using CRM.Services.LigneProspections;
+using CRM.Services.produitecerms;
 using CRM.Services.prospections;
 using CRM.Services.Societe;
 using CRM.Services.StatutPrespection;
@@ -47,6 +48,7 @@ builder.Services.AddScoped<IDomaineRespositoryDapper, DomaineRespositoryDapper>(
 builder.Services.AddScoped<IStatutProspectionRepositoryDapper, StatutProspectionRepositoryDapper>();
 builder.Services.AddScoped<IProspectionRespositoryDapper, ProspectionRespositoryDapper>();
 builder.Services.AddScoped<ILigneProspectionRespositoryDapper, LigneProspectionRespositoryDapper>();
+builder.Services.AddScoped<IProduitCermRespositoryDapper, ProduitCermRespositoryDapper>();
 
 // injection Services
 builder.Services.AddScoped<IAdminSeeder,AdminSeeder>();
@@ -60,6 +62,7 @@ builder.Services.AddScoped<IFamilleProduitService, FamilleProduitService>();
 builder.Services.AddScoped<ISupportProduitService, SupportProduitService>();
 builder.Services.AddScoped<ISocieteeService, SocieteeService>();
 builder.Services.AddScoped<ILigneProspectionService, LigneProspectionService>();
+builder.Services.AddScoped<IproduitCermService, ProduitCermService>();
 //builder.Services.AddHostedService<AdminSeederHostedService>();
 
 

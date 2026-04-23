@@ -21,6 +21,7 @@ namespace CRM.DAL.DBContexts
         public DbSet<FamilleProduit> FamilleProduits { get; set; }
         public DbSet<SupportProduit> SupportProduits { get; set; }
         public DbSet<Societee> Societees { get; set; }  
+        public DbSet<ProduitCerm> ProduitCerms { get; set; }
         public DataContext()
         {
             

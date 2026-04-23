@@ -1,0 +1,89 @@
+<div class="produit-list-page">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Produits CERM</h1>
+      <p class="page-subtitle">Recherchez et consultez le catalogue des produits CERM</p>
+    </div>
+  </div>
+
+  <!-- Error message -->
+  @if (produitCermService.errorMessage()) {
+    <div class="alert alert-error">
+      <span class="material-icons">error</span>
+      {{ produitCermService.errorMessage() }}
+    </div>
+  }
+
+  <!-- Search Bar -->
+  <div class="filters-bar">
+    <div class="search-group">
+      <div class="search-box">
+        <span class="material-icons">tag</span>
+        <input
+          type="text"
+          placeholder="Référence Article"
+          [ngModel]="refArtQuery()"
+          (ngModelChange)="refArtQuery.set($event)"
+          (keyup.enter)="search()"
+        />
+      </div>
+      <div class="search-box">
+        <span class="material-icons">description</span>
+        <input
+          type="text"
+          placeholder="Désignation"
+          [ngModel]="designationQuery()"
+          (ngModelChange)="designationQuery.set($event)"
+          (keyup.enter)="search()"
+        />
+      </div>
+      <button class="btn-primary" (click)="search()">
+        <span class="material-icons">search</span>
+        Rechercher
+      </button>
+    </div>
+    <span class="results-count">{{ produitCermService.produits().length }} produit(s) trouvé(s)</span>
+  </div>
+
+  <!-- Loading -->
+  @if (produitCermService.isLoading()) {
+    <div class="loading-container">
+      <div class="spinner"></div>
+      <p>Recherche en cours...</p>
+    </div>
+  }
+
+  <!-- Table -->
+  @if (!produitCermService.isLoading()) {
+    <div class="table-card">
+      @if (produitCermService.produits().length === 0) {
+        <div class="empty-state">
+          <span class="material-icons empty-icon">inventory_2</span>
+          <h3>Aucun produit trouvé</h3>
+          <p>Saisissez une référence ou une désignation pour commencer la recherche.</p>
+        </div>
+      } @else {
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Référence</th>
+              <th>Désignation</th>
+              <th>Dernière Modif</th>
+              <th>Dernière Sync</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (produit of produitCermService.produits(); track produit.refProduit) {
+              <tr>
+                <td class="name-cell">{{ produit.refProduit }}</td>
+                <td>{{ produit.designation || '-' }}</td>
+                <td>{{ formatDate(produit.lastModifiedDate) }}</td>
+                <td>{{ formatDate(produit.lastSyncDate) }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </div>
+  }
+</div>
