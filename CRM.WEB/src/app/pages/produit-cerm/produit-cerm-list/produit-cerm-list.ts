@@ -31,7 +31,7 @@ export class ProduitCermList implements OnInit {
     }).subscribe();
   }
 
-  formatDate(date: string | null): string {
+  formatDate(date: string | null | undefined): string {
     if (!date) return '-';
     return new Date(date).toLocaleDateString('fr-FR', {
       day: '2-digit',

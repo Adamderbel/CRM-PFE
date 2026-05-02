@@ -12,12 +12,14 @@ using CRM.Services.prospections;
 using CRM.Services.Societe;
 using CRM.Services.StatutPrespection;
 using CRM.Services.SupportProduits;
+using CRM.Services.clientscerm;
 using CRM.WebAPI.Middlewares;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using System.Text;
+using CRM.Services.reclamations;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -50,6 +52,8 @@ builder.Services.AddScoped<IProspectionRespositoryDapper, ProspectionRespository
 builder.Services.AddScoped<ILigneProspectionRespositoryDapper, LigneProspectionRespositoryDapper>();
 builder.Services.AddScoped<IProduitCermRespositoryDapper, ProduitCermRespositoryDapper>();
 
+builder.Services.AddScoped<IReclamationRespositoryDapper, ReclamationRespositoryDapper>();
+
 // injection Services
 builder.Services.AddScoped<IAdminSeeder,AdminSeeder>();
 builder.Services.AddScoped<IUserService, UserService>();
@@ -63,6 +67,8 @@ builder.Services.AddScoped<ISupportProduitService, SupportProduitService>();
 builder.Services.AddScoped<ISocieteeService, SocieteeService>();
 builder.Services.AddScoped<ILigneProspectionService, LigneProspectionService>();
 builder.Services.AddScoped<IproduitCermService, ProduitCermService>();
+builder.Services.AddScoped<IClientCermService, ClientCermService>();
+builder.Services.AddScoped<IReclamationService, ReclamationService>();
 //builder.Services.AddHostedService<AdminSeederHostedService>();
 
 

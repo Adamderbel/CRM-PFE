@@ -20,6 +20,7 @@ export class Sidebar {
     { icon: 'people', label: 'Prospects', route: '/prospects' },
     { icon: 'badge', label: 'Employees', route: '/employees' },
     { icon: 'inventory_2', label: 'Products', route: '/products' },
+    { icon: 'report_problem', label: 'Réclamations', route: '/reclamations' },
     { icon: 'bar_chart', label: 'Reports', route: '/reports' },
     { icon: 'settings', label: 'Settings', route: '/settings' },
   ];

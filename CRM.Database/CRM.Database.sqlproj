@@ -92,6 +92,7 @@
     <Build Include="Tables\ProduitCerm.sql" />
     <Build Include="Tables\SyncMetadata.sql" />
     <Build Include="Stored Procedures\sp_RechercherProduitCerm.sql" />
+    <Build Include="Tables\Reclamation.sql" />
   </ItemGroup>
   <ItemGroup>
     <PreDeploy Include="Script.PreDeployment.sql" />

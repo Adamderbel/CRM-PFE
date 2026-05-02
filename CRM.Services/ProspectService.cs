@@ -1,4 +1,4 @@
-﻿using CRM.Core.Exceptions;
+using CRM.Core.Exceptions;
 using CRM.DAL.DBContexts;
 using CRM.DAL.GenericRepository;
 using CRM.DAL.RepositoriesDupper;

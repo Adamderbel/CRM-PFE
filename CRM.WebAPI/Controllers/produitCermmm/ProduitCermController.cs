@@ -1,4 +1,4 @@
-﻿using CRM.Services.produitecerms;
+using CRM.Services.produitecerms;
 using CRM.Entities.Common;
 using Microsoft.AspNetCore.Mvc;
 
@@ -64,7 +64,7 @@ namespace CRM.WebAPI.Controllers.produitCermmm
                 return StatusCode(500, new { error = ex.Message, details = innerMessage });
             }
         }
-        [HttpGet("/recherche")]
+        [HttpGet("recherche")]
         public async Task<IActionResult> RechercheProduit([FromQuery] string? recherche)
         {
             try

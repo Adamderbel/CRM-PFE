@@ -69,6 +69,14 @@ export const routes: Routes = [
         path: 'ligne-prospections/:prospectionId',
         loadComponent: () => import('./pages/ligne-prospections/ligne-prospection-list/ligne-prospection-list').then((m) => m.LigneProspectionList),
       },
+      {
+        path: 'reclamations',
+        loadComponent: () => import('./pages/reclamations/reclamation-list/reclamation-list').then((m) => m.ReclamationList),
+      },
+      {
+        path: 'reclamations/create',
+        loadComponent: () => import('./pages/reclamations/reclamation-form/reclamation-form').then((m) => m.ReclamationForm),
+      },
     ],
   },
 ];

@@ -1,4 +1,4 @@
-﻿using CRM.Entities.Crm;
+using CRM.Entities.Crm;
 using CRM.Services;
 using CRM.Services.prospections;
 using CRM.Services.StatutPrespection;
@@ -31,6 +31,8 @@ namespace CRM.WebAPI.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateProspection([FromBody] ProspectionCreateDto prospectionDto)
         {
+            if (prospectionDto == null) return BadRequest("Prospection data is null.");
+
             try
             {
                 if (prospectionDto.ProspectId.HasValue)
@@ -38,9 +40,9 @@ namespace CRM.WebAPI.Controllers
                     var prospect = await _prospectService.GetByIdAsync(prospectionDto.ProspectId.Value);
                     if (prospect == null) return BadRequest("Invalid ProspectId: Prospect not found.");
                 }
-                if (prospectionDto == null) return BadRequest("Prospection data is null.");
+
                 var statut = await _statutProspectionService.GetByIdAsync(prospectionDto.StatutId);
-                if (statut == null) return BadRequest("Invalid StatutId Not found  moush mawjoud.");
+                if (statut == null) return BadRequest($"Invalid StatutId: Statut with ID {prospectionDto.StatutId} not found.");
                 if (prospectionDto.UserId.HasValue)
                 {
                     var user = await _userService.GetByIdAsync(prospectionDto.UserId.Value);

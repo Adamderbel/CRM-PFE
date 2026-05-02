@@ -1,116 +1,110 @@
 <div class="prospection-form-page">
   <div class="page-header">
-    <a [routerLink]="['/prospections']" [queryParams]="isProspectFixed() && prospectId() ? { prospectId: prospectId() } : null" class="back-link">
+    <a [routerLink]="['/prospections']"
+      [queryParams]="isProspectFixed() && prospectId() ? { prospectId: prospectId() } : null" class="back-link">
       <span class="material-icons">arrow_back</span>
       Retour aux prospections
     </a>
     <h1 class="page-title">{{ isEditMode() ? 'Modifier la prospection' : 'Nouvelle prospection' }}</h1>
     <p class="page-subtitle">
-      {{ isEditMode() ? 'Modifiez les informations de la prospection' : 'Remplissez les informations pour créer une nouvelle prospection' }}
+      {{ isEditMode() ? 'Modifiez les informations de la prospection' : 'Remplissez les informations pour créer une
+      nouvelle prospection' }}
     </p>
   </div>
 
   @if (errorMessage()) {
-    <div class="alert alert-error">
-      <span class="material-icons">error</span>
-      {{ errorMessage() }}
-    </div>
+  <div class="alert alert-error">
+    <span class="material-icons">error</span>
+    {{ errorMessage() }}
+  </div>
   }
 
   @if (successMessage()) {
-    <div class="alert alert-success">
-      <span class="material-icons">check_circle</span>
-      {{ successMessage() }}
-    </div>
+  <div class="alert alert-success">
+    <span class="material-icons">check_circle</span>
+    {{ successMessage() }}
+  </div>
   }
 
   @if (isLoading()) {
-    <div class="loading-container">
-      <div class="spinner"></div>
-      <p>Chargement des données...</p>
-    </div>
+  <div class="loading-container">
+    <div class="spinner"></div>
+    <p>Chargement des données...</p>
+  </div>
   }
 
   @if (!isLoading()) {
-    <form class="form-card" (submit)="$event.preventDefault(); save()" #form="ngForm">
+  <form class="form-card" (submit)="$event.preventDefault(); save()" #form="ngForm">
 
-      <div class="form-section">
-        <h2 class="form-section-title">
-          <span class="material-icons">person</span>
-          Informations Générales
-        </h2>
-        <div class="form-grid">
-          <div class="form-group">
-            <label for="prospectId">Prospect <span class="required">*</span></label>
-            <select id="prospectId" name="prospectId" [ngModel]="prospectId()" (ngModelChange)="prospectId.set($event)" [disabled]="isProspectFixed()" required>
-              <option value="" disabled selected>Sélectionner un prospect</option>
-              @for (p of prospects(); track p.id) {
-                <option [value]="p.id">{{ p.nom }} {{ p.prenom }}</option>
-              }
-            </select>
-          </div>
+    <div class="form-section">
+      <h2 class="form-section-title">
+        <span class="material-icons">person</span>
+        Informations Générales
+      </h2>
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="prospectId">Prospect <span class="required">*</span></label>
+          <select id="prospectId" name="prospectId" [ngModel]="prospectId()" (ngModelChange)="prospectId.set($event)"
+            [disabled]="isProspectFixed()" required>
+            <option value="" disabled selected>Sélectionner un prospect</option>
+            @for (p of prospects(); track p.id) {
+            <option [value]="p.id">{{ p.nom }} {{ p.prenom }}</option>
+            }
+          </select>
+        </div>
 
-          <div class="form-group">
-            <label for="statutId">Statut <span class="required">*</span></label>
-            <select id="statutId" name="statutId" [ngModel]="statutId()" (ngModelChange)="statutId.set($event)" [disabled]="!isEditMode()" required>
-              <option value="" disabled selected>Sélectionner un statut</option>
-              @for (s of statuts(); track s.id) {
-                <option [value]="s.id">{{ s.libelle }}</option>
-              }
-            </select>
-          </div>
+        <div class="form-group">
+          <label for="statutId">Statut <span class="required">*</span></label>
+          <select id="statutId" name="statutId" [ngModel]="statutId()" (ngModelChange)="statutId.set($event)"
+            [disabled]="!isEditMode()" required>
+            <option value="" disabled selected>Sélectionner un statut</option>
+            @for (s of statuts(); track s.id) {
+            <option [value]="s.id">{{ s.libelle }}</option>
+            }
+          </select>
         </div>
       </div>
+    </div>
 
-      <div class="form-section">
-        <h2 class="form-section-title">
-          <span class="material-icons">event</span>
-          Planification
-        </h2>
-        <div class="form-grid">
-          <div class="form-group">
-            <label for="dateDebut">Date et heure de début</label>
-            <input
-              type="datetime-local"
-              id="dateDebut"
-              name="dateDebut"
-              [ngModel]="dateDebut()"
-              (ngModelChange)="dateDebut.set($event)"
-            />
-          </div>
+    <div class="form-section">
+      <h2 class="form-section-title">
+        <span class="material-icons">event</span>
+        Planification
+      </h2>
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="dateDebut">Date et heure de début <span class="required">*</span></label>
+          <input type="datetime-local" id="dateDebut" name="dateDebut" [ngModel]="dateDebut()"
+            (ngModelChange)="dateDebut.set($event)" required />
         </div>
       </div>
+    </div>
 
-      <div class="form-section">
-        <h2 class="form-section-title">
-          <span class="material-icons">notes</span>
-          Détails
-        </h2>
-        <div class="form-group full-width">
-          <label for="notes">Notes</label>
-          <textarea
-            id="notes"
-            name="notes"
-            rows="4"
-            placeholder="Saisissez vos notes ou compte-rendu ici..."
-            [ngModel]="notes()"
-            (ngModelChange)="notes.set($event)"
-          ></textarea>
-        </div>
+    <div class="form-section">
+      <h2 class="form-section-title">
+        <span class="material-icons">notes</span>
+        Détails
+      </h2>
+      <div class="form-group full-width">
+        <label for="notes">Notes</label>
+        <textarea id="notes" name="notes" rows="4" maxlength="500"
+          placeholder="Saisissez vos notes ou compte-rendu ici..." [ngModel]="notes()"
+          (ngModelChange)="notes.set($event)"></textarea>
       </div>
+    </div>
 
-      <div class="form-actions">
-        <a routerLink="/prospections" class="btn-outline">Annuler</a>
-        <button type="submit" class="btn-primary" [disabled]="isSaving() || !form.valid">
-          @if (isSaving()) {
-            <div class="spinner-sm"></div>
-            Enregistrement...
-          } @else {
-            <span class="material-icons">save</span>
-            {{ isEditMode() ? 'Mettre à jour' : 'Créer la prospection' }}
-          }
-        </button>
-      </div>
-    </form>
+    <div class="form-actions">
+      <a routerLink="/prospections" class="btn-outline">Annuler</a>
+      <button type="submit" class="btn-primary" [disabled]="isSaving() || !form.valid">
+        @if (isSaving()) {
+        <div class="spinner-sm"></div>
+        Enregistrement...
+        } @else {
+        <span class="material-icons">save</span>
+        {{ isEditMode() ? 'Mettre à jour' : 'Créer la prospection' }}
+        }
+      </button>
+    </div>
+  </form>
   }
 </div>

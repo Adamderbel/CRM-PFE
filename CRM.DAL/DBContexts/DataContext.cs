@@ -22,6 +22,8 @@ namespace CRM.DAL.DBContexts
         public DbSet<SupportProduit> SupportProduits { get; set; }
         public DbSet<Societee> Societees { get; set; }  
         public DbSet<ProduitCerm> ProduitCerms { get; set; }
+        public DbSet<ClientCerm> ClientCerms { get; set; }
+        public DbSet<CRM.Entities.Reclamation> Reclamations { get; set; }
         public DataContext()
         {
             
