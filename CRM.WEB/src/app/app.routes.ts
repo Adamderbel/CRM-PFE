@@ -22,6 +22,10 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/dashboard/dashboard').then((m) => m.Dashboard),
       },
       {
+        path: 'products',
+        loadComponent: () => import('./pages/produit-cerm/produit-cerm-list/produit-cerm-list').then((m) => m.ProduitCermList),
+      },
+      {
         path: 'prospects',
         loadComponent: () => import('./pages/prospects/prospect-list/prospect-list').then((m) => m.ProspectList),
       },
@@ -64,6 +68,14 @@ export const routes: Routes = [
       {
         path: 'ligne-prospections/:prospectionId',
         loadComponent: () => import('./pages/ligne-prospections/ligne-prospection-list/ligne-prospection-list').then((m) => m.LigneProspectionList),
+      },
+      {
+        path: 'reclamations',
+        loadComponent: () => import('./pages/reclamations/reclamation-list/reclamation-list').then((m) => m.ReclamationList),
+      },
+      {
+        path: 'reclamations/create',
+        loadComponent: () => import('./pages/reclamations/reclamation-form/reclamation-form').then((m) => m.ReclamationForm),
       },
     ],
   },

@@ -15,16 +15,16 @@ export class ProspectionService {
   readonly errorMessage = this.error.asReadonly();
   readonly prospectionCount = computed(() => this.prospectionList().length);
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   getStatuts(): Observable<any[]> {
-    return this.http.get<any[]>(`${environment.apiUrl}/api/StatutProspection`);
+    return this.http.get<any[]>(`${environment.apiUrl}/StatutProspection`);
   }
 
   getAll(): Observable<Prospection[]> {
     this.loading.set(true);
     this.error.set(null);
-    return this.http.get<Prospection[]>(`${environment.apiUrl}/api/Prospection`).pipe(
+    return this.http.get<Prospection[]>(`${environment.apiUrl}/Prospection`).pipe(
       tap((data) => {
         this.prospectionList.set(data);
         this.loading.set(false);
@@ -43,7 +43,7 @@ export class ProspectionService {
   getById(id: string): Observable<Prospection> {
     this.loading.set(true);
     this.error.set(null);
-    return this.http.get<Prospection>(`${environment.apiUrl}/api/Prospection/${id}`).pipe(
+    return this.http.get<Prospection>(`${environment.apiUrl}/Prospection/${id}`).pipe(
       tap(() => this.loading.set(false)),
       catchError((err) => {
         this.loading.set(false);
@@ -56,7 +56,7 @@ export class ProspectionService {
   getByProspectId(prospectId: string): Observable<Prospection[]> {
     this.loading.set(true);
     this.error.set(null);
-    return this.http.get<Prospection[]>(`${environment.apiUrl}/api/Prospection/prospect/${prospectId}`).pipe(
+    return this.http.get<Prospection[]>(`${environment.apiUrl}/Prospection/prospect/${prospectId}`).pipe(
       tap((data) => {
         this.prospectionList.set(data);
         this.loading.set(false);
@@ -73,14 +73,15 @@ export class ProspectionService {
   create(prospection: ProspectionCreateDto): Observable<any> {
     this.loading.set(true);
     this.error.set(null);
-    return this.http.post(`${environment.apiUrl}/api/Prospection`, prospection, { responseType: 'text' }).pipe(
+    return this.http.post(`${environment.apiUrl}/Prospection`, prospection, { responseType: 'text' }).pipe(
       tap(() => {
         this.loading.set(false);
         this.getAll().subscribe(); // Refresh list after creation
       }),
       catchError((err) => {
         this.loading.set(false);
-        this.error.set('Erreur lors de la création de la prospection.');
+        const errorMsg = err.error?.details || err.error?.error || err.error || 'Erreur lors de la création de la prospection.';
+        this.error.set(errorMsg);
         return throwError(() => err);
       })
     );
@@ -89,7 +90,7 @@ export class ProspectionService {
   update(id: string, prospection: ProspectionUpdateDto): Observable<any> {
     this.loading.set(true);
     this.error.set(null);
-    return this.http.put(`${environment.apiUrl}/api/Prospection/${id}`, prospection, { responseType: 'text' }).pipe(
+    return this.http.put(`${environment.apiUrl}/Prospection/${id}`, prospection, { responseType: 'text' }).pipe(
       tap(() => {
         this.loading.set(false);
         this.getAll().subscribe(); // Refresh list after update
@@ -105,7 +106,7 @@ export class ProspectionService {
   delete(id: string): Observable<any> {
     this.loading.set(true);
     this.error.set(null);
-    return this.http.delete(`${environment.apiUrl}/api/Prospection/${id}`, { responseType: 'text' }).pipe(
+    return this.http.delete(`${environment.apiUrl}/Prospection/${id}`, { responseType: 'text' }).pipe(
       tap(() => {
         this.loading.set(false);
         this.getAll().subscribe(); // Refresh list after deletion

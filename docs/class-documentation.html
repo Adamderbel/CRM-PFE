@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentation du Diagramme de Classes - CRM ALPHA</title>
+    <link rel="stylesheet" href="usecase-documentation.css">
+</head>
+<body>
+    <nav class="sidebar">
+        <div class="sidebar-logo">
+            <div class="logo-icon">C</div>
+            <div>
+                <h2>CRM ALPHA</h2>
+                <span>UML Documentation</span>
+            </div>
+        </div>
+        <div class="nav-section">
+            <div class="nav-section-title">Navigation</div>
+            <a href="usecase-documentation.html" class="nav-link">← Retour Cas d'Utilisation</a>
+            <a href="#intro" class="nav-link"><span class="nav-num">01</span> Introduction</a>
+            <a href="#class-diagram" class="nav-link"><span class="nav-num">02</span> Diagramme de Classes</a>
+        </div>
+    </nav>
+
+    <main class="main">
+        <section id="intro" class="cover">
+            <h1>Modélisation UML : Diagramme de Classes</h1>
+            <div class="subtitle">Projet CRM ALPHA - Méthodologie StarUML / PlantUML</div>
+            <div class="cover-meta">
+                <div>Auteur <strong>Équipe Dev</strong></div>
+                <div>Version <strong>1.0.0</strong></div>
+                <div>Date <strong>2026</strong></div>
+            </div>
+        </section>
+
+        <section id="class-diagram" class="section">
+            <div class="section-header">
+                <div class="section-num">02</div>
+                <h2>Diagramme de Classes Général</h2>
+            </div>
+            <div class="diagram-desc">
+                <h4>Aperçu Global</h4>
+                <p>Ce diagramme représente la structure statique du système CRM ALPHA, incluant les entités principales de gestion de la relation client, des prospections, du catalogue produit et de la sécurité (utilisateurs et rôles).</p>
+                <ul>
+                    <li><strong>Sécurité :</strong> SecUser, SecRole, UserRole.</li>
+                    <li><strong>CRM :</strong> Prospect, Prospection, LigneProspection, Reclamation, ReclamationHistorique.</li>
+                    <li><strong>Référentiels & Intégration CERM :</strong> DomaineActivites, StatutProspection, CauseEchec, FamilleProduit, SupportProduit, Societee, ClientCerm, ProduitCerm.</li>
+                </ul>
+            </div>
+            
+            <div class="code-block">
+                <div class="code-header">
+                    <span>diagramme_classes.puml</span>
+                    <span class="lang">PlantUML</span>
+                </div>
+                <pre>
+<span class="kw">@startuml</span> CRM_Class_Diagram
+
+<span class="cm">' Paramètres visuels</span>
+<span class="kw">skinparam</span> <span class="st">class</span> {
+    BackgroundColor #ffffff
+    BorderColor #7c5cfc
+    ArrowColor #4a1fb8
+    HeaderBackgroundColor #ece7ff
+}
+
+<span class="cm">' Package Sécurité</span>
+<span class="kw">package</span> <span class="st">"Sécurité (sec)"</span> {
+    <span class="kw">class</span> <span class="ac">SecUser</span> {
+        + Id : Guid
+        + UserName : string
+        + Email : string
+        + Nom : string
+        + Prenom : string
+        + PasswordHash : string
+        + IsActive : bool
+    }
+
+    <span class="kw">class</span> <span class="ac">SecRole</span> {
+        + Id : Guid
+        + Name : string
+    }
+
+    <span class="kw">class</span> <span class="ac">UserRole</span> {
+        + UserId : Guid
+        + RoleId : Guid
+    }
+}
+
+<span class="cm">' Package CRM</span>
+<span class="kw">package</span> <span class="st">"Relation Client (crm)"</span> {
+    <span class="kw">class</span> <span class="ac">Prospect</span> {
+        + Id : Guid
+        + Nom : string
+        + Prenom : string
+        + Email : string
+        + Telephone : string
+        + Source : string
+        + DateCreation : DateTime
+        + Notes : string
+    }
+
+    <span class="kw">class</span> <span class="ac">Prospection</span> {
+        + Id : Guid
+        + DateDebut : DateTime
+        + DateFin : DateTime
+        + Notes : string
+    }
+
+    <span class="kw">class</span> <span class="ac">LigneProspection</span> {
+        + Id : Guid
+        + Designation : string
+        + DateDemandeOffre : DateTime
+        + NumeroDevis : string
+        + DateDevis : DateTime
+        + NumeroCommande : string
+        + DateCommande : DateTime
+        + BatEnvoyee : bool
+        + DateEnvoiBat : DateTime
+        + Concretisee : bool
+        + RefArt : string
+        + Date : DateTime
+    }
+
+    <span class="kw">class</span> <span class="ac">Reclamation</span> {
+        + Id : int
+        + Titre : string
+        + Description : string
+        + Statut : string
+        + Priorite : string
+        + CreatedAt : DateTime
+        + UpdatedAt : DateTime
+    }
+
+    <span class="kw">class</span> <span class="ac">ReclamationHistorique</span> {
+        + Id : int
+        + Action : string
+        + DateAction : DateTime
+    }
+}
+
+<span class="cm">' Package Référentiels / Commun</span>
+<span class="kw">package</span> <span class="st">"Référentiels & Intégration CERM (comm)"</span> {
+    <span class="kw">class</span> <span class="ac">DomaineActivites</span> {
+        + Id : int
+        + Libelle : string
+    }
+
+    <span class="kw">class</span> <span class="ac">StatutProspection</span> {
+        + Id : int
+        + Libelle : string
+    }
+
+    <span class="kw">class</span> <span class="ac">CauseEchec</span> {
+        + Id : int
+        + Libelle : string
+    }
+
+    <span class="kw">class</span> <span class="ac">FamilleProduit</span> {
+        + Id : int
+        + Libelle : string
+    }
+
+    <span class="kw">class</span> <span class="ac">SupportProduit</span> {
+        + Id : int
+        + Libelle : string
+    }
+
+    <span class="kw">class</span> <span class="ac">Societee</span> {
+        + Id : int
+        + RaisonSociale : string
+    }
+
+    <span class="kw">class</span> <span class="ac">ClientCerm</span> {
+        + RefClient : int
+        + Nom : string
+        + LastModifiedDate : DateTime
+        + LastSyncDate : DateTime
+    }
+
+    <span class="kw">class</span> <span class="ac">ProduitCerm</span> {
+        + RefProduit : int
+        + Designation : string
+        + LastModifiedDate : DateTime
+        + LastSyncDate : DateTime
+    }
+}
+
+<span class="cm">' Relations Sécurité</span>
+SecUser "1" <span class="rel">--</span> "*" UserRole
+SecRole "1" <span class="rel">--</span> "*" UserRole
+
+<span class="cm">' Relations CRM (Associations)</span>
+Prospect "*" <span class="rel">--</span> "1" DomaineActivites : appartient à >
+Prospection "*" <span class="rel">--</span> "1" Prospect : concerne >
+Prospection "*" <span class="rel">--</span> "1" SecUser : gérée par >
+Prospection "*" <span class="rel">--</span> "1" StatutProspection : a pour statut >
+
+<span class="cm">' Relations Lignes de Prospection (Composition)</span>
+Prospection "1" <span class="rel">*--</span> "*" LigneProspection : contient >
+
+<span class="cm">' Relations Ligne de Prospection vers Référentiels</span>
+LigneProspection "*" <span class="rel">--</span> "1" FamilleProduit
+LigneProspection "*" <span class="rel">--</span> "0..1" SupportProduit
+LigneProspection "*" <span class="rel">--</span> "0..1" Societee
+LigneProspection "*" <span class="rel">--</span> "0..1" StatutProspection
+LigneProspection "*" <span class="rel">--</span> "0..1" CauseEchec : échoue suite à >
+
+<span class="cm">' Relations Réclamations</span>
+Reclamation "1" <span class="rel">*--</span> "*" ReclamationHistorique : possède historique >
+Reclamation "*" <span class="rel">--</span> "0..1" ClientCerm : concerne client >
+Reclamation "*" <span class="rel">--</span> "0..1" ProduitCerm : concerne produit >
+Reclamation "*" <span class="rel">--</span> "1" SecUser : responsable >
+ReclamationHistorique "*" <span class="rel">--</span> "1" SecUser : effectuée par >
+
+<span class="kw">@enduml</span>
+                </pre>
+            </div>
+        </section>
+    </main>
+</body>
+</html>

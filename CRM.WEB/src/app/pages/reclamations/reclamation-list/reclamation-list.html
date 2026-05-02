@@ -1,0 +1,103 @@
+<div class="reclamation-list-page">
+  <div class="page-header">
+    <div class="header-content">
+      <h1 class="page-title">Réclamations</h1>
+      <p class="page-subtitle">Gérez les réclamations de vos clients</p>
+    </div>
+    <div class="header-actions">
+      <a routerLink="/reclamations/create" class="btn-primary">
+        <span class="material-icons">add</span>
+        Nouvelle Réclamation
+      </a>
+    </div>
+  </div>
+
+  @if (errorMessage()) {
+  <div class="alert alert-error">
+    <span class="material-icons">error</span>
+    {{ errorMessage() }}
+  </div>
+  }
+
+  @if (isLoading()) {
+  <div class="loading-container">
+    <div class="spinner"></div>
+    <p>Chargement des réclamations...</p>
+  </div>
+  } @else {
+  <div class="table-container">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Référence</th>
+          <th>Titre</th>
+          <th>Client</th>
+          <th>Produit</th>
+          <th>Statut</th>
+          <th>Priorité</th>
+          <th>Date Création</th>
+          <th class="actions-column">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (rec of reclamations(); track rec.id) {
+        <tr>
+          <td>{{ rec.numeroReference || '-' }}</td>
+          <td>{{ rec.titre }}</td>
+          <td>{{ rec.clientId }}</td>
+          <td>{{ rec.produitRef }}</td>
+          <td>
+            <span class="badge" [class.badge-primary]="rec.statut === 'En cours'"
+              [class.badge-success]="rec.statut === 'Résolu'">
+              {{ rec.statut }}
+            </span>
+          </td>
+          <td>
+            <span class="badge" [class.badge-danger]="rec.priorite === 'Urgente'">
+              {{ rec.priorite }}
+            </span>
+          </td>
+          <td>{{ rec.createdAt | date:'shortDate' }}</td>
+          <td class="actions-cell">
+            <button class="btn-icon btn-delete" (click)="deleteReclamation(rec.id)" title="Supprimer">
+              <span class="material-icons">delete</span>
+            </button>
+          </td>
+        </tr>
+        } @empty {
+        <tr>
+          <td colspan="7" class="empty-state">
+            <span class="material-icons">inbox</span>
+            <p>Aucune réclamation trouvée</p>
+          </td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  }
+
+  <!-- Delete Confirmation Modal -->
+  @if (showDeleteModal()) {
+  <div class="modal-overlay" (click)="closeModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-icon warning">
+          <span class="material-icons">warning</span>
+        </div>
+        <h3 class="modal-title">Confirmer la suppression</h3>
+      </div>
+      <div class="modal-body">
+        <p>Êtes-vous sûr de vouloir supprimer cette réclamation ? Cette action est irréversible.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" (click)="closeModal()">Annuler</button>
+        <button class="btn-confirm-delete" (click)="confirmDelete()">
+          <span class="material-icons">delete</span>
+          Supprimer
+        </button>
+      </div>
+    </div>
+  </div>
+  }
+</div>

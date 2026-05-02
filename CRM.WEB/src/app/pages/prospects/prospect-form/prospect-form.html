@@ -43,6 +43,7 @@
               [ngModel]="nom()"
               (ngModelChange)="nom.set($event)"
               name="nom"
+              maxlength="100"
               required
             />
           </div>
@@ -55,6 +56,7 @@
               [ngModel]="prenom()"
               (ngModelChange)="prenom.set($event)"
               name="prenom"
+              maxlength="100"
               required
             />
           </div>
@@ -76,11 +78,12 @@
               [ngModel]="email()"
               (ngModelChange)="email.set($event)"
               name="email"
+              maxlength="150"
               required
             />
           </div>
           <div class="form-group">
-            <label for="telephone">Téléphone</label>
+            <label for="telephone">Téléphone <span class="required">*</span></label>
             <input
               id="telephone"
               type="tel"
@@ -88,6 +91,8 @@
               [ngModel]="telephone()"
               (ngModelChange)="telephone.set($event)"
               name="telephone"
+              maxlength="20"
+              required
             />
           </div>
         </div>
@@ -131,6 +136,7 @@
           <textarea
             id="notes"
             rows="4"
+            maxlength="500"
             placeholder="Ajoutez des notes sur ce prospect..."
             [ngModel]="notes()"
             (ngModelChange)="notes.set($event)"

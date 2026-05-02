@@ -37,7 +37,7 @@ export class ProspectionForm implements OnInit {
     private authService: AuthService,
     private route: ActivatedRoute,
     private router: Router
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.loadProspects();
@@ -119,13 +119,24 @@ export class ProspectionForm implements OnInit {
   }
 
   save(): void {
-    if (!this.prospectId() || !this.statutId()) {
-      this.errorMessage.set('Veuillez remplir les champs obligatoires.');
+    this.errorMessage.set('');
+
+    if (!this.prospectId() || !this.statutId() || !this.userId()) {
+      this.errorMessage.set('Veuillez remplir les champs obligatoires (Prospect, Statut, Utilisateur).');
+      return;
+    }
+
+    if (!this.dateDebut()) {
+      this.errorMessage.set('La date de début est obligatoire.');
+      return;
+    }
+
+    if (this.notes() && this.notes().length > 500) {
+      this.errorMessage.set('Les notes ne peuvent pas dépasser 500 caractères.');
       return;
     }
 
     this.isSaving.set(true);
-    this.errorMessage.set('');
 
     const payload = {
       dateDebut: this.dateDebut() ? new Date(this.dateDebut()).toISOString() : undefined,

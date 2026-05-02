@@ -9,29 +9,29 @@ import { LigneProspection, LigneProspectionCreateDto, LigneProspectionUpdateDto 
   providedIn: 'root'
 })
 export class LigneProspectionService {
-  private apiUrl = `${environment.apiUrl}/api/LigneProspection`;
+  private apiUrl = `${environment.apiUrl}/LigneProspection`;
 
   // State
   ligneProspections = signal<LigneProspection[]>([]);
   isLoading = signal<boolean>(false);
   errorMessage = signal<string | null>(null);
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   getFamilleProduits(): Observable<any[]> {
-    return this.http.get<any[]>(`${environment.apiUrl}/api/FamilleProduit`);
+    return this.http.get<any[]>(`${environment.apiUrl}/FamilleProduit`);
   }
 
   getSocietes(): Observable<any[]> {
-    return this.http.get<any[]>(`${environment.apiUrl}/api/Societe`);
+    return this.http.get<any[]>(`${environment.apiUrl}/Societe`);
   }
 
   getStatuts(): Observable<any[]> {
-    return this.http.get<any[]>(`${environment.apiUrl}/api/StatutProspection`);
+    return this.http.get<any[]>(`${environment.apiUrl}/StatutProspection`);
   }
 
   getSupportProduits(): Observable<any[]> {
-    return this.http.get<any[]>(`${environment.apiUrl}/api/SupportProduit`);
+    return this.http.get<any[]>(`${environment.apiUrl}/SupportProduit`);
   }
 
   getAll(): Observable<LigneProspection[]> {

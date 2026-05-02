@@ -1,4 +1,4 @@
-﻿using CRM.Entities.Security;
+using CRM.Entities.Security;
 using CRM.Services;
 using CRM.WebAPI.DTOs;
 using Microsoft.AspNetCore.Authorization;
@@ -12,6 +12,7 @@ using System.Text;
 namespace CRM.WebAPI.Controllers
 {
     [ApiController]
+    [Route("api")]
     public class AuthController : ControllerBase
     {
         private readonly UserManager<SecUser> _userManager;
