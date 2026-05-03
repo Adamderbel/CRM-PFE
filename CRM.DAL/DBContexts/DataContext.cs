@@ -1,4 +1,5 @@
-﻿using CRM.Entities.Comm;
+﻿using CRM.Entities;
+using CRM.Entities.Comm;
 using CRM.Entities.Common;
 using CRM.Entities.Crm;
 using Microsoft.EntityFrameworkCore;
@@ -23,7 +24,10 @@ namespace CRM.DAL.DBContexts
         public DbSet<Societee> Societees { get; set; }  
         public DbSet<ProduitCerm> ProduitCerms { get; set; }
         public DbSet<ClientCerm> ClientCerms { get; set; }
-        public DbSet<CRM.Entities.Reclamation> Reclamations { get; set; }
+        public DbSet<Reclamation> Reclamations { get; set; }
+        public DbSet<TypeActionProspection> TypeActionProspections { get; set; }
+
+        public DbSet<ActionsProspection> ActionsProspections { get; set; }
         public DataContext()
         {
             

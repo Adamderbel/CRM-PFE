@@ -93,6 +93,8 @@
     <Build Include="Tables\SyncMetadata.sql" />
     <Build Include="Stored Procedures\sp_RechercherProduitCerm.sql" />
     <Build Include="Tables\Reclamation.sql" />
+    <Build Include="Tables\TypeActionProspection.sql" />
+    <Build Include="Tables\ActionsProspection.sql" />
   </ItemGroup>
   <ItemGroup>
     <PreDeploy Include="Script.PreDeployment.sql" />
@@ -113,6 +115,8 @@
     <None Include="Scripts\Referential\05_StatutProspection.sql" />
     <None Include="Scripts\Referential\06_Societee.sql" />
     <None Include="Scripts\PostDeploy\02_SyncMetadata.sql" />
+    <None Include="Scripts\Referential\07_CauseEchec.sql" />
+    <None Include="Scripts\Referential\08_TypeActionProspection.sql" />
   </ItemGroup>
   <ItemGroup>
     <RefactorLog Include="CRM.Database.refactorlog" />

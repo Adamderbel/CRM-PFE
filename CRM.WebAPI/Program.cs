@@ -5,21 +5,24 @@ using CRM.DAL.RepositoriesDapper;
 using CRM.DAL.RepositoriesDupper;
 using CRM.Entities.Security;
 using CRM.Services;
+using CRM.Services.ActionProspection;
+using CRM.Services.CauseEchecs;
+using CRM.Services.clientscerm;
 using CRM.Services.FamilleProduits;
 using CRM.Services.LigneProspections;
 using CRM.Services.produitecerms;
 using CRM.Services.prospections;
+using CRM.Services.reclamations;
 using CRM.Services.Societe;
 using CRM.Services.StatutPrespection;
 using CRM.Services.SupportProduits;
-using CRM.Services.clientscerm;
+using CRM.Services.type_Action;
 using CRM.WebAPI.Middlewares;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using System.Text;
-using CRM.Services.reclamations;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -69,6 +72,9 @@ builder.Services.AddScoped<ILigneProspectionService, LigneProspectionService>();
 builder.Services.AddScoped<IproduitCermService, ProduitCermService>();
 builder.Services.AddScoped<IClientCermService, ClientCermService>();
 builder.Services.AddScoped<IReclamationService, ReclamationService>();
+builder.Services.AddScoped<ITypeActionService, TypeActionService>();
+builder.Services.AddScoped<IActionProspectionService, ActionProspectionService>();
+builder.Services.AddScoped<ICauseEchecService, CauseEchecService>();
 //builder.Services.AddHostedService<AdminSeederHostedService>();
 
 

@@ -24,6 +24,7 @@ namespace CRM.Services.LigneProspections
 
         public async Task CreateAsync(LigneProspection ligneProspection)
         {
+            ValidateBusinessRules(ligneProspection);
             await _ligneProspectionRepository.InsertAsync(ligneProspection);
             await _context.SaveChangesAsync();
         }
@@ -46,8 +47,48 @@ namespace CRM.Services.LigneProspections
 
         public async Task UpdateAsync(LigneProspection ligneProspection)
         {
+            ValidateBusinessRules(ligneProspection);
             await _ligneProspectionRepository.UpdateAsync(ligneProspection);
             await _context.SaveChangesAsync();
+        }
+       
+        public async Task CloseAsync(Guid id, int? causeEchecId)
+        {
+            var ligne = await _ligneProspectionRepository.GetByIdAsync(id);
+
+            if (ligne == null)
+                throw new Exception("Ligne introuvable");
+
+            // 🟢 WIN
+            if (!string.IsNullOrEmpty(ligne.NumeroCommande))
+            {
+                ligne.Concretisee = true;
+                ligne.CauseEchecId = null;
+            }
+            // 🔴 LOSS
+            else
+            {
+                if (causeEchecId == null)
+                    throw new Exception("Cause d'échec obligatoire");
+
+                ligne.Concretisee = false;
+                ligne.CauseEchecId = causeEchecId;
+            }
+
+            await _ligneProspectionRepository.UpdateAsync(ligne);
+            await _context.SaveChangesAsync();
+        }
+
+
+        private void ValidateBusinessRules(LigneProspection ligne)
+        {
+            // Gagné + cause d’échec = incohérent
+            if (ligne.Concretisee == true && ligne.CauseEchecId != null)
+                throw new Exception("Une ligne gagnée ne peut pas avoir une cause d'échec");
+
+            // Perdu sans cause
+            if (ligne.Concretisee == false && ligne.CauseEchecId == null)
+                throw new Exception("Une ligne perdue doit avoir une cause d'échec");
         }
     }
 }

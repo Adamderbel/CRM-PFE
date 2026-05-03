@@ -153,5 +153,13 @@ namespace CRM.WebAPI.Controllers
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
+
+        [HttpPost("{id}/close")]
+        public async Task<IActionResult> Close(Guid id, int? causeEchecId)
+        {
+            await _ligneProspectionService.CloseAsync(id, causeEchecId);
+
+            return Ok("Ligne clôturée");
+        }
     }
 }

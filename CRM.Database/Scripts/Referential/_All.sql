@@ -6,5 +6,8 @@
 :r .\04_SuppProduit.sql
 :r .\05_StatutProspection.sql
 :r .\06_Societee.sql
+:r .\07_CauseEchec.sql
+:r .\08_TypeActionProspection.sql
+
 
 PRINT '--- Script Referentiel END ---';

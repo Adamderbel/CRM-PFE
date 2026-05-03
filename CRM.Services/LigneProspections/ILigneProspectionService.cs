@@ -14,5 +14,9 @@ namespace CRM.Services.LigneProspections
         Task CreateAsync(LigneProspection ligneProspection);
         Task UpdateAsync(LigneProspection ligneProspection);
         Task DeleteAsync(Guid id);
+
+        // Métier CRM
+        // 🎯 CRM
+        Task CloseAsync(Guid id, int? causeEchecId);
     }
 }
