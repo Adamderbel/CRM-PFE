@@ -26,7 +26,7 @@ namespace CRM.WebAPI.Controllers
         public async Task<IActionResult> GetAll()
         {
             var reclamations = await _reclamationService.GetAllReclamations();
-            
+
             // Map to an anonymous object (or a dedicated DTO) to prevent JSON circular reference loops
             var result = reclamations.Select(r => new
             {
@@ -41,7 +41,8 @@ namespace CRM.WebAPI.Controllers
                 ProduitRef = r.ProduitRef,
                 ResponsableId = r.ResponsableId,
                 CreatedAt = r.CreatedAt,
-                UpdatedAt = r.UpdatedAt
+                UpdatedAt = r.UpdatedAt,
+                
             });
 
             return Ok(result);
@@ -66,7 +67,7 @@ namespace CRM.WebAPI.Controllers
                 }
 
                 
-                var newReclamation = new CRM.Entities.Reclamation
+                var newReclamation = new Reclamation
                 { 
                     Id = Guid.NewGuid(),
                     Titre = reclamation.Titre,

@@ -3,6 +3,7 @@ using CRM.DAL.DBContexts;
 using CRM.DAL.GenericRepository;
 using CRM.DAL.RepositoriesDupper;
 using CRM.Entities.Crm;
+using CRM.Services.comm;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,16 +17,19 @@ namespace CRM.Services
         private readonly IGenericRepository<Prospect> _prospectRepository;
         private readonly IProspectRepositoryDapper _prospectRepositoryDapper;
         private readonly DataContext _context;
-        
+        private readonly CodeGeneratorService _codeGeneratorService; 
+
 
         public ProspectService(
             IGenericRepository<Prospect> prospectRepository,
             IProspectRepositoryDapper prospectRepositoryDapper,
-            DataContext context)
+            DataContext context,
+            CodeGeneratorService codeGenerator)
         {
             _prospectRepository = prospectRepository;
             _prospectRepositoryDapper =  prospectRepositoryDapper;
             _context = context;
+             _codeGeneratorService = codeGenerator;
         }
 
         public async Task<IEnumerable<Prospect>> GetAllAsync()
@@ -47,6 +51,7 @@ namespace CRM.Services
         public async Task CreateAsync(Prospect prospect)
         {
             prospect.DateCreation ??= DateTime.Now;
+            prospect.CodeCRM = _codeGeneratorService.GenerateCode("PROS");
 
             await _prospectRepository.InsertAsync(prospect);
             await _context.SaveChangesAsync();

@@ -17,9 +17,10 @@
     [ProspectionId] UNIQUEIDENTIFIER  NOT NULL, 
     [SocieteeId] INT NULL, 
     [StatutId] INT NULL, 
-    [date] DATE NOT NULL
-
+    [date] DATE NOT NULL,
+    [CodeCRM ] NVARCHAR(MAX) NULL, 
     constraint FK_LigneProspections_CauseEchec FOREIGN KEY (CauseEchecId) REFERENCES [comm].CauseEchecs(Id),
+
     constraint FK_LigneProspections_FamilleProduit FOREIGN KEY (FamilleProduitId) REFERENCES [comm].FamilleProduits(Id),
     constraint FK_LigneProspections_SupportProduit FOREIGN KEY (SupportProduitId) REFERENCES [comm].SupportProduits(Id),
     constraint FK_LigneProspections_Prospection FOREIGN KEY (ProspectionId) REFERENCES [crm].Prospection(Id),

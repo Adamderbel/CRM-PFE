@@ -31,6 +31,7 @@ namespace CRM.Entities.Crm
 
         [ForeignKey("idDomaineActivitee")]
         public DomaineActivites? DomaineActivite { get; set; }
+        public string? CodeCRM { get; set; }
 
 
 

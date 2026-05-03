@@ -2,6 +2,7 @@
 using CRM.DAL.GenericRepository;
 using CRM.DAL.RepositoriesDapper;
 using CRM.Entities.Crm;
+using CRM.Services.comm;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,16 +16,19 @@ namespace CRM.Services.LigneProspections
         private readonly IGenericRepository<LigneProspection> _ligneProspectionRepository;
         private readonly DataContext _context;
         private readonly ILigneProspectionRespositoryDapper _ligneProspectionRepositoryDapper;
-        public LigneProspectionService(IGenericRepository<LigneProspection> ligneProspectionRepository, DataContext context, ILigneProspectionRespositoryDapper LigneProspectionRespositoryDapper)
+        private readonly CodeGeneratorService _codeGeneratorService;
+        public LigneProspectionService(IGenericRepository<LigneProspection> ligneProspectionRepository, DataContext context, ILigneProspectionRespositoryDapper LigneProspectionRespositoryDapper,CodeGeneratorService codeGeneratorService)
         {
             _ligneProspectionRepository = ligneProspectionRepository;
             _context = context;
             _ligneProspectionRepositoryDapper = LigneProspectionRespositoryDapper;
+            _codeGeneratorService = codeGeneratorService;
         }
 
         public async Task CreateAsync(LigneProspection ligneProspection)
         {
-            ValidateBusinessRules(ligneProspection);
+           // ValidateBusinessRules(ligneProspection);
+            ligneProspection.CodeCRM = _codeGeneratorService.GenerateCode("PROD");
             await _ligneProspectionRepository.InsertAsync(ligneProspection);
             await _context.SaveChangesAsync();
         }
@@ -47,7 +51,7 @@ namespace CRM.Services.LigneProspections
 
         public async Task UpdateAsync(LigneProspection ligneProspection)
         {
-            ValidateBusinessRules(ligneProspection);
+           // ValidateBusinessRules(ligneProspection);
             await _ligneProspectionRepository.UpdateAsync(ligneProspection);
             await _context.SaveChangesAsync();
         }
