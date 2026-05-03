@@ -1,16 +1,25 @@
 export interface Reclamation {
-  id: string; // The controller uses Guid.NewGuid()
-  titre: string;
-  description: string;
-  statut: string;
-  priorite: string;
-  source: string;
-  numeroReference: string;
+  id: string; // Guid
+
+  titre?: string;
+  description?: string;
+
+  statut?: string;
+  priorite?: string;
+  source?: string;
+
+  numeroReference?: string;
+
   clientId: number;
-  produitRef: number;
+  nomClient?: string;
+
+  produitId: number;
+  designationProduit?: string;
+
   responsableId?: number;
-  createdAt: string;
-  updatedAt: string;
+
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface ReclamationCreateDto {

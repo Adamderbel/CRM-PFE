@@ -24,28 +24,37 @@ namespace CRM.WebAPI.Controllers
 
         [HttpGet]
         public async Task<IActionResult> GetAll()
-        {
-            var reclamations = await _reclamationService.GetAllReclamations();
+        {  
+                var reclamations = await _reclamationService.GetAllReclamations();
+                foreach (var item in reclamations)
+                {
+                    item.Client = await _clientCermService.GetByIdAsync(item.ClientId);
+                    item.Produit = await _produitCermService.GetByIdAsync(item.ProduitRef);
+                }
 
-            // Map to an anonymous object (or a dedicated DTO) to prevent JSON circular reference loops
-            var result = reclamations.Select(r => new
-            {
-                Id = r.Id,
-                Titre = r.Titre,
-                Description = r.Description,
-                Statut = r.Statut,
-                Priorite = r.Priorite,
-                Source = r.Source,
-                NumeroReference = r.NumeroReference,
-                ClientId = r.ClientId,
-                ProduitRef = r.ProduitRef,
-                ResponsableId = r.ResponsableId,
-                CreatedAt = r.CreatedAt,
-                UpdatedAt = r.UpdatedAt,
-                
-            });
+                // Map to an anonymous object (or a dedicated DTO) to prevent JSON circular reference loops
+                var result = reclamations.Select(r => new ReclamationDtoCreate
+                {
 
-            return Ok(result);
+                    Titre = r.Titre,
+                    Description = r.Description,
+                    Statut = r.Statut,
+                    Priorite = r.Priorite,
+                    Source = r.Source,
+                    NumeroReference = r.NumeroReference,
+                    ClientId = r.ClientId,
+                    NomClient = r.Client?.Nom,
+                    ProduitId = r.ProduitRef,
+                    DesignationProduit = r.Produit?.Designation,
+                    ResponsableId = r.ResponsableId
+
+
+                });
+
+                return Ok(result);
+
+            
+           
         }
 
         [HttpPost]
@@ -78,7 +87,7 @@ namespace CRM.WebAPI.Controllers
                     NumeroReference = reclamation.NumeroReference,
                     ClientId = reclamation.ClientId,
                     ProduitRef = reclamation.ProduitId,
-                    ResponsableId = reclamation.ResponsableId,
+                    ResponsableId = (int)reclamation.ResponsableId,
                     CreatedAt = DateTime.UtcNow,
                     UpdatedAt = DateTime.UtcNow
                 };

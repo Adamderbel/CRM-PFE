@@ -30,8 +30,8 @@ namespace CRM.Entities
         public string? NumeroReference { get; set; }
 
         // Foreign Keys
-        public int? ClientId { get; set; }
-        public int? ProduitRef { get; set; }
+        public int ClientId { get; set; }
+        public int ProduitRef { get; set; }
         public int? ResponsableId { get; set; }
         
 

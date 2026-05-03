@@ -44,8 +44,8 @@
         <tr>
           <td>{{ rec.numeroReference || '-' }}</td>
           <td>{{ rec.titre }}</td>
-          <td>{{ rec.clientId }}</td>
-          <td>{{ rec.produitRef }}</td>
+          <td>{{ rec.nomClient }}</td>
+          <td>{{ rec.designationProduit }}</td>
           <td>
             <span class="badge" [class.badge-primary]="rec.statut === 'En cours'"
               [class.badge-success]="rec.statut === 'Résolu'">
