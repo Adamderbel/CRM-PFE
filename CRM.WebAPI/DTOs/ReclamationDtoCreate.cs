@@ -19,10 +19,10 @@ namespace CRM.WebAPI.DTOs
         public string? NumeroReference { get; set; }
 
         public int ClientId { get; set; }
-        public string NomClient { get; set; }
+        public string? NomClient { get; set; }
 
         public int ProduitId { get; set; }
-        public string DesignationProduit { get; set; }
+        public string? DesignationProduit { get; set; }
 
         public int? ResponsableId { get; set; }
     }

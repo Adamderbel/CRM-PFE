@@ -5,7 +5,7 @@
   </div>
 
   <nav class="sidebar-nav">
-    @for (item of menuItems; track item.route) {
+    @for (item of menuItems(); track item.route) {
       <a class="nav-item" [routerLink]="item.route" routerLinkActive="active">
         <span class="material-icons">{{ item.icon }}</span>
         <span class="nav-label">{{ item.label }}</span>

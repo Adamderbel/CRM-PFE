@@ -1,10 +1,12 @@
-import { Component, signal } from '@angular/core';
+import { Component, computed } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
+import { AuthService } from '../../core/services/auth.service';
 
 interface MenuItem {
   icon: string;
   label: string;
   route: string;
+  roles?: string[];
 }
 
 @Component({
@@ -15,13 +17,22 @@ interface MenuItem {
   styleUrl: './sidebar.css',
 })
 export class Sidebar {
-  menuItems: MenuItem[] = [
-    { icon: 'dashboard', label: 'Dashboard', route: '/dashboard' },
-    { icon: 'people', label: 'Prospects', route: '/prospects' },
-    { icon: 'badge', label: 'Employees', route: '/employees' },
-    { icon: 'inventory_2', label: 'Products', route: '/products' },
-    { icon: 'report_problem', label: 'Réclamations', route: '/reclamations' },
-    { icon: 'bar_chart', label: 'Reports', route: '/reports' },
+  constructor(private authService: AuthService) {}
+
+  private allMenuItems: MenuItem[] = [
+    { icon: 'dashboard', label: 'Dashboard', route: '/dashboard', roles: ['Admin', 'Commercial'] },
+    { icon: 'people', label: 'Prospects', route: '/prospects', roles: ['Commercial'] },
+    { icon: 'badge', label: 'Employees', route: '/employees', roles: ['Admin', 'Commercial'] },
+    { icon: 'inventory_2', label: 'Products', route: '/products', roles: ['Commercial'] },
+    { icon: 'report_problem', label: 'Réclamations', route: '/reclamations', roles: ['Commercial'] },
+    { icon: 'bar_chart', label: 'Reports', route: '/reports', roles: ['Admin', 'Commercial'] },
     { icon: 'settings', label: 'Settings', route: '/settings' },
   ];
+
+  menuItems = computed(() => {
+    return this.allMenuItems.filter(item => {
+      if (!item.roles) return true;
+      return item.roles.some(role => this.authService.hasRole(role));
+    });
+  });
 }

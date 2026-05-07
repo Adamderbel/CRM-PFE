@@ -15,10 +15,6 @@ export class ReclamationList implements OnInit {
   reclamations = signal<Reclamation[]>([]);
   isLoading = signal(false);
   errorMessage = signal('');
-  
-  // Modal State
-  showDeleteModal = signal(false);
-  selectedReclamationId = signal<string | null>(null);
 
   constructor(private reclamationService: ReclamationService) { }
 
@@ -38,32 +34,5 @@ export class ReclamationList implements OnInit {
         this.isLoading.set(false);
       }
     });
-  }
-
-  deleteReclamation(id: string): void {
-    this.selectedReclamationId.set(id);
-    this.showDeleteModal.set(true);
-  }
-
-  confirmDelete(): void {
-    const id = this.selectedReclamationId();
-    if (id) {
-      this.reclamationService.delete(id).subscribe({
-        next: () => {
-          this.reclamations.set(this.reclamations().filter(r => r.id !== id));
-          this.closeModal();
-        },
-        error: (err) => {
-          console.error('Delete error:', err);
-          alert('Une erreur est survenue lors de la suppression.');
-          this.closeModal();
-        }
-      });
-    }
-  }
-
-  closeModal(): void {
-    this.showDeleteModal.set(false);
-    this.selectedReclamationId.set(null);
   }
 }

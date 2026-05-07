@@ -36,7 +36,6 @@
           <th>Statut</th>
           <th>Priorité</th>
           <th>Date Création</th>
-          <th class="actions-column">Actions</th>
         </tr>
       </thead>
       <tbody>
@@ -58,11 +57,6 @@
             </span>
           </td>
           <td>{{ rec.createdAt | date:'shortDate' }}</td>
-          <td class="actions-cell">
-            <button class="btn-icon btn-delete" (click)="deleteReclamation(rec.id)" title="Supprimer">
-              <span class="material-icons">delete</span>
-            </button>
-          </td>
         </tr>
         } @empty {
         <tr>
@@ -74,30 +68,6 @@
         }
       </tbody>
     </table>
-  </div>
-  }
-
-  <!-- Delete Confirmation Modal -->
-  @if (showDeleteModal()) {
-  <div class="modal-overlay" (click)="closeModal()">
-    <div class="modal-content" (click)="$event.stopPropagation()">
-      <div class="modal-header">
-        <div class="modal-icon warning">
-          <span class="material-icons">warning</span>
-        </div>
-        <h3 class="modal-title">Confirmer la suppression</h3>
-      </div>
-      <div class="modal-body">
-        <p>Êtes-vous sûr de vouloir supprimer cette réclamation ? Cette action est irréversible.</p>
-      </div>
-      <div class="modal-footer">
-        <button class="btn-cancel" (click)="closeModal()">Annuler</button>
-        <button class="btn-confirm-delete" (click)="confirmDelete()">
-          <span class="material-icons">delete</span>
-          Supprimer
-        </button>
-      </div>
-    </div>
   </div>
   }
 </div>

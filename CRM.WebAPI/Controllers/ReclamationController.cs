@@ -87,7 +87,7 @@ namespace CRM.WebAPI.Controllers
                     NumeroReference = reclamation.NumeroReference,
                     ClientId = reclamation.ClientId,
                     ProduitRef = reclamation.ProduitId,
-                    ResponsableId = (int)reclamation.ResponsableId,
+                    ResponsableId = reclamation.ResponsableId,
                     CreatedAt = DateTime.UtcNow,
                     UpdatedAt = DateTime.UtcNow
                 };
@@ -100,20 +100,6 @@ namespace CRM.WebAPI.Controllers
             {
                 var innerMessage = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
                 return StatusCode(500, new { error = ex.Message, details = innerMessage });
-            }
-        }
-
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteReclamation(Guid id)
-        {
-            try
-            {
-                await _reclamationService.DeleteReclamation(id);
-                return Ok(new { message = "Reclamation deleted successfully." });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { error = "Erreur lors de la suppression.", details = ex.Message });
             }
         }
     }
