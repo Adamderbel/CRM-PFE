@@ -83,6 +83,19 @@ export class LigneProspectionService {
     );
   }
 
+  demanderDevis(ligneId: string, data: { date: string, email: string, notes: string }): Observable<any> {
+    this.isLoading.set(true);
+    this.errorMessage.set(null);
+
+    // Assuming the backend endpoint will be /api/LigneProspection/{id}/devis
+    return this.http.post(`${this.apiUrl}/${ligneId}/devis`, data, { responseType: 'text' }).pipe(
+      tap(() => {
+        this.isLoading.set(false);
+      }),
+      catchError((error) => this.handleError(error))
+    );
+  }
+
   private handleError(error: HttpErrorResponse): Observable<never> {
     this.isLoading.set(false);
     let errorMsg = 'Une erreur est survenue';

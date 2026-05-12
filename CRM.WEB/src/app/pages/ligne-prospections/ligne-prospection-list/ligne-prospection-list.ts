@@ -12,6 +12,14 @@ import { LigneProspectionService } from '../../../core/services/ligne-prospectio
   styleUrl: './ligne-prospection-list.css'
 })
 export class LigneProspectionList implements OnInit {
+  isDevisModalOpen = signal<boolean>(false);
+  devisData = signal<{ notes: string; email: string; date: string; ligne: any }>({
+    notes: '',
+    email: '',
+    date: new Date().toISOString().split('T')[0],
+    ligne: null
+  });
+
   prospectionId = signal<string | null>(null);
   searchQuery = signal('');
 
@@ -53,5 +61,44 @@ export class LigneProspectionList implements OnInit {
   formatDate(date: string | Date | undefined): string {
     if (!date) return '-';
     return new Date(date).toLocaleDateString('fr-FR');
+  }
+
+  openDevisModal(ligne: any): void {
+    this.devisData.set({
+      notes: '',
+      email: '',
+      date: new Date().toISOString().split('T')[0], // current date auto
+      ligne: ligne
+    });
+    this.isDevisModalOpen.set(true);
+  }
+
+  closeDevisModal(): void {
+    this.isDevisModalOpen.set(false);
+  }
+
+  submitDevis(): void {
+    const data = this.devisData();
+    if (!data.ligne) return;
+
+    console.log('Sending Devis request with data:', data);
+
+    // Call the service to send the quote request
+    this.ligneProspectionService.demanderDevis(data.ligne.id, {
+      date: data.date,
+      email: data.email,
+      notes: data.notes
+    }).subscribe({
+      next: (res) => {
+        console.log('Devis demandé avec succès', res);
+        alert('Demande de devis envoyée avec succès !');
+        this.closeDevisModal();
+      },
+      error: (err) => {
+        console.error('Erreur', err);
+        alert('Erreur lors de l\'envoi de la demande de devis.');
+        // close modal anyway or let the user try again
+      }
+    });
   }
 }
