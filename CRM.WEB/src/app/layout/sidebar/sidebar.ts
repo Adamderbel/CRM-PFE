@@ -20,13 +20,14 @@ export class Sidebar {
   constructor(private authService: AuthService) {}
 
   private allMenuItems: MenuItem[] = [
-    { icon: 'dashboard', label: 'Dashboard', route: '/dashboard', roles: ['Admin', 'Commercial'] },
+    { icon: 'dashboard', label: 'Dashboard', route: '/dashboard', roles: ['Commercial'] },
+    { icon: 'dashboard', label: 'Dashboard', route: '/dashboard-admin', roles: ['Admin'] },
     { icon: 'people', label: 'Prospects', route: '/prospects', roles: ['Commercial'] },
     { icon: 'badge', label: 'Employees', route: '/employees', roles: ['Admin', 'Commercial'] },
     { icon: 'inventory_2', label: 'Products', route: '/products', roles: ['Commercial'] },
     { icon: 'report_problem', label: 'Réclamations', route: '/reclamations', roles: ['Commercial'] },
     { icon: 'bar_chart', label: 'Reports', route: '/reports', roles: ['Admin', 'Commercial'] },
-    { icon: 'settings', label: 'Settings', route: '/settings' },
+    { icon: 'settings', label: 'Settings', route: '/settings', roles: ['Admin'] },
   ];
 
   menuItems = computed(() => {
@@ -36,3 +37,4 @@ export class Sidebar {
     });
   });
 }
+
