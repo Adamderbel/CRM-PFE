@@ -17,7 +17,12 @@ export const roleGuard: CanActivateFn = (route, state) => {
     return true;
   }
 
-  // Not authorized, redirect or show an error
-  router.navigate(['/dashboard']);
+  // Not authorized, redirect to the correct dashboard
+  if (authService.hasRole('Admin')) {
+    router.navigate(['/dashboard-admin']);
+  } else {
+    router.navigate(['/dashboard']);
+  }
   return false;
 };
+

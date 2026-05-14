@@ -22,7 +22,13 @@ export const routes: Routes = [
         path: 'dashboard',
         loadComponent: () => import('./pages/dashboard/dashboard').then((m) => m.Dashboard),
         canActivate: [roleGuard],
-        data: { roles: ['Admin', 'Commercial'] }
+        data: { roles: ['Commercial'] }
+      },
+      {
+        path: 'dashboard-admin',
+        loadComponent: () => import('./pages/dashboard-admin/dashboard-admin').then((m) => m.DashboardAdmin),
+        canActivate: [roleGuard],
+        data: { roles: ['Admin'] }
       },
       {
         path: 'products',

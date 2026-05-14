@@ -1,5 +1,6 @@
 ﻿using CRM.Entities.Crm;
 using CRM.Services;
+using CRM.Services.Email;
 using CRM.Services.FamilleProduits;
 using CRM.Services.LigneProspections;
 using CRM.Services.prospections;
@@ -22,6 +23,7 @@ namespace CRM.WebAPI.Controllers
         private readonly ISupportProduitService _SupportProduitService;
         private readonly IFamilleProduitService _FamilleProduitService;
         private readonly ISocieteeService _societeeService;
+        private readonly IEmailService _emailService;
 
         public LigneProspectionController(ILigneProspectionService ligneProspectionService ,
             IProspectService ProspectService,
@@ -29,7 +31,8 @@ namespace CRM.WebAPI.Controllers
             IProspectionServices prospectionServices,
         ISupportProduitService SupportProduitService,
         IFamilleProduitService FamilleProduitService,
-        ISocieteeService SocieteeService)
+        ISocieteeService SocieteeService,
+        IEmailService emailService)
         
         {
             _ligneProspectionService = ligneProspectionService;
@@ -39,6 +42,7 @@ namespace CRM.WebAPI.Controllers
             _SupportProduitService = SupportProduitService;
             _FamilleProduitService = FamilleProduitService;
             _societeeService = SocieteeService;
+            _emailService = emailService;
         }
         [HttpGet]
         public async Task<IActionResult> GetAll()
@@ -160,6 +164,44 @@ namespace CRM.WebAPI.Controllers
             await _ligneProspectionService.CloseAsync(id, causeEchecId);
 
             return Ok("Ligne clôturée");
+        }
+
+        [HttpPost("{id}/devis")]
+        public async Task<IActionResult> DemanderDevis(Guid id, [FromBody] DevisRequestDto devisRequestDto)
+        {
+            try
+            {
+                var ligneP = await _ligneProspectionService.GetByIdAsync(id);
+                if (ligneP == null) return NotFound("Ligne Prospection not found.");
+
+                // Populate related entities to include them in the email
+                if (ligneP.FamilleProduitId != 0)
+                {
+                    ligneP.FamilleProduit = await _FamilleProduitService.GetByIdAsync(ligneP.FamilleProduitId);
+                }
+                if (ligneP.SupportProduitId.HasValue)
+                {
+                    ligneP.SupportProduit = await _SupportProduitService.GetByIdAsync(ligneP.SupportProduitId.Value);
+                }
+                if (ligneP.ProspectionId != Guid.Empty)
+                {
+                    ligneP.Prospection = await _prospectionServices.GetByIdAsync(ligneP.ProspectionId);
+                    if (ligneP.Prospection != null && ligneP.Prospection.ProspectId.HasValue)
+                    {
+                        ligneP.Prospection.Prospect = await _ProspectService.GetByIdAsync(ligneP.Prospection.ProspectId.Value);
+                    }
+                }
+
+                // Actual logic to send an email
+                await _emailService.SendDevisEmailAsync(ligneP, devisRequestDto.Email, devisRequestDto.Notes, devisRequestDto.Date);
+
+                return Ok("Demande de devis traitée avec succès.");
+            }
+            catch (Exception ex)
+            {
+                var innerMessage = ex.InnerException != null ? ex.InnerException.Message : "";
+                return StatusCode(500, $"Internal server error: {ex.Message}. Details: {innerMessage}");
+            }
         }
     }
 }

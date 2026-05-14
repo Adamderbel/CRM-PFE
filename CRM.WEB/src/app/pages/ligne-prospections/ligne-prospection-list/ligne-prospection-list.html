@@ -65,6 +65,9 @@
               <div class="ligne-card-header">
                 <span class="status-badge" [class.status-encours]="ligne.statut?.libelle?.toLowerCase().includes('cours')" [class.status-termine]="ligne.statut?.libelle?.toLowerCase().includes('clôturé')">{{ ligne.statut?.libelle || 'Inconnu' }}</span>
                 <div class="actions-cell">
+                  <button class="card-action-btn" title="Demander un devis" (click)="openDevisModal(ligne)">
+                    <span class="material-icons" style="font-size: 18px;">request_quote</span>
+                  </button>
                   <a [routerLink]="['/ligne-prospections/edit', ligne.id]" class="card-action-btn" title="Modifier">
                     <span class="material-icons">edit</span>
                   </a>
@@ -92,6 +95,41 @@
           }
         </div>
       }
+    </div>
+  }
+
+  @if (isDevisModalOpen()) {
+    <div class="modal-overlay" (click)="closeDevisModal()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h2>Demander un devis</h2>
+          <button class="icon-button" (click)="closeDevisModal()">
+            <span class="material-icons">close</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group info-summary" *ngIf="devisData().ligne">
+            <strong>Désignation:</strong> {{ devisData().ligne.designation }}<br>
+            <strong>Société:</strong> {{ devisData().ligne.societee?.nom || '-' }}
+          </div>
+          <div class="form-group">
+            <label for="devisDate">Date</label>
+            <input type="date" id="devisDate" [ngModel]="devisData().date" (ngModelChange)="devisData().date = $event" disabled class="form-control" />
+          </div>
+          <div class="form-group">
+            <label for="devisEmail">Email</label>
+            <input type="email" id="devisEmail" placeholder="nom@exemple.com" [ngModel]="devisData().email" (ngModelChange)="devisData().email = $event" class="form-control" />
+          </div>
+          <div class="form-group">
+            <label for="devisNotes">Notes</label>
+            <textarea id="devisNotes" rows="4" placeholder="Vos notes pour le devis..." [ngModel]="devisData().notes" (ngModelChange)="devisData().notes = $event" class="form-control"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-cancel" (click)="closeDevisModal()">Annuler</button>
+          <button type="button" class="btn-primary" (click)="submitDevis()">Envoyer</button>
+        </div>
+      </div>
     </div>
   }
 </div>
