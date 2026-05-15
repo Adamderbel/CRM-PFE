@@ -1,0 +1,407 @@
+<div class="settings-page">
+
+  <!-- Page Header -->
+  <div class="settings-header">
+    <h1 class="page-title">Paramètres</h1>
+    <p class="page-subtitle">Gérez votre profil, sécurité et préférences</p>
+  </div>
+
+  <!-- Tab Navigation -->
+  <div class="tabs-bar">
+    <button class="tab-btn" [class.active]="activeTab() === 'profil'" (click)="setTab('profil')">
+      <span class="material-icons">person</span>
+      Profil
+    </button>
+    <button class="tab-btn" [class.active]="activeTab() === 'securite'" (click)="setTab('securite')">
+      <span class="material-icons">lock</span>
+      Sécurité
+    </button>
+    <button class="tab-btn" [class.active]="activeTab() === 'preferences'" (click)="setTab('preferences')">
+      <span class="material-icons">tune</span>
+      Préférences
+    </button>
+  </div>
+
+  <!-- ======================== -->
+  <!--    TAB: PROFIL            -->
+  <!-- ======================== -->
+  @if (activeTab() === 'profil') {
+    <div class="tab-content fade-in">
+
+      <!-- Profile Card -->
+      <div class="card profile-card">
+        <div class="card-header">
+          <div class="card-icon-wrap">
+            <span class="material-icons">account_circle</span>
+          </div>
+          <div>
+            <h2 class="card-title">Informations du Profil</h2>
+            <p class="card-desc">Vos informations personnelles et coordonnées</p>
+          </div>
+        </div>
+
+        <div class="profile-layout">
+          <!-- Avatar Column -->
+          <div class="avatar-col">
+            <div class="avatar-ring">
+              <div class="avatar-circle">{{ profile.initials }}</div>
+            </div>
+            <button class="btn-outline btn-sm">
+              <span class="material-icons">photo_camera</span>
+              Changer la photo
+            </button>
+          </div>
+
+          <!-- Info Column -->
+          <div class="info-col">
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Nom</label>
+                <div class="input-readonly">
+                  <span class="material-icons input-icon">badge</span>
+                  {{ profile.nom }}
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Prénom</label>
+                <div class="input-readonly">
+                  <span class="material-icons input-icon">badge</span>
+                  {{ profile.prenom }}
+                </div>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Email</label>
+                <div class="input-readonly">
+                  <span class="material-icons input-icon">email</span>
+                  {{ profile.email }}
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Téléphone</label>
+                <div class="input-readonly">
+                  <span class="material-icons input-icon">phone</span>
+                  {{ profile.telephone }}
+                </div>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Rôle</label>
+                <div class="input-readonly">
+                  <span class="material-icons input-icon">admin_panel_settings</span>
+                  <span class="role-badge">{{ profile.role }}</span>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Département</label>
+                <div class="input-readonly">
+                  <span class="material-icons input-icon">business</span>
+                  {{ profile.departement }}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  }
+
+  <!-- ======================== -->
+  <!--    TAB: SECURITE          -->
+  <!-- ======================== -->
+  @if (activeTab() === 'securite') {
+    <div class="tab-content fade-in">
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon-wrap icon-orange">
+            <span class="material-icons">shield</span>
+          </div>
+          <div>
+            <h2 class="card-title">Changer le mot de passe</h2>
+            <p class="card-desc">Assurez-vous d'utiliser un mot de passe fort et unique</p>
+          </div>
+        </div>
+
+        <div class="security-form">
+          <div class="form-group full-width">
+            <label class="form-label">Ancien mot de passe</label>
+            <div class="input-field">
+              <span class="material-icons input-icon">lock_open</span>
+              <input type="password" placeholder="Entrez votre mot de passe actuel">
+              <button class="toggle-pw" type="button">
+                <span class="material-icons">visibility_off</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Nouveau mot de passe</label>
+              <div class="input-field">
+                <span class="material-icons input-icon">lock</span>
+                <input type="password" placeholder="Nouveau mot de passe">
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Confirmer le mot de passe</label>
+              <div class="input-field">
+                <span class="material-icons input-icon">lock</span>
+                <input type="password" placeholder="Confirmez le mot de passe">
+              </div>
+            </div>
+          </div>
+
+          <!-- Strength Meter -->
+          <div class="strength-section">
+            <span class="strength-label">Force du mot de passe</span>
+            <div class="strength-track">
+              <div class="strength-bar bar-weak filled"></div>
+              <div class="strength-bar bar-fair"></div>
+              <div class="strength-bar bar-good"></div>
+              <div class="strength-bar bar-strong"></div>
+            </div>
+            <div class="strength-rules">
+              <div class="rule valid">
+                <span class="material-icons">check_circle</span>
+                Au moins 8 caractères
+              </div>
+              <div class="rule">
+                <span class="material-icons">radio_button_unchecked</span>
+                Une lettre majuscule
+              </div>
+              <div class="rule">
+                <span class="material-icons">radio_button_unchecked</span>
+                Un chiffre
+              </div>
+              <div class="rule">
+                <span class="material-icons">radio_button_unchecked</span>
+                Un caractère spécial
+              </div>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button class="btn-primary">
+              <span class="material-icons">save</span>
+              Mettre à jour le mot de passe
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  }
+
+  <!-- ======================== -->
+  <!--    TAB: PREFERENCES       -->
+  <!-- ======================== -->
+  @if (activeTab() === 'preferences') {
+    <div class="tab-content fade-in">
+
+      <!-- Theme Card -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon-wrap icon-violet">
+            <span class="material-icons">palette</span>
+          </div>
+          <div>
+            <h2 class="card-title">Thème de l'application</h2>
+            <p class="card-desc">Personnalisez l'apparence de votre interface</p>
+          </div>
+        </div>
+
+        <div class="theme-grid">
+          <div class="theme-card" [class.selected]="selectedTheme() === 'clair'" (click)="setTheme('clair')">
+            <div class="theme-preview light-preview">
+              <div class="preview-sidebar"></div>
+              <div class="preview-content">
+                <div class="preview-bar"></div>
+                <div class="preview-block"></div>
+                <div class="preview-block short"></div>
+              </div>
+            </div>
+            <div class="theme-info">
+              <span class="material-icons">light_mode</span>
+              <span>Clair</span>
+            </div>
+            <div class="theme-check" *ngIf="selectedTheme() === 'clair'">
+              <span class="material-icons">check_circle</span>
+            </div>
+          </div>
+
+          <div class="theme-card" [class.selected]="selectedTheme() === 'sombre'" (click)="setTheme('sombre')">
+            <div class="theme-preview dark-preview">
+              <div class="preview-sidebar"></div>
+              <div class="preview-content">
+                <div class="preview-bar"></div>
+                <div class="preview-block"></div>
+                <div class="preview-block short"></div>
+              </div>
+            </div>
+            <div class="theme-info">
+              <span class="material-icons">dark_mode</span>
+              <span>Sombre</span>
+            </div>
+            <div class="theme-check" *ngIf="selectedTheme() === 'sombre'">
+              <span class="material-icons">check_circle</span>
+            </div>
+          </div>
+
+          <div class="theme-card" [class.selected]="selectedTheme() === 'systeme'" (click)="setTheme('systeme')">
+            <div class="theme-preview system-preview">
+              <div class="preview-sidebar"></div>
+              <div class="preview-content">
+                <div class="preview-bar"></div>
+                <div class="preview-block"></div>
+                <div class="preview-block short"></div>
+              </div>
+            </div>
+            <div class="theme-info">
+              <span class="material-icons">settings_brightness</span>
+              <span>Système</span>
+            </div>
+            <div class="theme-check" *ngIf="selectedTheme() === 'systeme'">
+              <span class="material-icons">check_circle</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Language Card -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon-wrap icon-blue">
+            <span class="material-icons">translate</span>
+          </div>
+          <div>
+            <h2 class="card-title">Langue & Région</h2>
+            <p class="card-desc">Paramètres de localisation de l'application</p>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Langue de l'interface</label>
+            <div class="select-field">
+              <span class="material-icons input-icon">language</span>
+              <select>
+                <option value="fr" selected>🇫🇷  Français</option>
+                <option value="en">🇬🇧  English</option>
+                <option value="ar">🇲🇦  العربية</option>
+              </select>
+              <span class="material-icons select-arrow">expand_more</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Fuseau horaire</label>
+            <div class="select-field">
+              <span class="material-icons input-icon">schedule</span>
+              <select>
+                <option>(GMT+01:00) Paris, Alger, Tunis</option>
+                <option>(GMT+00:00) London, Casablanca</option>
+                <option>(GMT+02:00) Le Caire, Helsinki</option>
+              </select>
+              <span class="material-icons select-arrow">expand_more</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row" style="margin-top: 1.25rem;">
+          <div class="form-group">
+            <label class="form-label">Format de date</label>
+            <div class="select-field">
+              <span class="material-icons input-icon">calendar_today</span>
+              <select>
+                <option>DD/MM/YYYY</option>
+                <option>MM/DD/YYYY</option>
+                <option>YYYY-MM-DD</option>
+              </select>
+              <span class="material-icons select-arrow">expand_more</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Devise</label>
+            <div class="select-field">
+              <span class="material-icons input-icon">payments</span>
+              <select>
+                <option>EUR (€)</option>
+                <option>MAD (DH)</option>
+                <option>USD ($)</option>
+              </select>
+              <span class="material-icons select-arrow">expand_more</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Notifications Card -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon-wrap icon-green">
+            <span class="material-icons">notifications</span>
+          </div>
+          <div>
+            <h2 class="card-title">Notifications</h2>
+            <p class="card-desc">Contrôlez la manière dont vous recevez les alertes</p>
+          </div>
+        </div>
+
+        <div class="notif-list">
+          <div class="notif-item" (click)="toggleNotif('email')">
+            <div class="notif-info">
+              <span class="material-icons notif-icon">email</span>
+              <div>
+                <div class="notif-title">Notifications par Email</div>
+                <div class="notif-desc">Rapports quotidiens et alertes importantes</div>
+              </div>
+            </div>
+            <div class="toggle" [class.on]="notifEmail()">
+              <div class="toggle-knob"></div>
+            </div>
+          </div>
+
+          <div class="notif-item" (click)="toggleNotif('push')">
+            <div class="notif-info">
+              <span class="material-icons notif-icon">desktop_windows</span>
+              <div>
+                <div class="notif-title">Notifications Push</div>
+                <div class="notif-desc">Alertes en temps réel sur le bureau</div>
+              </div>
+            </div>
+            <div class="toggle" [class.on]="notifPush()">
+              <div class="toggle-knob"></div>
+            </div>
+          </div>
+
+          <div class="notif-item" (click)="toggleNotif('recap')">
+            <div class="notif-info">
+              <span class="material-icons notif-icon">summarize</span>
+              <div>
+                <div class="notif-title">Récapitulatif Hebdomadaire</div>
+                <div class="notif-desc">Résumé des activités chaque lundi</div>
+              </div>
+            </div>
+            <div class="toggle" [class.on]="notifRecap()">
+              <div class="toggle-knob"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button class="btn-primary">
+          <span class="material-icons">save</span>
+          Enregistrer les préférences
+        </button>
+      </div>
+
+    </div>
+  }
+
+</div>

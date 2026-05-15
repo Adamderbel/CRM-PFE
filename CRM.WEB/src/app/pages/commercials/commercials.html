@@ -1,0 +1,234 @@
+<div class="commercials-page">
+  <!-- Header -->
+  <header class="page-header">
+    <div class="header-left">
+      <h1 class="page-title">Comptes Commerciaux</h1>
+    </div>
+
+    <div class="header-right">
+      <div class="search-container">
+        <span class="material-icons search-icon">search</span>
+        <input type="text" class="search-input" placeholder="Rechercher des comptes, emails ou noms...">
+      </div>
+
+      <div class="header-actions">
+        <button class="icon-btn"><span class="material-icons">notifications</span></button>
+        <button class="icon-btn"><span class="material-icons">history</span></button>
+        <button class="icon-btn"><span class="material-icons">chat_bubble_outline</span></button>
+      </div>
+
+      <button class="btn-new" (click)="openModal()">
+        <span class="material-icons">person_add</span>
+        Nouveau Commercial
+      </button>
+
+      <div class="user-profile">
+        <div class="avatar-placeholder">
+          <span class="material-icons">admin_panel_settings</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Global Loading / Error -->
+  @if (errorMessage()) {
+    <div class="alert-error">
+      <span class="material-icons">error_outline</span>
+      {{ errorMessage() }}
+    </div>
+  }
+
+  <!-- KPI Cards -->
+  <section class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-top">
+        <span class="kpi-label">Total Commerciaux</span>
+        <div class="kpi-icon-wrap blue">
+          <span class="material-icons">business_center</span>
+        </div>
+      </div>
+      <div class="kpi-value">{{ commercials().length }}</div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-top">
+        <span class="kpi-label">Comptes Actifs</span>
+        <div class="kpi-icon-wrap green">
+          <span class="material-icons">check_circle</span>
+        </div>
+      </div>
+      <div class="kpi-value">{{ commercials().length }}</div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-top">
+        <span class="kpi-label">Comptes Désactivés</span>
+        <div class="kpi-icon-wrap red">
+          <span class="material-icons">block</span>
+        </div>
+      </div>
+      <div class="kpi-value">0</div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-top">
+        <span class="kpi-label">Nouveaux ce mois</span>
+        <div class="kpi-icon-wrap indigo">
+          <span class="material-icons">trending_up</span>
+        </div>
+      </div>
+      <div class="kpi-value">+{{ commercials().length }}</div>
+      <div class="kpi-footer">
+        <span class="trend-up">+100%</span>
+        <span class="trend-label">vs N-1</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Table Card -->
+  <section class="table-container">
+    <div class="table-header">
+      <h2 class="table-title">Répertoire des Comptes</h2>
+      <div class="table-actions">
+        @if (isLoading()) {
+          <div class="loader-sm"></div>
+        }
+        <button class="btn-secondary" (click)="loadCommercials()">
+          <span class="material-icons">refresh</span>
+          Actualiser
+        </button>
+      </div>
+    </div>
+
+    <div class="table-wrapper">
+      <table class="commercial-table">
+        <thead>
+          <tr>
+            <th>Nom</th>
+            <th>Prénom</th>
+            <th>Utilisateur</th>
+            <th>Email</th>
+            <th>Rôles</th>
+            <th>Statut</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (comm of commercials(); track comm.id) {
+          <tr>
+            <td>{{ comm.nom }}</td>
+            <td>{{ comm.prenom }}</td>
+            <td class="username-tag">@{{ comm.userName }}</td>
+            <td class="email-cell">{{ comm.email }}</td>
+            <td>
+              @for (role of comm.roles; track role) {
+                <span class="role-tag">{{ role }}</span>
+              }
+            </td>
+            <td>
+               <span class="status-badge active">Actif</span>
+            </td>
+          </tr>
+          }
+          @if (commercials().length === 0 && !isLoading()) {
+            <tr>
+              <td colspan="6" class="empty-state">Aucun commercial trouvé ou erreur de chargement.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <div class="pagination">
+      <span class="pagination-info">Affichage de {{ commercials().length }} comptes</span>
+    </div>
+  </section>
+
+  <!-- Create Modal -->
+  @if (isModalOpen) {
+  <div class="modal-overlay" (click)="closeModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div>
+          <h2 class="modal-title">Créer un nouveau compte commercial</h2>
+          <p class="modal-subtitle">Configurez les identifiants et les informations de base pour le nouveau gestionnaire.</p>
+        </div>
+        <button class="close-btn" (click)="closeModal()">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        @if (successMessage()) {
+          <div class="alert-success">
+            <span class="material-icons">check_circle</span>
+            {{ successMessage() }}
+          </div>
+        }
+
+        @if (errorMessage()) {
+          <div class="modal-alert-error">
+            {{ errorMessage() }}
+          </div>
+        }
+
+        <form class="form-grid" (ngSubmit)="createAccount()">
+          <div class="form-group">
+            <label class="form-label">Prénom</label>
+            <div class="input-field">
+              <input type="text" name="prenom" [(ngModel)]="newAccount.prenom" placeholder="ex: Jean" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Nom</label>
+            <div class="input-field">
+              <input type="text" name="nom" [(ngModel)]="newAccount.nom" placeholder="ex: Dupont" required>
+            </div>
+          </div>
+
+          <div class="form-group full-width">
+            <label class="form-label">Nom d'utilisateur</label>
+            <div class="input-field input-with-icon">
+              <span class="material-icons input-icon-prefix">alternate_email</span>
+              <input type="text" name="userName" [(ngModel)]="newAccount.userName" placeholder="j.dupont">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Email</label>
+            <div class="input-field">
+              <input type="email" name="email" [(ngModel)]="newAccount.email" placeholder="jean.dupont@entreprise.com" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Mot de passe</label>
+            <div class="input-field">
+              <input type="password" name="password" [(ngModel)]="newAccount.password" placeholder="••••••••" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Confirmer le mot de passe</label>
+            <div class="input-field">
+              <input type="password" name="confirmPassword" [(ngModel)]="newAccount.confirmPassword" placeholder="••••••••" required>
+            </div>
+          </div>
+          <button type="submit" style="display: none;"></button>
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-ghost" (click)="closeModal()" [disabled]="isLoading()">Annuler</button>
+        <button class="btn-primary" (click)="createAccount()" [disabled]="isLoading()">
+          @if (isLoading()) {
+            <span class="loader-inline"></span>
+          } @else {
+            Créer le compte
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+  }
+</div>

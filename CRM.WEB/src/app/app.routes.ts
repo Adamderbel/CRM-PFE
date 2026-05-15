@@ -17,6 +17,12 @@ export const routes: Routes = [
     component: Layout,
     canActivate: [authGuard],
     children: [
+      {
+        path: 'clients',
+        loadComponent: () => import('./pages/clients/clients-list/clients-list').then((m) => m.ClientsList),
+        canActivate: [roleGuard],
+        data: { roles: ['Commercial'] }
+      },
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
       {
         path: 'dashboard',
@@ -113,6 +119,18 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/reclamations/reclamation-form/reclamation-form').then((m) => m.ReclamationForm),
         canActivate: [roleGuard],
         data: { roles: ['Commercial'] }
+      },
+      {
+        path: 'settings',
+        loadComponent: () => import('./pages/settings-admin/settings-admin').then((m) => m.SettingsAdmin),
+        canActivate: [roleGuard],
+        data: { roles: ['Admin'] }
+      },
+      {
+        path: 'employees',
+        loadComponent: () => import('./pages/commercials/commercials').then((m) => m.Commercials),
+        canActivate: [roleGuard],
+        data: { roles: ['Admin'] }
       }
     ],
   },

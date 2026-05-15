@@ -17,13 +17,14 @@ interface MenuItem {
   styleUrl: './sidebar.css',
 })
 export class Sidebar {
-  constructor(private authService: AuthService) {}
+  constructor(private authService: AuthService) { }
 
   private allMenuItems: MenuItem[] = [
     { icon: 'dashboard', label: 'Dashboard', route: '/dashboard', roles: ['Commercial'] },
     { icon: 'dashboard', label: 'Dashboard', route: '/dashboard-admin', roles: ['Admin'] },
     { icon: 'people', label: 'Prospects', route: '/prospects', roles: ['Commercial'] },
-    { icon: 'badge', label: 'Employees', route: '/employees', roles: ['Admin', 'Commercial'] },
+    { icon: 'group', label: 'Clients', route: '/clients', roles: ['Commercial'] },
+    { icon: 'badge', label: 'Commerciaux', route: '/employees', roles: ['Admin'] },
     { icon: 'inventory_2', label: 'Products', route: '/products', roles: ['Commercial'] },
     { icon: 'report_problem', label: 'Réclamations', route: '/reclamations', roles: ['Commercial'] },
     { icon: 'bar_chart', label: 'Reports', route: '/reports', roles: ['Admin', 'Commercial'] },
