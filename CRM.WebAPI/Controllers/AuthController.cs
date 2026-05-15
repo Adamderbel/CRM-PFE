@@ -1,5 +1,7 @@
+using CRM.Entities.Common;
 using CRM.Entities.Security;
 using CRM.Services;
+using CRM.Services.clientscerm;
 using CRM.WebAPI.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -20,11 +22,14 @@ namespace CRM.WebAPI.Controllers
 
         private readonly IUserService _userService;
 
-        public AuthController(UserManager<SecUser> userManager, IConfiguration config, IUserService userService)
+        private readonly IClientCermService _clientCermService;
+
+        public AuthController(UserManager<SecUser> userManager, IConfiguration config, IUserService userService,IClientCermService clientCermService)
         {
             _userManager = userManager;
             _config = config;
             _userService = userService;
+            _clientCermService = clientCermService;
         }
 
        // [Authorize(Roles = "ADMIN")]
@@ -42,10 +47,25 @@ namespace CRM.WebAPI.Controllers
 
 
 
+
+
             }; 
 
-            await _userService.CreateUserAsync(user, request.Password, request.Role);
+           var userSaved = await _userService.CreateUserAsync(user, request.Password, request.Role);
+            if (request.RefClient is int clientId)
+            {
+                var clientCerm = await _clientCermService.GetByIdAsync(clientId);
 
+                if (clientCerm == null)
+                {
+                    return BadRequest("Client introuvable");
+                }
+                else
+                {
+                    clientCerm.idUser = userSaved.Id;
+                   await _clientCermService.update(clientCerm);
+                }
+            }
             return Ok();
         }
 

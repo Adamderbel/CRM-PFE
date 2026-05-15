@@ -17,5 +17,6 @@ namespace CRM.Entities.Common
         public string? Nom { get; set; }
         public DateTime? LastModifiedDate { get; set; }
         public DateTime? LastSyncDate { get; set; }
+        public Guid? idUser { get; set; }
     }
 }

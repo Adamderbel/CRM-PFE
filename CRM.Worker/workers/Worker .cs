@@ -26,8 +26,14 @@ namespace CRM.Worker.workers
 
                 try
                 {
-                    await _sync.SyncClientsAsync();
-                    await _sync.SyncProduitsAsync();
+                   // await _sync.SyncClientsAsync();
+                   // await _sync.SyncProduitsAsync();
+                    //await _sync.SyncCommandesAsync();
+                    //await _sync.SyncCommandesLignesAsync();
+                    await _sync.SyncProspectClientCermAsync();
+                    await _sync.SyncRefProduitProspectionAsync();
+                    await _sync.SyncCommandesProspectionAsync();
+                   
                     Console.WriteLine("✅ AFTER SYNC");
                 }
                 catch (Exception ex)

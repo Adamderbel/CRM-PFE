@@ -9,7 +9,7 @@ namespace CRM.Services
 {
     public interface IUserService
     {
-        public Task CreateUserAsync(SecUser user, string plainPassword, string roleName);
+        public Task<SecUser> CreateUserAsync(SecUser user, string plainPassword, string roleName);
         public Task<SecRole?> GetRoleByRoleName(string roleName);
         public Task<IEnumerable<UserRole>> GetRolesByRoleIdAsync(Guid roleId);
         public Task<SecUser?> GetUserByEmailAsync(string email);

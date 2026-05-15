@@ -95,6 +95,8 @@
     <Build Include="Tables\Reclamation.sql" />
     <Build Include="Tables\TypeActionProspection.sql" />
     <Build Include="Tables\ActionsProspection.sql" />
+    <Build Include="Tables\CRM_Commande.sql" />
+    <Build Include="Tables\CERM_commandeLigne.sql" />
   </ItemGroup>
   <ItemGroup>
     <PreDeploy Include="Script.PreDeployment.sql" />
