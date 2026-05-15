@@ -194,7 +194,8 @@ namespace CRM.WebAPI.Controllers
 
                 // Actual logic to send an email
                 await _emailService.SendDevisEmailAsync(ligneP, devisRequestDto.Email, devisRequestDto.Notes, devisRequestDto.Date);
-
+                ligneP.DateDemandeOffre = DateTime.Now;
+              await  _ligneProspectionService.UpdateAsync(ligneP);
                 return Ok("Demande de devis traitée avec succès.");
             }
             catch (Exception ex)

@@ -11,5 +11,6 @@ namespace CRM.Services.clientscerm
     {
         Task<IEnumerable<ClientCerm>> GetAllAsync();
         Task<ClientCerm?> GetByIdAsync(int id);
+        Task update(ClientCerm clientCerm);
     }
 }

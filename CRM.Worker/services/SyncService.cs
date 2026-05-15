@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CRM.Entities.Common;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -57,6 +58,129 @@ namespace CRM.Worker.services
                 .Max();
 
             await _crm.UpdateLastSyncDateAsync("Produits", maxDate);
+        }
+
+
+        // =========================
+        // SYNC COMMANDES ONLY
+        // =========================
+        public async Task SyncCommandesAsync()
+        {
+            Console.WriteLine("SYNC COMMANDES START");
+
+            try
+            {
+                // 1. GET DATA FROM CERM (déjà agrégé + statut calculé en SQL)
+                var commandes = await _cerm.GetCommandesAsync();
+
+                if (commandes == null || commandes.Count == 0)
+                {
+                    Console.WriteLine("Aucune commande à synchroniser");
+                    return;
+                }
+
+                Console.WriteLine($"Commandes trouvées: {commandes.Count}");
+
+                // 2. UPSERT INTO CRM
+                await _crm.UpsertCommandesAsync(commandes);
+
+                Console.WriteLine("SYNC COMMANDES END SUCCESS");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("ERROR SYNC COMMANDES: " + ex.Message);
+                throw;
+            }
+        }
+        public async Task SyncCommandesLignesAsync()
+        {
+            Console.WriteLine("Sync Commandes Lignes");
+
+            var lignes = await _cerm.GetCommandesLignesAsync();
+
+            if (lignes == null || lignes.Count == 0)
+                return;
+
+            await _crm.UpsertCommandesLignesAsync(lignes);
+        }
+
+        public async Task SyncRefProduitProspectionAsync()
+        {
+            Console.WriteLine("Sync Ref Produit Prospect");
+
+            var lignes = await _crm.GetLignesSansRefProduitAsync();
+
+            if (lignes == null || lignes.Count == 0)
+                return;
+
+            foreach (var ligne in lignes)
+            {
+                if (string.IsNullOrWhiteSpace(ligne.CodeCRM))
+                    continue;
+
+                var refProduit = await _cerm.GetRefProduitByCodeCrmAsync(ligne.CodeCRM);
+
+                if (string.IsNullOrWhiteSpace(refProduit))
+                    continue;
+
+                await _crm.UpdateRefProduitAsync(ligne.Id, refProduit);
+            }
+        }
+        public async Task SyncProspectClientCermAsync()
+        {
+            Console.WriteLine("Sync Prospect Client CERM");
+
+            var prospects = await _crm.GetProspectsSansClientCermAsync();
+
+            if (prospects == null || prospects.Count == 0)
+                return;
+
+            foreach (var prospect in prospects)
+            {
+                if (string.IsNullOrWhiteSpace(prospect.CodeCRM))
+                    continue;
+
+                var clientCermId = await _cerm.GetClientCermByCodeCrmAsync(prospect.CodeCRM);
+
+                if (string.IsNullOrWhiteSpace(clientCermId))
+                    continue;
+
+                await _crm.UpdateClientCermProspectAsync(prospect.Id, clientCermId);
+            }
+        }
+        public async Task SyncCommandesProspectionAsync()
+        {
+            Console.WriteLine("=== SYNC PROSPECTION → CERM ===");
+
+            var lignes = await _crm.GetLignesProspectionSansCmdAsync();
+
+            if (lignes == null || lignes.Count == 0)
+            {
+                Console.WriteLine("Aucune ligne à traiter");
+                return;
+            }
+
+            foreach (var ligne in lignes)
+            {
+                if (
+                    string.IsNullOrEmpty(ligne.RefArt))
+                    continue;
+
+                var commande = await _crm.GetCommandeFromLigneAsync(
+                    ligne.RefArt);
+
+                if (commande == null)
+                    continue;
+
+                await _crm.UpdateCommandeLigneProspectionAsync(
+                    ligne.Id,
+                    commande.RefCommande!,
+                    commande.DateCommande);
+
+                Console.WriteLine($"OK -> {ligne.Id} | {commande.RefCommande}");
+            }
+
+            Console.WriteLine("=== SYNC TERMINÉ ===");
         }
     }
 }

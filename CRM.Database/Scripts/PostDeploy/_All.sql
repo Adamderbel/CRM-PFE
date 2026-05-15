@@ -32,3 +32,4 @@ ELSE
 BEGIN
     PRINT 'Script ' + @ScriptNameMetaData + ' déjà exécuté, skip.';
 END
+GO

@@ -19,7 +19,7 @@ namespace CRM.Services
         {
             _userRepository = userRepository;
         }
-        public async Task CreateUserAsync(SecUser user, string plainPassword, string roleName)
+        public async Task<SecUser> CreateUserAsync(SecUser user, string plainPassword, string roleName)
         {
             user.PasswordHash = _passwordHasher.HashPassword(user, plainPassword);
             _userRepository.AddAsync(user);
@@ -35,6 +35,7 @@ namespace CRM.Services
             }
 
             await _userRepository.SaveAsync();
+            return user; 
 
         }
 

@@ -29,5 +29,10 @@ namespace CRM.Services.clientscerm
         {
             return await _clientCermRepository.GetByIdAsync(id);
         }
+
+        public async Task update(ClientCerm clientCerm)
+        {
+          await  _clientCermRepository.UpdateAsync(clientCerm);
+        }
     }
 }
