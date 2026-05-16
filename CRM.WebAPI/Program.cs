@@ -9,9 +9,11 @@ using CRM.Services.ActionProspection;
 using CRM.Services.CauseEchecs;
 using CRM.Services.clientscerm;
 using CRM.Services.comm;
+using CRM.Services.commandeService;
 using CRM.Services.Email;
 using CRM.Services.FamilleProduits;
 using CRM.Services.LigneProspections;
+using CRM.Services.notification;
 using CRM.Services.produitecerms;
 using CRM.Services.prospections;
 using CRM.Services.reclamations;
@@ -79,6 +81,8 @@ builder.Services.AddScoped<IActionProspectionService, ActionProspectionService>(
 builder.Services.AddScoped<ICauseEchecService, CauseEchecService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<CodeGeneratorService>();
+builder.Services.AddScoped<ICommandeService,CommandeService>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
 //builder.Services.AddHostedService<AdminSeederHostedService>();
 
 
