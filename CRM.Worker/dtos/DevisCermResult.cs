@@ -6,11 +6,12 @@ using System.Threading.Tasks;
 
 namespace CRM.Worker.dtos
 {
-    public class CommandeCermResult
+    public class DevisCermResult
     {
-        public string RefCommande { get; set; }
+        public string? NumeroDevis { get; set; }
 
-        public DateTime? DateCommande { get; set; }
+        public DateTime? DateDevis { get; set; }
+        public string? ClientCermId { get; set; }
         public Guid UserId { get; set; }
     }
 }

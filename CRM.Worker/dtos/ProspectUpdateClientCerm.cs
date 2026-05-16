@@ -11,5 +11,6 @@ namespace CRM.Worker.dtos
         public Guid Id { get; set; }
 
         public string? CodeCRM { get; set; }
+        public Guid UserId { get; set; }
     }
 }
