@@ -8,6 +8,6 @@
         public string Prenom { get; set; } = null!;
         public required string Password { get; set; }
         public String Role { get; set; } = null!;
-        public int? RefClient { get; set; }
+        public string? RefClient { get; set; }
     }
 }

@@ -1,4 +1,4 @@
-﻿using CRM.Entities.Common;
+using CRM.Entities.Common;
 using CRM.Entities.Crm;
 using System;
 using System.ComponentModel.DataAnnotations;
