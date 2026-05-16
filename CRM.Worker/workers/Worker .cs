@@ -32,6 +32,7 @@ namespace CRM.Worker.workers
                     //await _sync.SyncCommandesLignesAsync();
                     await _sync.SyncProspectClientCermAsync();
                     await _sync.SyncRefProduitProspectionAsync();
+                    await _sync.SyncDevisProspectionAsync();
                     await _sync.SyncCommandesProspectionAsync();
                    
                     Console.WriteLine("✅ AFTER SYNC");

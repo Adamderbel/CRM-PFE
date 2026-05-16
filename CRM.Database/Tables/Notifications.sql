@@ -1,0 +1,16 @@
+﻿CREATE TABLE [crm].[Notifications]
+(
+	 Id UNIQUEIDENTIFIER PRIMARY KEY,
+
+    UserId UNIQUEIDENTIFIER NOT NULL,
+
+    TypeNotification NVARCHAR(50),
+
+    Titre NVARCHAR(255),
+
+    Message NVARCHAR(MAX),
+
+    Lu BIT NOT NULL DEFAULT 0,
+
+    DateCreation DATETIME NOT NULL DEFAULT GETDATE()
+)

@@ -1,4 +1,5 @@
 ﻿using CRM.Entities.Common;
+using CRM.Worker.dtos;
 using Microsoft.Data.SqlClient;
 using System;
 using System.Collections.Generic;
@@ -260,6 +261,49 @@ AND antw_txt = @CodeCRM";
 
             return result?.ToString()?.Trim();
         }
-     
+        public async Task<DevisCermResult?> GetDevisFromLigneAsync(
+    string refProduit,
+    string clientId)
+        {
+            using var conn = new SqlConnection(_connectionString);
+            await conn.OpenAsync();
+
+            string query = @"
+select top 1
+    d.bon__ref as numero_devis,
+    d.best_dat as date_devis
+from afgart__ a
+inner join v1eti___ v
+    on a.off1_ref = v.off__ref
+inner join v1off___ d
+    on v.off__ref = d.off1_ref
+where a.afg__ref = @RefProduit
+and d.kla__ref = @ClientId
+order by d.best_dat asc";
+
+            using var cmd = new SqlCommand(query, conn);
+
+            cmd.Parameters.AddWithValue("@RefProduit", refProduit);
+            cmd.Parameters.AddWithValue("@ClientId", clientId);
+
+            using var reader = await cmd.ExecuteReaderAsync();
+
+            if (await reader.ReadAsync())
+            {
+                return new DevisCermResult
+                {
+                    NumeroDevis = reader.IsDBNull(0)
+                        ? null
+                        : reader.GetString(0),
+
+                    DateDevis = reader.IsDBNull(1)
+                        ? null
+                        : reader.GetDateTime(1)
+                };
+            }
+
+            return null;
+        }
+
     }
 }

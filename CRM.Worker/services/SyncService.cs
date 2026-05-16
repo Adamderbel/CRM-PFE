@@ -124,6 +124,12 @@ namespace CRM.Worker.services
                     continue;
 
                 await _crm.UpdateRefProduitAsync(ligne.Id, refProduit);
+                await _crm.CreateNotificationAsync(
+    ligne.UserId,
+    "PRODUIT_SYNC",
+    "PRODUIT_SYNC",
+    $"Produit affecté à la ligne {ligne.Id}"
+        );
             }
         }
         public async Task SyncProspectClientCermAsync()
@@ -146,6 +152,12 @@ namespace CRM.Worker.services
                     continue;
 
                 await _crm.UpdateClientCermProspectAsync(prospect.Id, clientCermId);
+                await _crm.CreateNotificationAsync(
+                            prospect.UserId,
+                            "PROSPECT_UPDATED",
+                            "PROSPECT_UPDATED",
+                              $"Le prospect {prospect.Id} a été enrichi avec ClientCermId {clientCermId}"
+);
             }
         }
         public async Task SyncCommandesProspectionAsync()
@@ -177,10 +189,63 @@ namespace CRM.Worker.services
                     commande.RefCommande!,
                     commande.DateCommande);
 
+                await _crm.CreateNotificationAsync(
+                  ligne.UserId,
+                    "COMMANDE_SYNC",
+                     "COMMANDE_SYNC",
+                     $"Commande {commande.RefCommande} reçue. Ligne de prospection concrétisée."
+);
+
                 Console.WriteLine($"OK -> {ligne.Id} | {commande.RefCommande}");
             }
 
             Console.WriteLine("=== SYNC TERMINÉ ===");
+        }
+        public async Task SyncDevisProspectionAsync()
+        {
+            Console.WriteLine("=== SYNC DEVIS PROSPECTION ===");
+
+            var lignes = await _crm.GetLignesProspectionSansDevisAsync();
+
+            if (lignes == null || lignes.Count == 0)
+                return;
+
+            foreach (var ligne in lignes)
+            {
+                if (
+                    string.IsNullOrWhiteSpace(ligne.RefArt)
+                    || string.IsNullOrWhiteSpace(ligne.ClientCermId))
+                    continue;
+
+                var devis = await _cerm.GetDevisFromLigneAsync(
+                    ligne.RefArt,
+                    ligne.ClientCermId);
+
+                if (devis == null)
+                    continue;
+
+                await _crm.UpdateDevisLigneProspectionAsync(
+                    ligne.Id,
+                    devis.NumeroDevis!,
+                    devis.DateDevis);
+
+                // =========================
+                // NOTIFICATION
+                // =========================
+
+                 await _crm.CreateNotificationAsync(
+                        ligne.UserId,
+                        "Devis reçu depuis CERM",
+                        "Devis reçu depuis CERM",
+
+                        $"Le devis {devis.NumeroDevis} a été reçu pour la ligne de prospection.");
+                
+
+                Console.WriteLine(
+                    $"DEVIS OK -> {ligne.Id} | {devis.NumeroDevis}");
+            }
+
+            Console.WriteLine("=== FIN SYNC DEVIS ===");
         }
     }
 }

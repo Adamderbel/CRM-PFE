@@ -256,13 +256,16 @@ WHEN NOT MATCHED THEN
             await conn.OpenAsync();
 
             string query = @"
-SELECT Id, CodeCRM
-FROM crm.LigneProspections
-WHERE RefArt IS NULL
-AND CodeCRM IS NOT NULL";
+                    SELECT 
+                      lp.Id,
+                      lp.CodeCRM,
+                         p.UserId
+                        FROM crm.LigneProspections lp
+                        LEFT JOIN crm.Prospection p ON p.Id = lp.ProspectionId
+                            WHERE lp.RefArt IS NULL
+                            AND lp.CodeCRM IS NOT NULL";
 
             using var cmd = new SqlCommand(query, conn);
-
             using var reader = await cmd.ExecuteReaderAsync();
 
             while (await reader.ReadAsync())
@@ -270,7 +273,8 @@ AND CodeCRM IS NOT NULL";
                 list.Add(new LigneProspectionUpdateProduit
                 {
                     Id = reader.GetGuid(0),
-                    CodeCRM = reader.GetString(1)
+                    CodeCRM = reader.GetString(1),
+                    UserId =  reader.GetGuid(2)
                 });
             }
 
@@ -301,13 +305,15 @@ WHERE Id = @Id";
             await conn.OpenAsync();
 
             string query = @"
-SELECT Id, CodeCRM
+SELECT 
+    Id, 
+    CodeCRM,
+    UserId
 FROM crm.prospect
 WHERE ClientCermId IS NULL
 AND CodeCRM IS NOT NULL";
 
             using var cmd = new SqlCommand(query, conn);
-
             using var reader = await cmd.ExecuteReaderAsync();
 
             while (await reader.ReadAsync())
@@ -315,21 +321,22 @@ AND CodeCRM IS NOT NULL";
                 list.Add(new ProspectUpdateClientCerm
                 {
                     Id = reader.GetGuid(0),
-                    CodeCRM = reader.GetString(1)
+                    CodeCRM = reader.GetString(1),
+                    UserId =  reader.GetGuid(2)
                 });
             }
 
             return list;
         }
-      public async Task UpdateClientCermProspectAsync(Guid id, string clientCermId)
+        public async Task UpdateClientCermProspectAsync(Guid id, string clientCermId)
         {
             using var conn = new SqlConnection(_connectionString);
             await conn.OpenAsync();
 
             string query = @"
-UPDATE crm.prospect
-SET ClientCermId = @ClientCermId
-WHERE Id = @Id";
+            UPDATE crm.prospect
+            SET ClientCermId = @ClientCermId
+             WHERE Id = @Id";
 
             using var cmd = new SqlCommand(query, conn);
 
@@ -351,11 +358,13 @@ WHERE Id = @Id";
 
             string query = @"
 SELECT 
-    Id,
-    RefArt
-FROM crm.LigneProspections
-WHERE (NumeroCommande IS NULL OR NumeroCommande = '')
-  AND (DateCommande IS NULL)";
+    lp.Id,
+    lp.RefArt,
+    pr.UserId
+FROM crm.LigneProspections lp
+INNER JOIN crm.Prospection pr ON pr.Id = lp.ProspectionId
+WHERE (lp.NumeroCommande IS NULL OR lp.NumeroCommande = '')
+  AND (lp.DateCommande IS NULL)";
 
             using var cmd = new SqlCommand(query, conn);
             using var reader = await cmd.ExecuteReaderAsync();
@@ -365,13 +374,13 @@ WHERE (NumeroCommande IS NULL OR NumeroCommande = '')
                 list.Add(new LigneProspection
                 {
                     Id = reader.GetGuid(0),
-                    RefArt = reader.IsDBNull(2) ? null : reader.GetString(1)
+                    RefArt = reader.IsDBNull(1) ? null : reader.GetString(1),
+                    UserId =  reader.GetGuid(2)
                 });
             }
 
             return list;
         }
-
 
 
         public async Task<CommandeCermResult?> GetCommandeFromLigneAsync(
@@ -426,6 +435,129 @@ WHERE Id = @Id";
             cmd.Parameters.AddWithValue("@Id", id);
             cmd.Parameters.AddWithValue("@NumeroCommande", (object?)numeroCommande ?? DBNull.Value);
             cmd.Parameters.AddWithValue("@DateCommande", (object?)dateCommande ?? DBNull.Value);
+
+            await cmd.ExecuteNonQueryAsync();
+        }
+
+
+        public async Task CreateNotificationAsync(
+    Guid userId,
+    string type,
+    string titre,
+    string message)
+        {
+            using var conn = new SqlConnection(_connectionString);
+            await conn.OpenAsync();
+
+            string query = @"
+INSERT INTO crm.Notifications
+(
+    Id,
+    UserId,
+    TypeNotification,
+    Titre,
+    Message,
+    Lu,
+    DateCreation
+)
+VALUES
+(
+    @Id,
+    @UserId,
+    @TypeNotification,
+    @Titre,
+    @Message,
+    0,
+    GETDATE()
+)";
+
+            using var cmd = new SqlCommand(query, conn);
+
+            cmd.Parameters.AddWithValue("@Id", Guid.NewGuid());
+
+            cmd.Parameters.AddWithValue("@UserId", userId);
+
+            cmd.Parameters.AddWithValue("@TypeNotification", type);
+
+            cmd.Parameters.AddWithValue("@Titre", titre);
+
+            cmd.Parameters.AddWithValue("@Message", message);
+
+            await cmd.ExecuteNonQueryAsync();
+        }
+
+
+        public async Task<List<LigneProspection>> GetLignesProspectionSansDevisAsync()
+        {
+            var list = new List<LigneProspection>();
+
+            using var conn = new SqlConnection(_connectionString);
+            await conn.OpenAsync();
+
+            string query = @"
+SELECT
+    lp.Id,
+    lp.RefArt,
+    p.ClientCermId,
+    p.UserId
+FROM crm.LigneProspections lp
+INNER JOIN crm.Prospection p
+    ON lp.ProspectionId = p.Id
+WHERE (lp.NumeroDevis IS NULL OR lp.NumeroDevis = '')
+AND lp.DateDevis IS NULL
+AND lp.RefArt IS NOT NULL
+AND p.ClientCermId IS NOT NULL";
+
+            using var cmd = new SqlCommand(query, conn);
+
+            using var reader = await cmd.ExecuteReaderAsync();
+
+            while (await reader.ReadAsync())
+            {
+                list.Add(new LigneProspection
+                {
+                    Id = reader.GetGuid(0),
+
+                    RefArt = reader.IsDBNull(1)
+                        ? null
+                        : reader.GetString(1),
+
+                    ClientCermId = reader.IsDBNull(2)
+                        ? null
+                        : reader.GetString(2),
+
+                    UserId = reader.GetGuid(3)
+                });
+            }
+
+            return list;
+        }
+        public async Task UpdateDevisLigneProspectionAsync(
+    Guid id,
+    string numeroDevis,
+    DateTime? dateDevis)
+        {
+            using var conn = new SqlConnection(_connectionString);
+            await conn.OpenAsync();
+
+            string query = @"
+UPDATE crm.LigneProspections
+SET
+    NumeroDevis = @NumeroDevis,
+    DateDevis = @DateDevis
+WHERE Id = @Id";
+
+            using var cmd = new SqlCommand(query, conn);
+
+            cmd.Parameters.AddWithValue("@Id", id);
+
+            cmd.Parameters.AddWithValue(
+                "@NumeroDevis",
+                (object?)numeroDevis ?? DBNull.Value);
+
+            cmd.Parameters.AddWithValue(
+                "@DateDevis",
+                (object?)dateDevis ?? DBNull.Value);
 
             await cmd.ExecuteNonQueryAsync();
         }

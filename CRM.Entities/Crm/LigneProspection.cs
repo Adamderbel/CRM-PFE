@@ -66,5 +66,7 @@ namespace CRM.Entities.Crm
         [ForeignKey("StatutId")]
         public StatutProspection? Statut { get; set; }
         public  String? CodeCRM { get; set; }
+        public Guid UserId { get; set; }
+        public string? ClientCermId { get; set; }
     }
 }
