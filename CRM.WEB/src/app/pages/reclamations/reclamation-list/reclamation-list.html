@@ -36,6 +36,7 @@
           <th>Statut</th>
           <th>Priorité</th>
           <th>Date Création</th>
+          <th>Actions</th>
         </tr>
       </thead>
       <tbody>
@@ -47,7 +48,8 @@
           <td>{{ rec.designationProduit }}</td>
           <td>
             <span class="badge" [class.badge-primary]="rec.statut === 'En cours'"
-              [class.badge-success]="rec.statut === 'Résolu'">
+              [class.badge-warning]="rec.statut === 'En execution' || rec.statut === 'Controle'"
+              [class.badge-success]="rec.statut === 'Résolu' || rec.statut === 'Cloturé' || rec.statut === 'Clôturé'">
               {{ rec.statut }}
             </span>
           </td>
@@ -57,10 +59,27 @@
             </span>
           </td>
           <td>{{ rec.createdAt | date:'shortDate' }}</td>
+          <td>
+            @if (rec.statut === 'Nouveau' || rec.statut === 'Nouveau') {
+              <button class="btn-secondary" (click)="openAnalysePopup(rec)">Analyser</button>
+            }
+            @if (rec.statut === 'En cours') {
+              <button class="btn-primary" (click)="openExecutionPopup(rec)">Exécution</button>
+            }
+            @if (rec.statut === 'En execution') {
+              <button class="btn-outline" style="border-color: #fb8c00; color: #fb8c00;" (click)="openControlePopup(rec)">Contrôler</button>
+            }
+            @if (rec.statut === 'Controle') {
+              <button class="btn-primary" style="background-color: #43a047;" (click)="openCloturePopup(rec)">Clôturer</button>
+            }
+            @if (rec.statut === 'Cloturé' || rec.statut === 'Clôturé') {
+              <button class="btn-outline" (click)="openConsulterPopup(rec)">Consulter</button>
+            }
+          </td>
         </tr>
         } @empty {
         <tr>
-          <td colspan="7" class="empty-state">
+          <td colspan="8" class="empty-state">
             <span class="material-icons">inbox</span>
             <p>Aucune réclamation trouvée</p>
           </td>
@@ -68,6 +87,153 @@
         }
       </tbody>
     </table>
+  </div>
+  }
+
+  <!-- Analyse Popup -->
+  @if (showAnalysePopup()) {
+  <div class="modal-overlay">
+    <div class="modal-content" style="max-width: 500px;">
+      <div class="modal-header">
+        <h3 class="modal-title">Analyse de la réclamation</h3>
+      </div>
+      <div class="modal-body" style="text-align: left; padding: 15px 0;">
+        <label style="font-weight: 600; display: block; margin-bottom: 8px;">Analyse Réclamation</label>
+        <textarea style="width: 100%; border: 1px solid #ddd; border-radius: 8px; padding: 10px; font-family: inherit; margin-bottom: 15px;" rows="4" [(ngModel)]="analyseText"></textarea>
+
+        <label style="font-weight: 600; display: flex; align-items: center; gap: 8px; margin-bottom: 15px; cursor: pointer;">
+          <input type="checkbox" [(ngModel)]="justifiee">
+          Justifiée ?
+        </label>
+
+        <label style="font-weight: 600; display: block; margin-bottom: 8px;">Commentaire de justification</label>
+        <textarea style="width: 100%; border: 1px solid #ddd; border-radius: 8px; padding: 10px; font-family: inherit;" rows="3" [(ngModel)]="commentaireJustification"></textarea>
+      </div>
+      <div class="modal-footer" style="margin-top: 15px;">
+        <button class="btn-outline" style="flex: 1;" (click)="closeAnalysePopup()">Annuler</button>
+        <button class="btn-primary" style="flex: 1; justify-content: center;" (click)="saveAnalyse()">Sauvegarder</button>
+      </div>
+    </div>
+  </div>
+  }
+
+  <!-- Exécution Popup -->
+  @if (showExecutionPopup()) {
+  <div class="modal-overlay">
+    <div class="modal-content" style="max-width: 400px;">
+      <div class="modal-header">
+        <h3 class="modal-title">Exécution</h3>
+      </div>
+      <div class="modal-body" style="text-align: left; padding: 15px 0;">
+        <label style="font-weight: 600; display: block; margin-bottom: 8px;">Date d'exécution</label>
+        <input type="date" style="width: 100%; border: 1px solid #ddd; border-radius: 8px; padding: 10px; font-family: inherit;" [(ngModel)]="dateExecution" />
+      </div>
+      <div class="modal-footer" style="margin-top: 15px;">
+        <button class="btn-outline" style="flex: 1;" (click)="closeExecutionPopup()">Annuler</button>
+        <button class="btn-primary" style="flex: 1; justify-content: center;" (click)="saveExecution()">Sauvegarder</button>
+      </div>
+    </div>
+  </div>
+  }
+
+  <!-- Contrôle Exécution Popup -->
+  @if (showControlePopup()) {
+  <div class="modal-overlay">
+    <div class="modal-content" style="max-width: 500px;">
+      <div class="modal-header">
+        <h3 class="modal-title">Contrôler l'Exécution</h3>
+      </div>
+      <div class="modal-body" style="text-align: left; padding: 15px 0;">
+        <label style="font-weight: 600; display: block; margin-bottom: 8px;">Date de contrôle de l'exécution</label>
+        <input type="date" style="width: 100%; border: 1px solid #ddd; border-radius: 8px; padding: 10px; font-family: inherit; margin-bottom: 15px;" [(ngModel)]="dateControleExecution" />
+
+        <label style="font-weight: 600; display: block; margin-bottom: 8px;">Commentaire de l'exécution</label>
+        <textarea style="width: 100%; border: 1px solid #ddd; border-radius: 8px; padding: 10px; font-family: inherit;" rows="4" [(ngModel)]="commentaireControleExecution"></textarea>
+      </div>
+      <div class="modal-footer" style="margin-top: 15px;">
+        <button class="btn-outline" style="flex: 1;" (click)="closeControlePopup()">Annuler</button>
+        <button class="btn-primary" style="flex: 1; justify-content: center; background-color: #fb8c00;" (click)="saveControle()">Sauvegarder</button>
+      </div>
+    </div>
+  </div>
+  }
+
+  <!-- Clôture Popup -->
+  @if (showCloturePopup()) {
+  <div class="modal-overlay">
+    <div class="modal-content" style="max-width: 500px;">
+      <div class="modal-header">
+        <h3 class="modal-title">Clôturer la Réclamation</h3>
+      </div>
+      <div class="modal-body" style="text-align: left; padding: 15px 0;">
+        <label style="font-weight: 600; display: block; margin-bottom: 8px;">Date de Clôture</label>
+        <input type="date" style="width: 100%; border: 1px solid #ddd; border-radius: 8px; padding: 10px; font-family: inherit; margin-bottom: 15px;" [(ngModel)]="dateClotureReclamation" />
+
+        <label style="font-weight: 600; display: block; margin-bottom: 8px;">Responsable de l'incident (Nom & Prénom)</label>
+        <input type="text" placeholder="Saisir le nom et prénom..." style="width: 100%; border: 1px solid #ddd; border-radius: 8px; padding: 10px; font-family: inherit; margin-bottom: 15px;" [(ngModel)]="responsableFaute" />
+
+        <label style="font-weight: 600; display: block; margin-bottom: 8px;">Coût des dégâts en (MT)</label>
+        <input type="number" step="0.01" placeholder="0.00" style="width: 100%; border: 1px solid #ddd; border-radius: 8px; padding: 10px; font-family: inherit; margin-bottom: 15px;" [(ngModel)]="degats" />
+
+        <label style="font-weight: 600; display: block; margin-bottom: 8px;">Rapport Final</label>
+        <textarea style="width: 100%; border: 1px solid #ddd; border-radius: 8px; padding: 10px; font-family: inherit;" rows="4" [(ngModel)]="rapport" placeholder="Détails du rapport..."></textarea>
+      </div>
+      <div class="modal-footer" style="margin-top: 15px;">
+        <button class="btn-outline" style="flex: 1;" (click)="closeCloturePopup()">Annuler</button>
+        <button class="btn-primary" style="flex: 1; justify-content: center; background-color: #43a047;" (click)="saveCloture()">Clôturer</button>
+      </div>
+    </div>
+  </div>
+  }
+
+  <!-- Consultation Popup -->
+  @if (showConsulterPopup() && selectedReclamation()) {
+  <div class="modal-overlay">
+    <div class="modal-content" style="max-width: 600px;">
+      <div class="modal-header">
+        <h3 class="modal-title">Détails de la Réclamation</h3>
+        <span class="badge badge-success" style="margin-top: 8px;">{{ selectedReclamation()?.statut }}</span>
+      </div>
+      <div class="modal-body" style="text-align: left; padding: 15px 0; max-height: 60vh; overflow-y: auto;">
+
+        <div style="margin-bottom: 15px;">
+          <h4 style="margin-bottom: 8px; color: #1e1b3a; border-bottom: 1px solid #eee; padding-bottom: 4px;">Informations Générales</h4>
+          <p><strong>Référence :</strong> {{ selectedReclamation()?.numeroReference }}</p>
+          <p><strong>Titre :</strong> {{ selectedReclamation()?.titre }}</p>
+          <p><strong>Client :</strong> {{ selectedReclamation()?.nomClient }}</p>
+          <p><strong>Date Création :</strong> {{ selectedReclamation()?.createdAt | date:'shortDate' }}</p>
+        </div>
+
+        <div style="margin-bottom: 15px;">
+          <h4 style="margin-bottom: 8px; color: #1e1b3a; border-bottom: 1px solid #eee; padding-bottom: 4px;">Analyse</h4>
+          <p><strong>Justifiée :</strong> {{ selectedReclamation()?.justifiee ? 'Oui' : 'Non' }}</p>
+          <p><strong>Analyse menée :</strong> {{ selectedReclamation()?.analyseReclamation || 'N/A' }}</p>
+          <p><strong>Justification :</strong> {{ selectedReclamation()?.commentaireJustification || 'N/A' }}</p>
+        </div>
+
+        <div style="margin-bottom: 15px;">
+          <h4 style="margin-bottom: 8px; color: #1e1b3a; border-bottom: 1px solid #eee; padding-bottom: 4px;">Exécution & Contrôle</h4>
+          <p><strong>Date Exécution :</strong> {{ (selectedReclamation()?.dateExecution | date:'shortDate') || 'N/A' }}</p>
+          <p><strong>Date Contrôle :</strong> {{ (selectedReclamation()?.dateControleExecution | date:'shortDate') || 'N/A' }}</p>
+          <p><strong>Commentaire Contrôle :</strong> {{ selectedReclamation()?.commentaireControleExecution || 'N/A' }}</p>
+        </div>
+
+        <div style="margin-bottom: 15px;">
+          <h4 style="margin-bottom: 8px; color: #1e1b3a; border-bottom: 1px solid #eee; padding-bottom: 4px;">Clôture & Rapport</h4>
+          <p><strong>Date Clôture :</strong> {{ (selectedReclamation()?.dateClotureReclamation | date:'shortDate') || 'N/A' }}</p>
+          <p><strong>Responsable Faute :</strong> {{ selectedReclamation()?.responsableFaute || 'N/A' }}</p>
+          <p><strong>Dégâts (MT) :</strong> {{ selectedReclamation()?.degats ? (selectedReclamation()?.degats + ' MT') : 'N/A' }}</p>
+          <p><strong>Rapport final :</strong></p>
+          <div style="background: #f9f9f9; padding: 10px; border-radius: 8px; margin-top: 5px; white-space: pre-wrap;">
+            {{ selectedReclamation()?.rapport || 'Aucun rapport fourni.' }}
+          </div>
+        </div>
+
+      </div>
+      <div class="modal-footer" style="margin-top: 15px;">
+        <button class="btn-outline" style="width: 100%;" (click)="closeConsulterPopup()">Fermer</button>
+      </div>
+    </div>
   </div>
   }
 </div>

@@ -19,4 +19,8 @@ export class ReclamationService {
   create(data: ReclamationCreateDto): Observable<any> {
     return this.http.post(this.apiUrl, data);
   }
+
+  update(id: string, data: ReclamationCreateDto | Reclamation): Observable<any> {
+    return this.http.put(`${this.apiUrl}/${id}`, data);
+  }
 }

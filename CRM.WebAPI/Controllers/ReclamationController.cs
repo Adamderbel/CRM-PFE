@@ -35,7 +35,7 @@ namespace CRM.WebAPI.Controllers
                 // Map to an anonymous object (or a dedicated DTO) to prevent JSON circular reference loops
                 var result = reclamations.Select(r => new ReclamationDtoCreate
                 {
-
+                    Id = r.Id,
                     Titre = r.Titre,
                     Description = r.Description,
                     Statut = r.Statut,
@@ -46,9 +46,18 @@ namespace CRM.WebAPI.Controllers
                     NomClient = r.Client?.Nom,
                     ProduitId = r.ProduitRef,
                     DesignationProduit = r.Produit?.Designation,
-                    ResponsableId = r.ResponsableId
-
-
+                    AnalyseReclamation = r.AnalyseReclamation,
+                    Justifiee = r.Justifiee,
+                    CommentaireJustification = r.CommentaireJustification,
+                    DateExecution = r.DateExecution,
+                    DateControleExecution = r.DateControleExecution,
+                    CommentaireControleExecution = r.CommentaireControleExecution,
+                    DateClotureReclamation = r.DateClotureReclamation,
+                    Rapport = r.Rapport,
+                    ResponsableFaute = r.ResponsableFaute,
+                    Degats = r.Degats,
+                    CreatedAt = r.CreatedAt,
+                    UpdatedAt = r.UpdatedAt
                 });
 
                 return Ok(result);
@@ -87,7 +96,6 @@ namespace CRM.WebAPI.Controllers
                     NumeroReference = reclamation.NumeroReference,
                     ClientId = reclamation.ClientId,
                     ProduitRef = reclamation.ProduitId,
-                    ResponsableId = reclamation.ResponsableId,
                     CreatedAt = DateTime.UtcNow,
                     UpdatedAt = DateTime.UtcNow
                 };
@@ -100,6 +108,51 @@ namespace CRM.WebAPI.Controllers
             {
                 var innerMessage = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
                 return StatusCode(500, new { error = ex.Message, details = innerMessage });
+            }
+        }
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateReclamation(Guid id, [FromBody] ReclamationDtoCreate reclamation)
+        {
+            try
+            {
+                var existingReclamation = await _reclamationService.GetReclamationById(id);
+                if (existingReclamation == null)
+                {
+                    return NotFound(new { error = "Reclamation not found." });
+                }
+
+                existingReclamation.AnalyseReclamation = reclamation.AnalyseReclamation;
+                existingReclamation.Justifiee = reclamation.Justifiee;
+                existingReclamation.CommentaireJustification = reclamation.CommentaireJustification;
+                existingReclamation.Statut = reclamation.Statut; // Should pass 'En cours', 'En execution', 'Controle'
+                if (reclamation.DateExecution.HasValue)
+                {
+                    existingReclamation.DateExecution = reclamation.DateExecution;
+                }
+                if (reclamation.DateControleExecution.HasValue)
+                {
+                    existingReclamation.DateControleExecution = reclamation.DateControleExecution;
+                }
+                existingReclamation.CommentaireControleExecution = reclamation.CommentaireControleExecution;
+
+                if (reclamation.DateClotureReclamation.HasValue)
+                {
+                    existingReclamation.DateClotureReclamation = reclamation.DateClotureReclamation;
+                }
+                existingReclamation.Rapport = reclamation.Rapport;
+                existingReclamation.ResponsableFaute = reclamation.ResponsableFaute;
+                existingReclamation.Degats = reclamation.Degats;
+
+                existingReclamation.UpdatedAt = DateTime.UtcNow;
+
+                await _reclamationService.UpdateReclamation(id, existingReclamation);
+                return Ok(new { message = "Reclamation updated successfully." });
+            }
+            catch (Exception ex)
+            {
+                var innerMessage = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
+                return StatusCode(500, new { error = ex.Message, details = innerMessage, stack = ex.StackTrace });
             }
         }
     }

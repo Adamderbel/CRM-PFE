@@ -26,6 +26,41 @@ namespace CRM.WebAPI.DTOs
 
         public string? DesignationProduit { get; set; }
 
-        public int? ResponsableId { get; set; }
+
+        // Complaint Information
+        [MaxLength(50)]
+        public string? Lot { get; set; }
+
+        public string? AnalyseReclamation { get; set; }
+
+        public bool? Justifiee { get; set; }
+
+        public string? CommentaireJustification { get; set; }
+
+        public DateTime? DateExecution { get; set; }
+
+        public DateTime? DateControleExecution { get; set; }
+
+        public string? CommentaireControleExecution { get; set; }
+
+        public DateTime? DateClotureReclamation { get; set; }
+
+        [MaxLength(50)]
+        public string? EtatReclamation { get; set; }
+
+        public double? Degats { get; set; }
+
+        [MaxLength(50)]
+        public string? Rapport { get; set; }
+
+        [MaxLength(50)]
+        public string? ResponsableFaute { get; set; }
+
+        // Dates
+        public DateTime? CreatedAt { get; set; }
+
+        public DateTime? UpdatedAt { get; set; }
+
+
     }
 }
