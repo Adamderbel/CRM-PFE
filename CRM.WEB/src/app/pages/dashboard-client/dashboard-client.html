@@ -1,0 +1,272 @@
+<div class="espace-client-container">
+
+  <!-- Welcome Banner Hero Card -->
+  <div class="welcome-hero-card">
+    <div class="hero-left">
+      <span class="hero-welcome-badge">Bienvenue {{ userName() }} 👋</span>
+      <h1 class="hero-title">Bienvenue dans votre espace client</h1>
+      <p class="hero-subtitle">Retrouvez ici un aperçu de vos activités, commandes, factures et bien plus encore.</p>
+      <button class="hero-btn" routerLink="/commande-client">Voir mes commandes <span class="arrow">&gt;</span></button>
+    </div>
+    <div class="hero-right">
+      <!-- Embedded glowing chart graphic card -->
+      <div class="performance-chart-card">
+        <div class="perf-header">
+          <span class="perf-label">Performance</span>
+          <div class="perf-value-container">
+            <span class="perf-value">+24.5%</span>
+            <span class="perf-sub">vs mois dernier</span>
+          </div>
+        </div>
+        <!-- Embedded SVGs for the curved line -->
+        <div class="chart-svg-container">
+          <svg viewBox="0 0 200 80" class="chart-sparkline">
+            <defs>
+              <linearGradient id="chart-grad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#fff" stop-opacity="0.3"></stop>
+                <stop offset="100%" stop-color="#fff" stop-opacity="0"></stop>
+              </linearGradient>
+            </defs>
+            <path d="M 0 60 Q 40 40 80 50 T 160 20 T 200 30" fill="none" stroke="#fff" stroke-width="3"
+              stroke-linecap="round"></path>
+            <path d="M 0 60 Q 40 40 80 50 T 160 20 T 200 30 L 200 80 L 0 80 Z" fill="url(#chart-grad)"></path>
+            <circle cx="160" cy="20" r="4" fill="#fff" class="glow-dot"></circle>
+          </svg>
+        </div>
+        <button class="perf-circle-btn">
+          <span class="material-icons">north_east</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats Grid Row -->
+  <div class="stats-row-grid">
+    @for (s of stats; track s.label) {
+    <div class="stat-card">
+      <div class="stat-icon-circle" [style.color]="s.color" [style.background-color]="s.bg">
+        <span class="material-icons">{{ s.icon }}</span>
+      </div>
+      <div class="stat-info">
+        <span class="stat-label">{{ s.label }}</span>
+        <span class="stat-value">{{ s.value }}</span>
+        <span class="stat-trend">
+          <span class="material-icons trend-up-icon">north</span>
+          <span class="trend-bold">{{ s.change }}</span> vs mois dernier
+        </span>
+      </div>
+    </div>
+    }
+  </div>
+
+  <!-- Analytics Charts Row -->
+  <div class="analytics-grid">
+    <div class="panel-card analytics-card large-chart-card">
+      <div class="panel-header">
+        <div>
+          <h2 class="panel-title">Commandes des 8 derniers mois</h2>
+          <p class="panel-subtitle">Suivi de l'évolution de vos commandes sur la période récente.</p>
+        </div>
+        <span class="analytics-chip">+14% ce trimestre</span>
+      </div>
+
+      <div class="line-chart-wrap">
+        <svg viewBox="0 0 280 130" class="line-chart">
+          <defs>
+            <linearGradient id="lineGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#7c5cfc" stop-opacity="0.35"></stop>
+              <stop offset="100%" stop-color="#7c5cfc" stop-opacity="0"></stop>
+            </linearGradient>
+          </defs>
+          <path [attr.d]="monthlyAreaPath" class="line-area"></path>
+          <path [attr.d]="monthlyPath" class="line-stroke"></path>
+          @for (point of monthlyCommandes; let i = $index; track point.label) {
+            <circle
+              class="line-point"
+              [attr.cx]="i * (280 / (monthlyCommandes.length - 1))"
+              [attr.cy]="110 - (point.value / monthlyMax) * 110"
+              r="4">
+            </circle>
+          }
+        </svg>
+
+        <div class="chart-axis-labels">
+          @for (point of monthlyCommandes; track point.label) {
+            <span>{{ point.label }}</span>
+          }
+        </div>
+      </div>
+    </div>
+
+    <div class="panel-card analytics-card donut-card">
+      <div class="panel-header">
+        <div>
+          <h2 class="panel-title">Répartition des statuts</h2>
+          <p class="panel-subtitle">Vue rapide de l'état de vos commandes.</p>
+        </div>
+      </div>
+
+      <div class="donut-layout">
+        <div class="donut-visual" [style.background]="'conic-gradient(' + breakdownGradient + ')'">
+          <div class="donut-center">
+            <span class="donut-value">{{ breakdownTotal }}</span>
+            <span class="donut-label">commandes</span>
+          </div>
+        </div>
+
+        <div class="donut-legend">
+          @for (item of breakdownItems; track item.label) {
+            <div class="legend-row">
+              <span class="legend-swatch" [style.background-color]="item.color"></span>
+              <span class="legend-name">{{ item.label }}</span>
+              <span class="legend-value">{{ item.value }}%</span>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+
+    <div class="panel-card analytics-card bar-card">
+      <div class="panel-header">
+        <div>
+          <h2 class="panel-title">Top produits</h2>
+          <p class="panel-subtitle">Produits les plus commandés par votre profil.</p>
+        </div>
+      </div>
+
+      <div class="bar-chart-list">
+        @for (item of productBars; track item.label) {
+          <div class="bar-row">
+            <div class="bar-row-head">
+              <span class="bar-name">{{ item.label }}</span>
+              <span class="bar-value">{{ item.value }}%</span>
+            </div>
+            <div class="bar-track">
+              <div class="bar-fill" [style.background-color]="item.color" [style.width.%]="item.value"></div>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Content Split Layout -->
+  <div class="dashboard-split-layout">
+
+    <!-- Left Column: Commandes Récentes -->
+    <div class="layout-column-left">
+      <div class="panel-card table-panel">
+        <div class="panel-header">
+          <h2 class="panel-title">Commandes récentes</h2>
+          <button class="panel-action-btn" routerLink="/commande-client">Voir toutes les commandes</button>
+        </div>
+
+        <div class="table-responsive">
+          <table class="recent-orders-table">
+            <thead>
+              <tr>
+                <th>Référence</th>
+                <th>Produit</th>
+                <th>Date</th>
+                <th>Statut</th>
+                <th>Montant</th>
+                <th class="text-right"></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (c of commandes; track c.reference) {
+              <tr>
+                <td class="ref-cell">
+                  <span class="material-icons ref-doc-icon">description</span>
+                  {{ c.reference }}
+                </td>
+                <td class="product-cell">{{ c.produit }}</td>
+                <td>{{ c.date }}</td>
+                <td>
+                  <span class="status-badge" [class]="getStatutClass(c.statut)">
+                    <span class="status-dot"></span>
+                    {{ c.statut }}
+                  </span>
+                </td>
+                <td class="amount-cell">{{ c.montant }}</td>
+                <td class="text-right actions-td">
+                  <button class="action-menu-btn">
+                    <span class="material-icons">more_horiz</span>
+                  </button>
+                </td>
+              </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Table Footer / Pagination -->
+        <div class="table-footer-pagination">
+          <div class="items-per-page">
+            <span>Afficher 5 résultats</span>
+            <span class="material-icons select-arrow">expand_more</span>
+          </div>
+          <div class="pagination-buttons">
+            <button class="p-btn"><span class="material-icons">chevron_left</span></button>
+            <button class="p-btn active">1</button>
+            <button class="p-btn">2</button>
+            <button class="p-btn">3</button>
+            <button class="p-btn"><span class="material-icons">chevron_right</span></button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column: Activities and Quick Actions -->
+    <div class="layout-column-right">
+
+      <!-- Recent Activities Feed -->
+      <div class="panel-card widget-panel">
+        <h2 class="panel-title widget-title">Activité récente</h2>
+
+        <div class="activities-timeline">
+          @for (act of activites; track act.titre) {
+          <div class="timeline-item">
+            <div class="timeline-badge" [class]="'badge-' + act.type">
+              <span class="material-icons">
+                @switch (act.type) {
+                @case ('livraison') { local_mall }
+                @case ('telechargement') { file_download }
+                @case ('expedition') { local_shipping }
+                @case ('paiement') { check_circle }
+                }
+              </span>
+            </div>
+            <div class="timeline-content">
+              <p class="timeline-text">{{ act.titre }}</p>
+              <span class="timeline-time">{{ act.date }}</span>
+            </div>
+          </div>
+          }
+        </div>
+      </div>
+
+      <!-- Quick Actions Grid -->
+      <div class="panel-card widget-panel">
+        <h2 class="panel-title widget-title">Actions rapides</h2>
+
+        <div class="quick-actions-grid">
+          @for (action of actions; track action.titre) {
+          <div class="quick-action-button-card">
+            <div class="action-card-icon">
+              <span class="material-icons">{{ action.icon }}</span>
+            </div>
+            <div class="action-card-text">
+              <span class="action-card-title">{{ action.titre }}</span>
+              <span class="action-card-sub">{{ action.sub }}</span>
+            </div>
+          </div>
+          }
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>

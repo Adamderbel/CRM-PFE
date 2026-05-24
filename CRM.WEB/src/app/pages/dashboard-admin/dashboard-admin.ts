@@ -1,18 +1,9 @@
-import { Component, OnInit, AfterViewInit, ElementRef, ViewChild, signal, computed } from '@angular/core';
+import { Component, OnInit, AfterViewInit, OnDestroy, ElementRef, ViewChild, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../core/services/auth.service';
+import { DashboardAdminService, DashboardStats, RecentProspection } from '../../core/services/dashboard-admin.service';
 import Chart from 'chart.js/auto';
-
-interface Employee {
-  id: number;
-  name: string;
-  avatar: string;
-  role: string;
-  department: string;
-  lastLogin: string;
-  status: 'Actif' | 'Inactif';
-}
 
 @Component({
   selector: 'app-dashboard-admin',
@@ -21,14 +12,24 @@ interface Employee {
   templateUrl: './dashboard-admin.html',
   styleUrl: './dashboard-admin.css',
 })
-export class DashboardAdmin implements OnInit, AfterViewInit {
-  @ViewChild('retentionChart') retentionChartRef!: ElementRef<HTMLCanvasElement>;
-  @ViewChild('diversityChart') diversityChartRef!: ElementRef<HTMLCanvasElement>;
+export class DashboardAdmin implements OnInit, AfterViewInit, OnDestroy {
+  @ViewChild('prospectionsStatusChart') prospectionsStatusChartRef!: ElementRef<HTMLCanvasElement>;
+  @ViewChild('lignesStatusChart') lignesStatusChartRef!: ElementRef<HTMLCanvasElement>;
+  @ViewChild('monthlyTrendChart') monthlyTrendChartRef!: ElementRef<HTMLCanvasElement>;
 
-  private retentionChartInstance: Chart | null = null;
-  private diversityChartInstance: Chart | null = null;
+  private prospectionsStatusChartInstance: Chart | null = null;
+  private lignesStatusChartInstance: Chart | null = null;
+  private monthlyTrendChartInstance: Chart | null = null;
 
-  constructor(private authService: AuthService) {}
+  private statsData: DashboardStats | null = null;
+  private chartsReady = false;
+
+  readonly currentYear = new Date().getFullYear();
+
+  constructor(
+    private authService: AuthService,
+    private dashboardService: DashboardAdminService
+  ) {}
 
   userName = computed(() => this.authService.userFullName() || 'Admin');
 
@@ -39,67 +40,72 @@ export class DashboardAdmin implements OnInit, AfterViewInit {
   }));
 
   searchQuery = signal('');
+  isLoading = signal(true);
 
-  metrics = [
-    { label: 'Total Employés', value: '1 450', icon: 'people', change: '+12%', trend: 'up' },
-    { label: 'Employés Actifs', value: '1 385', icon: 'verified_user', change: '+8%', trend: 'up' },
-    { label: 'Nouvelles Recrues', value: '52', icon: 'person_add', change: '+15%', trend: 'up' },
-    { label: 'Ancienneté Moy.', value: '3,4 ans', icon: 'schedule', change: '+5%', trend: 'up' },
-  ];
+  metrics = signal([
+    { label: 'Total Prospections', value: '-', icon: 'business_center' },
+    { label: 'Prospections Gagnées', value: '-', icon: 'emoji_events' },
+    { label: 'Prospections en Cours', value: '-', icon: 'pending_actions' },
+  ]);
 
-  employees: Employee[] = [
-    { id: 131, name: 'Alex R. Hmth', avatar: 'AH', role: 'Manager', department: 'Ventes', lastLogin: '19 Jan, 19:05', status: 'Actif' },
-    { id: 132, name: 'Jonvi Berter', avatar: 'JB', role: 'Développeur', department: 'Marketing', lastLogin: '18 Jan, 19:25', status: 'Actif' },
-    { id: 133, name: 'Meeratdhranan', avatar: 'MR', role: 'Designer', department: 'RH', lastLogin: '19 Jan, 09:58', status: 'Actif' },
-    { id: 134, name: 'Sara Mitchell', avatar: 'SM', role: 'Analyste', department: 'Tech', lastLogin: '17 Jan, 15:12', status: 'Inactif' },
-    { id: 135, name: 'David Chen', avatar: 'DC', role: 'Chef d\'équipe', department: 'Ventes', lastLogin: '19 Jan, 11:30', status: 'Actif' },
-  ];
+  recentProspections = signal<RecentProspection[]>([]);
 
-  ngOnInit(): void {}
-
-  ngAfterViewInit(): void {
-    this.createRetentionChart();
-    this.createDiversityChart();
+  ngOnInit(): void {
+    this.dashboardService.getStats().subscribe({
+      next: (data) => {
+        this.statsData = data;
+        this.metrics.set([
+          { label: 'Total Prospections', value: data.totalProspections.toString(), icon: 'business_center' },
+          { label: 'Prospections Gagnées', value: data.prospectionsGagnees.toString(), icon: 'emoji_events' },
+          { label: 'Prospections en Cours', value: data.prospectionsEnCours.toString(), icon: 'pending_actions' },
+        ]);
+        this.recentProspections.set(data.recentProspections);
+        this.isLoading.set(false);
+        if (this.chartsReady) {
+          this.buildCharts(data);
+        }
+      },
+      error: () => this.isLoading.set(false)
+    });
   }
 
-  private createRetentionChart(): void {
-    const ctx = this.retentionChartRef.nativeElement.getContext('2d');
+  ngAfterViewInit(): void {
+    this.chartsReady = true;
+    if (this.statsData) {
+      this.buildCharts(this.statsData);
+    }
+  }
+
+  ngOnDestroy(): void {
+    this.prospectionsStatusChartInstance?.destroy();
+    this.lignesStatusChartInstance?.destroy();
+    this.monthlyTrendChartInstance?.destroy();
+  }
+
+  private readonly STATUS_COLORS = ['#7c5cfc', '#2196f3', '#ff9800', '#f59e0b', '#10b981', '#ef4444'];
+
+  private buildCharts(data: DashboardStats): void {
+    this.createProspectionsStatusChart(data);
+    this.createLignesStatusChart(data);
+    this.createMonthlyTrendChart(data);
+  }
+
+  private createProspectionsStatusChart(data: DashboardStats): void {
+    const ctx = this.prospectionsStatusChartRef?.nativeElement.getContext('2d');
     if (!ctx) return;
 
-    // Create gradient
-    const gradient = ctx.createLinearGradient(0, 0, 0, 280);
-    gradient.addColorStop(0, 'rgba(124, 92, 252, 0.2)');
-    gradient.addColorStop(1, 'rgba(124, 92, 252, 0.0)');
-
-    this.retentionChartInstance = new Chart(ctx, {
-      type: 'line',
+    this.prospectionsStatusChartInstance?.destroy();
+    this.prospectionsStatusChartInstance = new Chart(ctx, {
+      type: 'bar',
       data: {
-        labels: ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'],
-        datasets: [
-          {
-            label: 'Taux de rétention',
-            data: [30, 28, 32, 35, 33, 38, 55, 60, 58, 65, 70, 85],
-            borderColor: '#7c5cfc',
-            backgroundColor: gradient,
-            borderWidth: 2,
-            fill: true,
-            tension: 0.4,
-            pointRadius: 0,
-            pointHoverRadius: 6,
-            pointHoverBackgroundColor: '#7c5cfc',
-            pointHoverBorderColor: '#fff',
-            pointHoverBorderWidth: 2,
-          },
-          {
-            label: 'Base',
-            data: [32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32],
-            borderColor: 'rgba(200, 200, 200, 0.5)',
-            borderWidth: 1,
-            borderDash: [5, 5],
-            fill: false,
-            pointRadius: 0,
-          }
-        ],
+        labels: data.prospectionsByStatus.map(s => s.libelle ?? ''),
+        datasets: [{
+          label: 'Prospections',
+          data: data.prospectionsByStatus.map(s => s.count),
+          backgroundColor: this.STATUS_COLORS,
+          borderRadius: 6,
+          borderSkipped: false,
+        }]
       },
       options: {
         responsive: true,
@@ -113,50 +119,39 @@ export class DashboardAdmin implements OnInit, AfterViewInit {
             borderColor: '#eee',
             borderWidth: 1,
             padding: 12,
-            displayColors: false,
-            callbacks: {
-              label: (ctx) => `Stats: ${ctx.raw}%`
-            }
           }
         },
         scales: {
           x: {
-            grid: { color: 'rgba(0, 0, 0, 0.04)' },
+            grid: { display: false },
             ticks: { color: '#999', font: { size: 11 } },
             border: { display: false }
           },
           y: {
-            min: 20,
-            max: 100,
-            grid: { color: 'rgba(0, 0, 0, 0.04)' },
-            ticks: {
-              color: '#999',
-              font: { size: 11 },
-              callback: (value) => value + '%',
-              stepSize: 20
-            },
-            border: { display: false }
+            grid: { color: 'rgba(0,0,0,0.04)' },
+            ticks: { color: '#999', font: { size: 11 }, stepSize: 1 },
+            border: { display: false },
+            beginAtZero: true,
           }
-        },
-        interaction: {
-          intersect: false,
-          mode: 'index'
         }
       }
     });
   }
 
-  private createDiversityChart(): void {
-    const ctx = this.diversityChartRef.nativeElement.getContext('2d');
+  private createLignesStatusChart(data: DashboardStats): void {
+    const ctx = this.lignesStatusChartRef?.nativeElement.getContext('2d');
     if (!ctx) return;
 
-    this.diversityChartInstance = new Chart(ctx, {
+    if (data.lignesByStatus.length === 0) return;
+
+    this.lignesStatusChartInstance?.destroy();
+    this.lignesStatusChartInstance = new Chart(ctx, {
       type: 'doughnut',
       data: {
-        labels: ['Ventes', 'Tech', 'RH', 'Marketing'],
+        labels: data.lignesByStatus.map(s => s.libelle ?? ''),
         datasets: [{
-          data: [138, 11, 10, 13],
-          backgroundColor: ['#7c5cfc', '#2196f3', '#ff9800', '#4caf50'],
+          data: data.lignesByStatus.map(s => s.count),
+          backgroundColor: this.STATUS_COLORS,
           borderColor: '#fff',
           borderWidth: 3,
           hoverOffset: 8,
@@ -175,16 +170,6 @@ export class DashboardAdmin implements OnInit, AfterViewInit {
               padding: 16,
               usePointStyle: true,
               pointStyleWidth: 10,
-              generateLabels: (chart) => {
-                const data = chart.data;
-                return data.labels!.map((label, i) => ({
-                  text: `${label}  ${(data.datasets[0].data[i] as number)}`,
-                  fillStyle: (data.datasets[0].backgroundColor as string[])[i],
-                  strokeStyle: 'transparent',
-                  pointStyle: 'circle',
-                  index: i,
-                }));
-              }
             }
           },
           tooltip: {
@@ -200,7 +185,84 @@ export class DashboardAdmin implements OnInit, AfterViewInit {
     });
   }
 
-  getStatusClass(status: string): string {
-    return status === 'Actif' ? 'status-badge status-active' : 'status-badge status-inactive';
+  private createMonthlyTrendChart(data: DashboardStats): void {
+    const ctx = this.monthlyTrendChartRef?.nativeElement.getContext('2d');
+    if (!ctx) return;
+
+    const gradient = ctx.createLinearGradient(0, 0, 0, 240);
+    gradient.addColorStop(0, 'rgba(124, 92, 252, 0.2)');
+    gradient.addColorStop(1, 'rgba(124, 92, 252, 0.0)');
+
+    this.monthlyTrendChartInstance?.destroy();
+    this.monthlyTrendChartInstance = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: data.monthlyTrend.map(m => m.month),
+        datasets: [{
+          label: 'Prospections Gagnées',
+          data: data.monthlyTrend.map(m => m.count),
+          borderColor: '#7c5cfc',
+          backgroundColor: gradient,
+          borderWidth: 2,
+          fill: true,
+          tension: 0.4,
+          pointRadius: 4,
+          pointBackgroundColor: '#7c5cfc',
+          pointHoverRadius: 6,
+          pointHoverBackgroundColor: '#7c5cfc',
+          pointHoverBorderColor: '#fff',
+          pointHoverBorderWidth: 2,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#fff',
+            titleColor: '#1e1b3a',
+            bodyColor: '#666',
+            borderColor: '#eee',
+            borderWidth: 1,
+            padding: 12,
+            displayColors: false,
+          }
+        },
+        scales: {
+          x: {
+            grid: { color: 'rgba(0,0,0,0.04)' },
+            ticks: { color: '#999', font: { size: 11 } },
+            border: { display: false }
+          },
+          y: {
+            grid: { color: 'rgba(0,0,0,0.04)' },
+            ticks: { color: '#999', font: { size: 11 }, stepSize: 1 },
+            border: { display: false },
+            beginAtZero: true,
+          }
+        },
+        interaction: { intersect: false, mode: 'index' }
+      }
+    });
+  }
+
+  getStatutClass(statutId: number | null | undefined): string {
+    const classes: Record<number, string> = {
+      1: 'statut-nouveau',
+      2: 'statut-qualification',
+      3: 'statut-proposition',
+      4: 'statut-negociation',
+      5: 'statut-gagne',
+      6: 'statut-perdu',
+    };
+    return `status-badge ${classes[statutId ?? 0] ?? ''}`;
+  }
+
+  getProspectInitials(name: string): string {
+    const parts = name.trim().split(' ');
+    return parts.length >= 2
+      ? (parts[0][0] + parts[1][0]).toUpperCase()
+      : name.slice(0, 2).toUpperCase();
   }
 }

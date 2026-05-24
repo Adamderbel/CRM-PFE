@@ -1,0 +1,157 @@
+.ligne-commandes-page {
+  padding: 1.5rem;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.eyebrow {
+  margin: 0 0 .35rem;
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  font-size: .78rem;
+  color: #6b7280;
+}
+
+.title {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 800;
+  color: #111827;
+}
+
+.subtitle {
+  margin: .5rem 0 0;
+  color: #6b7280;
+}
+
+.back-btn,
+.retry-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  border: 0;
+  border-radius: 12px;
+  padding: .85rem 1rem;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.back-btn {
+  background: #eef2ff;
+  color: #1f2937;
+}
+
+.state-card,
+.table-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 18px;
+  box-shadow: 0 8px 30px rgba(15, 23, 42, .06);
+}
+
+.state-card {
+  padding: 1.25rem;
+}
+
+.state-card.error {
+  border-color: #fecaca;
+  background: #fff1f2;
+}
+
+.retry-btn {
+  margin-top: 1rem;
+  background: #2563eb;
+  color: #fff;
+}
+
+.table-responsive {
+  overflow: auto;
+}
+
+.lignes-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 1100px;
+}
+
+.lignes-table th,
+.lignes-table td {
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 1px solid #e5e7eb;
+  white-space: nowrap;
+}
+
+.lignes-table th {
+  background: #f8fafc;
+  color: #475569;
+  font-size: .84rem;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: .35rem .8rem;
+  font-weight: 700;
+  background: #eef2ff;
+  color: #334155;
+}
+
+.statut-livree {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.statut-en-cours {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.statut-confirmee {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.btn-action-reclamation {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  background: #fff1f2;
+  color: #b91c1c;
+  cursor: pointer;
+  transition: background .2s, border-color .2s, color .2s;
+}
+
+.btn-action-reclamation:hover {
+  background: #ffe4e6;
+  border-color: #f87171;
+  color: #991b1b;
+}
+
+.btn-action-reclamation .material-icons {
+  font-size: 1.25rem;
+}
+
+@media (max-width: 768px) {
+  .page-header {
+    flex-direction: column;
+  }
+
+  .title {
+    font-size: 1.6rem;
+  }
+}

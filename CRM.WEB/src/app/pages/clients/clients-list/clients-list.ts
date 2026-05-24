@@ -1,8 +1,12 @@
-import { Component, OnInit, signal, computed } from '@angular/core';
+import { Component, OnInit, signal, computed, Injector, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ClientCermService } from '../../../core/services/client-cerm.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { ClientCerm } from '../../../core/models/client-cerm.model';
+import { toObservable } from '@angular/core/rxjs-interop';
+import { debounceTime, distinctUntilChanged, switchMap, catchError, tap } from 'rxjs/operators';
+import { of } from 'rxjs';
 
 interface ClientUI extends ClientCerm {
   email: string;
@@ -22,28 +26,31 @@ interface ClientUI extends ClientCerm {
 export class ClientsList implements OnInit {
   isModalOpen = false;
   isLoading = signal(false);
+  isSaving = signal(false);
   searchQuery = signal('');
 
+  // Search logic for ClientCerm linking
+  clientSearchQuery = signal('');
+  foundClients = signal<ClientCerm[]>([]);
+  selectedClient = signal<ClientCerm | null>(null);
+  isSearchingClient = signal(false);
+
   // Extended mock data for UI demo
-  clients = signal<ClientUI[]>([
-    { refClient: 1024, nom: 'Global Tech Solutions', contactPerson: 'Alice Dubois', email: 'contact@globaltech.fr', status: 'Actif', lastSyncDate: '2024-05-10', avatar: 'GT', revenue: '1.2M €' },
-    { refClient: 1085, nom: 'Industries Martin SAS', contactPerson: 'Robert Martin', email: 'r.martin@indusmartin.com', status: 'Actif', lastSyncDate: '2024-05-12', avatar: 'IM', revenue: '450K €' },
-    { refClient: 2142, nom: 'BioHealth Pharma', contactPerson: 'Clara Bernard', email: 'c.bernard@biohealth.org', status: 'En attente', lastSyncDate: '2024-05-08', avatar: 'BH', revenue: '890K €' },
-    { refClient: 3051, nom: 'Luxe & Co', contactPerson: 'Marc Leroy', email: 'm.leroy@luxeco.com', status: 'Suspendu', lastSyncDate: '2024-04-30', avatar: 'LC', revenue: '2.5M €' },
-    { refClient: 4122, nom: 'Green Energy Group', contactPerson: 'Sophie Guerin', email: 's.guerin@greenenergy.eu', status: 'Actif', lastSyncDate: '2024-05-14', avatar: 'GE', revenue: '1.8M €' },
-  ]);
+  clients = signal<ClientUI[]>([]);
 
   newClient = {
     nom: '',
-    contactPerson: '',
+    prenom: '',
+    username: '',
+    password: '',
     email: '',
-    status: 'Actif' as const
+    refClient: null as number | null
   };
 
   filteredClients = computed(() => {
     const query = this.searchQuery().toLowerCase();
-    return this.clients().filter(c => 
-      (c.nom?.toLowerCase().includes(query)) || 
+    return this.clients().filter(c =>
+      (c.nom?.toLowerCase().includes(query)) ||
       (c.refClient.toString().includes(query)) ||
       (c.contactPerson.toLowerCase().includes(query))
     );
@@ -59,13 +66,62 @@ export class ClientsList implements OnInit {
     };
   });
 
-  constructor(private clientService: ClientCermService) {
+  constructor(
+    private clientService: ClientCermService,
+    private authService: AuthService,
+    private injector: Injector
+  ) {
     console.log('ClientsList component loaded');
+    this.setupClientSearch();
   }
 
+  private setupClientSearch() {
+    toObservable(this.clientSearchQuery, { injector: this.injector }).pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      tap(() => this.isSearchingClient.set(true)),
+      switchMap(query => {
+        if (!query || query.length < 2) {
+          this.foundClients.set([]);
+          this.isSearchingClient.set(false);
+          return of([]);
+        }
+
+        const isNumeric = /^\d+$/.test(query);
+        const searchParams = isNumeric
+          ? { refClient: query, limit: 10 }
+          : { nom: query, limit: 10 };
+
+        return this.clientService.recherche(searchParams).pipe(
+          catchError(() => of([]))
+        );
+      })
+    ).subscribe(clients => {
+      this.foundClients.set(clients);
+      this.isSearchingClient.set(false);
+    });
+  }
+
+  selectClient(client: ClientCerm) {
+    this.selectedClient.set(client);
+    this.clientSearchQuery.set(client.nom || client.refClient.toString());
+    this.newClient.refClient = client.refClient;
+    // On ne force plus le remplacement du nom pour permettre à l'utilisateur de taper ce qu'il veut
+    // if (client.nom) {
+    //   this.newClient.nom = client.nom;
+    // }
+    this.foundClients.set([]);
+  }
+
+  clearClient() {
+    this.selectedClient.set(null);
+    this.clientSearchQuery.set('');
+    this.newClient.refClient = null;
+  }
+
+
   ngOnInit(): void {
-    // We keep the mock data for UI demo, but we could fetch from service here
-    // this.loadFromService();
+    this.loadFromService();
   }
 
   loadFromService(): void {
@@ -97,20 +153,32 @@ export class ClientsList implements OnInit {
   }
 
   createClient() {
-    const clientToAdd: ClientUI = {
-      refClient: Math.floor(Math.random() * 9000) + 1000,
+    this.isSaving.set(true);
+    const registerReq = {
       nom: this.newClient.nom,
-      contactPerson: this.newClient.contactPerson,
-      email: this.newClient.email,
-      status: this.newClient.status,
-      lastSyncDate: new Date().toISOString().split('T')[0],
-      avatar: this.newClient.nom.substring(0, 2).toUpperCase(),
-      revenue: '0 €'
+      prenom: this.newClient.prenom,
+      userName: this.newClient.username,
+      password: this.newClient.password,
+      email: this.newClient.email || `${this.newClient.username}@client.com`,
+      role: 'Client_User',
+      refClient: this.newClient.refClient
     };
 
-    this.clients.update(list => [clientToAdd, ...list]);
-    this.closeModal();
-    this.newClient = { nom: '', contactPerson: '', email: '', status: 'Actif' };
+    this.authService.register(registerReq).subscribe({
+      next: () => {
+        this.isSaving.set(false);
+        alert('Compte client créé avec succès ! Vous pouvez maintenant vous connecter avec ces identifiants.');
+        this.loadFromService();
+        this.closeModal();
+        this.newClient = { nom: '', prenom: '', username: '', password: '', email: '', refClient: null };
+        this.clearClient();
+      },
+      error: (err) => {
+        this.isSaving.set(false);
+        console.error('Erreur lors de la création du compte', err);
+        alert('Erreur lors de la création du compte. Vérifiez les informations.');
+      }
+    });
   }
 
   onSearchChange(value: string) {

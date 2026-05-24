@@ -31,6 +31,31 @@ export const routes: Routes = [
         data: { roles: ['Commercial'] }
       },
       {
+        path: 'dashboard-client',
+        loadComponent: () => import('./pages/dashboard-client/dashboard-client').then((m) => m.DashboardClient),
+        canActivate: [roleGuard],
+        data: { roles: ['Client_User'] }
+      },
+      {
+        path: 'commande-client',
+        loadComponent: () => import('./pages/commandes-client/commandes-client').then((m) => m.CommandesClient),
+        pathMatch: 'full',
+        canActivate: [roleGuard],
+        data: { roles: ['Client_User'] }
+      },
+      {
+        path: 'commande-client/lignes/:refCommande',
+        loadComponent: () => import('./pages/ligne-commandes/ligne-commandes').then((m) => m.LigneCommandes),
+        canActivate: [roleGuard],
+        data: { roles: ['Client_User'] }
+      },
+      {
+        path: 'reclamation-client',
+        loadComponent: () => import('./pages/reclamation-client/reclamation-client').then((m) => m.ReclamationClient),
+        canActivate: [roleGuard],
+        data: { roles: ['Client_User'] }
+      },
+      {
         path: 'dashboard-admin',
         loadComponent: () => import('./pages/dashboard-admin/dashboard-admin').then((m) => m.DashboardAdmin),
         canActivate: [roleGuard],
@@ -112,7 +137,7 @@ export const routes: Routes = [
         path: 'reclamations',
         loadComponent: () => import('./pages/reclamations/reclamation-list/reclamation-list').then((m) => m.ReclamationList),
         canActivate: [roleGuard],
-        data: { roles: ['Commercial'] }
+        data: { roles: ['Commercial', 'Client_User'] }
       },
       {
         path: 'reclamations/create',

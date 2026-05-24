@@ -1,4 +1,4 @@
-﻿using CRM.DAL.DBContexts;
+using CRM.DAL.DBContexts;
 using CRM.DAL.GenericRepository;
 using CRM.Entities.Common;
 using System;
@@ -33,6 +33,7 @@ namespace CRM.Services.clientscerm
         public async Task update(ClientCerm clientCerm)
         {
           await  _clientCermRepository.UpdateAsync(clientCerm);
+            await _context.SaveChangesAsync();
         }
     }
 }

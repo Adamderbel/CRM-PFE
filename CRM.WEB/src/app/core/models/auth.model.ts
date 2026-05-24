@@ -10,6 +10,7 @@ export interface RegisterRequest {
   prenom: string;
   password: string;
   role: string;
+  refClient?: number | null;
 }
 
 export interface LoginResponse {

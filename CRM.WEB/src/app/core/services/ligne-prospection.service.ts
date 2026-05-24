@@ -96,6 +96,27 @@ export class LigneProspectionService {
     );
   }
 
+  close(ligneId: string, causeEchecId?: number): Observable<any> {
+    this.isLoading.set(true);
+    this.errorMessage.set(null);
+
+    const params: any = {};
+    if (causeEchecId !== undefined && causeEchecId !== null) {
+      params.causeEchecId = causeEchecId;
+    }
+
+    return this.http.post(`${this.apiUrl}/${ligneId}/close`, null, {
+      params,
+      responseType: 'text'
+    }).pipe(
+      tap(() => {
+        this.isLoading.set(false);
+        this.getAll().subscribe(); // Refresh the list
+      }),
+      catchError((error) => this.handleError(error))
+    );
+  }
+
   private handleError(error: HttpErrorResponse): Observable<never> {
     this.isLoading.set(false);
     let errorMsg = 'Une erreur est survenue';

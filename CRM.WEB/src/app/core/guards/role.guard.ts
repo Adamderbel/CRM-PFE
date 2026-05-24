@@ -17,12 +17,24 @@ export const roleGuard: CanActivateFn = (route, state) => {
     return true;
   }
 
-  // Not authorized, redirect to the correct dashboard
-  if (authService.hasRole('Admin')) {
+  // Prevent infinite loop
+  const targetUrl = state.url;
+
+  if (authService.hasRole('Admin') && targetUrl !== '/dashboard-admin') {
     router.navigate(['/dashboard-admin']);
-  } else {
+    return false;
+  } else if (authService.hasRole('Commercial') && targetUrl !== '/dashboard') {
     router.navigate(['/dashboard']);
+    return false;
+  } else if (authService.hasRole('Client_User') && targetUrl !== '/dashboard-client') {
+    router.navigate(['/dashboard-client']);
+    return false;
+  } else if (targetUrl !== '/login' && !authService.hasRole('Commercial') && !authService.hasRole('Client_User') && !authService.hasRole('Admin')) {
+    router.navigate(['/login']);
+    return false;
   }
+
+  // If they are already on the fallback URL but still unauthorized, just return false so it doesn't loop
   return false;
 };
 

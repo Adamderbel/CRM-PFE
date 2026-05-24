@@ -84,6 +84,14 @@ namespace CRM.Services.ActionProspection
             if (action.ProspectionId == Guid.Empty)
                 throw new Exception("ProspectionId obligatoire");
 
+            if (action.TypeActionId <= 0)
+                throw new Exception("TypeActionId obligatoire");
+
+            var typeExists = await _context.TypeActionProspections
+                .AnyAsync(t => t.Id == action.TypeActionId);
+            if (!typeExists)
+                throw new Exception("Type d'action introuvable");
+
             if (action.LigneProspectionId != null)
             {
                 var ligne = await _context.LigneProspections

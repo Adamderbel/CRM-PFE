@@ -2,7 +2,7 @@
   <!-- En-tête -->
   <div class="dashboard-header">
     <div class="header-left">
-      <h1 class="page-title">Gestion des Employés & Analytiques</h1>
+      <h1 class="page-title">Tableau de Bord CRM</h1>
     </div>
     <div class="header-right">
       <span class="material-icons header-icon">calendar_today</span>
@@ -12,52 +12,65 @@
 
   <!-- Cartes KPI -->
   <section class="metrics-section">
-    @for (metric of metrics; track metric.label) {
+    @for (metric of metrics(); track metric.label) {
       <div class="kpi-card">
         <div class="kpi-header">
           <span class="kpi-label">{{ metric.label }}</span>
-          <span class="kpi-change" [class.positive]="metric.trend === 'up'">
-            <span class="material-icons kpi-trend-icon">trending_up</span>
-            {{ metric.change }}
-          </span>
+          <span class="material-icons kpi-icon">{{ metric.icon }}</span>
         </div>
-        <div class="kpi-value">{{ metric.value }}</div>
+        <div class="kpi-value">
+          @if (isLoading()) {
+            <span class="kpi-skeleton"></span>
+          } @else {
+            {{ metric.value }}
+          }
+        </div>
       </div>
     }
   </section>
 
-  <!-- Graphiques -->
+  <!-- Graphiques: Statuts -->
   <section class="charts-section">
-    <!-- Graphique de rétention -->
-    <div class="chart-card chart-retention">
+    <div class="chart-card">
       <div class="chart-header">
-        <h2 class="chart-title">Tendance de Rétention des Employés</h2>
-        <div class="chart-legend">
-          <span class="material-icons legend-icon">show_chart</span>
-          <span class="legend-text">Tendance</span>
-        </div>
+        <h2 class="chart-title">Prospections par Statut</h2>
       </div>
       <div class="chart-body">
-        <canvas #retentionChart></canvas>
+        <canvas #prospectionsStatusChart></canvas>
       </div>
     </div>
 
-    <!-- Graphique de diversité -->
-    <div class="chart-card chart-diversity">
+    <div class="chart-card">
       <div class="chart-header">
-        <h2 class="chart-title">Diversité & Composition</h2>
+        <h2 class="chart-title">Lignes de Prospection</h2>
       </div>
       <div class="chart-body chart-body-donut">
-        <canvas #diversityChart></canvas>
+        <canvas #lignesStatusChart></canvas>
       </div>
     </div>
   </section>
 
-  <!-- Tableau de gestion des utilisateurs -->
+  <!-- Graphique: Tendance mensuelle -->
+  <section class="charts-section-full">
+    <div class="chart-card">
+      <div class="chart-header">
+        <h2 class="chart-title">Tendance Mensuelle — Prospections Gagnées</h2>
+        <div class="chart-legend">
+          <span class="material-icons legend-icon">show_chart</span>
+          <span class="legend-text">{{ currentYear }}</span>
+        </div>
+      </div>
+      <div class="chart-body">
+        <canvas #monthlyTrendChart></canvas>
+      </div>
+    </div>
+  </section>
+
+  <!-- Tableau des prospections récentes -->
   <section class="table-section">
     <div class="table-card">
       <div class="table-header">
-        <h2 class="table-title">Tableau de Gestion des Utilisateurs</h2>
+        <h2 class="table-title">Prospections Récentes</h2>
         <div class="table-actions">
           <div class="table-search">
             <span class="material-icons">search</span>
@@ -75,58 +88,37 @@
         <table class="admin-table">
           <thead>
             <tr>
-              <th>
-                ID
-                <span class="material-icons sort-icon">unfold_more</span>
-              </th>
-              <th>
-                Nom
-                <span class="material-icons sort-icon">unfold_more</span>
-              </th>
-              <th>
-                Rôle
-                <span class="material-icons sort-icon">unfold_more</span>
-              </th>
-              <th>
-                Département
-                <span class="material-icons sort-icon">unfold_more</span>
-              </th>
-              <th>
-                Dernière Connexion
-                <span class="material-icons sort-icon">unfold_more</span>
-              </th>
+              <th>Prospect</th>
               <th>Statut</th>
-              <th>Actions</th>
+              <th>Date Début</th>
+              <th>Date Fin</th>
             </tr>
           </thead>
           <tbody>
-            @for (emp of employees; track emp.id) {
+            @if (isLoading()) {
               <tr>
-                <td class="td-id">{{ emp.id }}</td>
-                <td class="td-name">
-                  <div class="employee-info">
-                    <div class="employee-avatar">{{ emp.avatar }}</div>
-                    <span>{{ emp.name }}</span>
-                  </div>
-                </td>
-                <td>{{ emp.role }}</td>
-                <td>{{ emp.department }}</td>
-                <td>{{ emp.lastLogin }}</td>
-                <td>
-                  <span [class]="getStatusClass(emp.status)">{{ emp.status }}</span>
-                </td>
-                <td class="td-actions">
-                  <button class="action-btn" title="Modifier">
-                    <span class="material-icons">edit</span>
-                  </button>
-                  <button class="action-btn" title="Copier">
-                    <span class="material-icons">content_copy</span>
-                  </button>
-                  <button class="action-btn action-delete" title="Supprimer">
-                    <span class="material-icons">delete_outline</span>
-                  </button>
-                </td>
+                <td colspan="4" class="td-empty">Chargement...</td>
               </tr>
+            } @else if (recentProspections().length === 0) {
+              <tr>
+                <td colspan="4" class="td-empty">Aucune prospection trouvée.</td>
+              </tr>
+            } @else {
+              @for (p of recentProspections(); track p.id) {
+                <tr>
+                  <td class="td-name">
+                    <div class="employee-info">
+                      <div class="employee-avatar">{{ getProspectInitials(p.prospect) }}</div>
+                      <span>{{ p.prospect }}</span>
+                    </div>
+                  </td>
+                  <td>
+                    <span [class]="getStatutClass(p.statutId)">{{ p.statut }}</span>
+                  </td>
+                  <td>{{ p.dateDebut || '-' }}</td>
+                  <td>{{ p.dateFin || '-' }}</td>
+                </tr>
+              }
             }
           </tbody>
         </table>

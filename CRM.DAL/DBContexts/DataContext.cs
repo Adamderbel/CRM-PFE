@@ -28,6 +28,10 @@ namespace CRM.DAL.DBContexts
         public DbSet<TypeActionProspection> TypeActionProspections { get; set; }
 
         public DbSet<ActionsProspection> ActionsProspections { get; set; }
+
+        public DbSet<CermCommande> Commandes { get; set; }
+        public DbSet<CermCommandeLigne> LignesCommande { get; set; }
+        
         public DataContext()
         {
             

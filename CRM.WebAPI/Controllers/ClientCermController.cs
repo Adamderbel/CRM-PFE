@@ -69,7 +69,18 @@ namespace CRM.WebAPI.Controllers
                 return NotFound(new { message = $"Client Cerm with ID {id} not found." });
             }
             return Ok(clientCerm);
+        }
 
+        [HttpGet("user/{userId}")]
+        public async Task<IActionResult> GetByUserId(Guid userId)
+        {
+            var clients = await _clientCermService.GetAllAsync();
+            var client = clients.FirstOrDefault(c => c.idUser == userId);
+            if (client == null)
+            {
+                return NotFound(new { message = $"Client associated with User ID {userId} not found." });
+            }
+            return Ok(client);
         }
     }
 }
