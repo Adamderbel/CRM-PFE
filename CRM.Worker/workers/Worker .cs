@@ -30,8 +30,8 @@ namespace CRM.Worker.workers
                    // await _sync.SyncProduitsAsync();
                     //await _sync.SyncCommandesAsync();
                     //await _sync.SyncCommandesLignesAsync();
-                    await _sync.SyncProspectClientCermAsync();
-                    await _sync.SyncRefProduitProspectionAsync();
+                  //  await _sync.SyncProspectClientCermAsync();
+                   // await _sync.SyncRefProduitProspectionAsync();
                     await _sync.SyncDevisProspectionAsync();
                     await _sync.SyncCommandesProspectionAsync();
                    

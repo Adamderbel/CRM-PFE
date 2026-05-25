@@ -196,11 +196,11 @@ WHERE trn__srt <> 'R';
 
                     QteCommandee = reader.IsDBNull(4)
                         ? 0
-                        : Convert.ToDouble(reader.GetValue(4)),
+                        : Convert.ToDecimal(reader.GetValue(4)),
 
                     QteExpediee = reader.IsDBNull(5)
                         ? 0
-                        : Convert.ToDouble(reader.GetValue(5)),
+                        : Convert.ToDecimal(reader.GetValue(5)),
 
                     StatutLigne = reader.IsDBNull(6)
                         ? null
