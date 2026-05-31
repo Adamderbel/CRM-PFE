@@ -19,6 +19,7 @@
     [AccessFailedCount] INT NOT NULL DEFAULT 0,
     [IsActive] BIT NOT NULL DEFAULT 1,
     [CreatedAt] DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(), 
+    [LastLoginAt] DATETIME NULL, 
     CONSTRAINT [PK_Users] PRIMARY KEY ([Id])
 );
 GO

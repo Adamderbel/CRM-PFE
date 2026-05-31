@@ -16,6 +16,10 @@ export class ReclamationService {
     return this.http.get<Reclamation[]>(this.apiUrl);
   }
 
+  getByClient(clientId: number): Observable<Reclamation[]> {
+    return this.http.get<Reclamation[]>(`${this.apiUrl}/client/${clientId}`);
+  }
+
   create(data: ReclamationCreateDto): Observable<any> {
     return this.http.post(this.apiUrl, data);
   }

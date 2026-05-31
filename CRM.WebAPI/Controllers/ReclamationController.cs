@@ -1,8 +1,12 @@
 using CRM.Entities;
+using CRM.Entities.Common;
+using CRM.Entities.Security;
 using CRM.Services.clientscerm;
+using CRM.Services.notification;
 using CRM.Services.produitecerms;
 using CRM.Services.reclamations;
 using CRM.WebAPI.DTOs;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CRM.WebAPI.Controllers
@@ -14,12 +18,21 @@ namespace CRM.WebAPI.Controllers
         private readonly IReclamationService _reclamationService;
         private readonly IproduitCermService _produitCermService;
         private readonly IClientCermService _clientCermService;
+        private readonly INotificationService _notificationService;
+        private readonly UserManager<SecUser> _userManager;
 
-        public ReclamationController(IReclamationService reclamationService, IproduitCermService produitCermService, IClientCermService clientCermService)
+        public ReclamationController(
+            IReclamationService reclamationService,
+            IproduitCermService produitCermService,
+            IClientCermService clientCermService,
+            INotificationService notificationService,
+            UserManager<SecUser> userManager)
         {
             _reclamationService = reclamationService;
             _produitCermService = produitCermService;
             _clientCermService = clientCermService;
+            _notificationService = notificationService;
+            _userManager = userManager;
         }
 
         [HttpGet]
@@ -66,6 +79,56 @@ namespace CRM.WebAPI.Controllers
            
         }
 
+        [HttpGet("client/{clientId}")]
+        public async Task<IActionResult> GetByClient(int clientId)
+        {
+            try
+            {
+            var all = await _reclamationService.GetAllReclamations();
+            var filtered = all.Where(r => r.ClientId == clientId).ToList();
+
+            foreach (var item in filtered)
+            {
+                item.Client = await _clientCermService.GetByIdAsync(item.ClientId);
+                item.Produit = await _produitCermService.GetByIdAsync(item.ProduitRef);
+            }
+
+            var result = filtered.Select(r => new ReclamationDtoCreate
+            {
+                Id = r.Id,
+                Titre = r.Titre,
+                Description = r.Description,
+                Statut = r.Statut,
+                Priorite = r.Priorite,
+                Source = r.Source,
+                NumeroReference = r.NumeroReference,
+                ClientId = r.ClientId,
+                NomClient = r.Client?.Nom,
+                ProduitId = r.ProduitRef,
+                DesignationProduit = r.Produit?.Designation,
+                AnalyseReclamation = r.AnalyseReclamation,
+                Justifiee = r.Justifiee,
+                CommentaireJustification = r.CommentaireJustification,
+                DateExecution = r.DateExecution,
+                DateControleExecution = r.DateControleExecution,
+                CommentaireControleExecution = r.CommentaireControleExecution,
+                DateClotureReclamation = r.DateClotureReclamation,
+                Rapport = r.Rapport,
+                ResponsableFaute = r.ResponsableFaute,
+                Degats = r.Degats,
+                CreatedAt = r.CreatedAt,
+                UpdatedAt = r.UpdatedAt
+            });
+
+            return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                var inner = ex.InnerException?.Message ?? "";
+                return StatusCode(500, new { error = ex.Message, details = inner });
+            }
+        }
+
         [HttpPost]
         public async Task<IActionResult> CreateReclamation([FromBody] ReclamationDtoCreate reclamation)
         {
@@ -102,6 +165,37 @@ namespace CRM.WebAPI.Controllers
 
                 
                 await _reclamationService.AddReclamation(newReclamation);
+
+                // Notify all commerciaux that a new client reclamation has been filed
+                try
+                {
+                    var commerciaux = await _userManager.GetUsersInRoleAsync("COMMERCIAL");
+                    if (commerciaux.Count > 0)
+                    {
+                        var clientName = client.Nom ?? $"Client #{client.RefClient}";
+                        var produitName = produit.Designation ?? $"Produit #{produit.RefProduit}";
+                        var titre = "Nouvelle réclamation";
+                        var message = $"{clientName} a déposé une réclamation sur {produitName}.";
+
+                        var notifs = commerciaux.Select(u => new Notification
+                        {
+                            UserId = u.Id,
+                            TypeNotification = "RECLAMATION",
+                            Titre = titre,
+                            Message = message,
+                            Lu = false,
+                            DateCreation = DateTime.UtcNow
+                        });
+
+                        await _notificationService.CreateManyAsync(notifs);
+                    }
+                }
+                catch (Exception notifEx)
+                {
+                    // Don't fail the reclamation if notifications crash — just log it
+                    Console.WriteLine($"[Notification] Failed to notify commerciaux: {notifEx.Message}");
+                }
+
                 return Ok(new { message = "Reclamation created successfully." });
             }
             catch (Exception ex)

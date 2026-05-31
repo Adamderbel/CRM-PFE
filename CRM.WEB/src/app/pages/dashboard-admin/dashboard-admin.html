@@ -10,118 +10,18 @@
     </div>
   </div>
 
-  <!-- Cartes KPI -->
-  <section class="metrics-section">
-    @for (metric of metrics(); track metric.label) {
-      <div class="kpi-card">
-        <div class="kpi-header">
-          <span class="kpi-label">{{ metric.label }}</span>
-          <span class="material-icons kpi-icon">{{ metric.icon }}</span>
-        </div>
-        <div class="kpi-value">
-          @if (isLoading()) {
-            <span class="kpi-skeleton"></span>
-          } @else {
-            {{ metric.value }}
-          }
-        </div>
-      </div>
-    }
-  </section>
-
-  <!-- Graphiques: Statuts -->
-  <section class="charts-section">
-    <div class="chart-card">
-      <div class="chart-header">
-        <h2 class="chart-title">Prospections par Statut</h2>
-      </div>
-      <div class="chart-body">
-        <canvas #prospectionsStatusChart></canvas>
-      </div>
-    </div>
-
-    <div class="chart-card">
-      <div class="chart-header">
-        <h2 class="chart-title">Lignes de Prospection</h2>
-      </div>
-      <div class="chart-body chart-body-donut">
-        <canvas #lignesStatusChart></canvas>
-      </div>
-    </div>
-  </section>
-
-  <!-- Graphique: Tendance mensuelle -->
+  <!-- Utilisateurs par Rôle -->
   <section class="charts-section-full">
     <div class="chart-card">
       <div class="chart-header">
-        <h2 class="chart-title">Tendance Mensuelle — Prospections Gagnées</h2>
+        <h2 class="chart-title">Utilisateurs par Rôle</h2>
         <div class="chart-legend">
-          <span class="material-icons legend-icon">show_chart</span>
-          <span class="legend-text">{{ currentYear }}</span>
+          <span class="material-icons legend-icon">people</span>
+          <span class="legend-text">Répartition globale</span>
         </div>
       </div>
       <div class="chart-body">
-        <canvas #monthlyTrendChart></canvas>
-      </div>
-    </div>
-  </section>
-
-  <!-- Tableau des prospections récentes -->
-  <section class="table-section">
-    <div class="table-card">
-      <div class="table-header">
-        <h2 class="table-title">Prospections Récentes</h2>
-        <div class="table-actions">
-          <div class="table-search">
-            <span class="material-icons">search</span>
-            <input
-              type="text"
-              placeholder="Rechercher..."
-              [ngModel]="searchQuery()"
-              (ngModelChange)="searchQuery.set($event)"
-            />
-          </div>
-        </div>
-      </div>
-
-      <div class="table-wrapper">
-        <table class="admin-table">
-          <thead>
-            <tr>
-              <th>Prospect</th>
-              <th>Statut</th>
-              <th>Date Début</th>
-              <th>Date Fin</th>
-            </tr>
-          </thead>
-          <tbody>
-            @if (isLoading()) {
-              <tr>
-                <td colspan="4" class="td-empty">Chargement...</td>
-              </tr>
-            } @else if (recentProspections().length === 0) {
-              <tr>
-                <td colspan="4" class="td-empty">Aucune prospection trouvée.</td>
-              </tr>
-            } @else {
-              @for (p of recentProspections(); track p.id) {
-                <tr>
-                  <td class="td-name">
-                    <div class="employee-info">
-                      <div class="employee-avatar">{{ getProspectInitials(p.prospect) }}</div>
-                      <span>{{ p.prospect }}</span>
-                    </div>
-                  </td>
-                  <td>
-                    <span [class]="getStatutClass(p.statutId)">{{ p.statut }}</span>
-                  </td>
-                  <td>{{ p.dateDebut || '-' }}</td>
-                  <td>{{ p.dateFin || '-' }}</td>
-                </tr>
-              }
-            }
-          </tbody>
-        </table>
+        <canvas #usersByRoleChart></canvas>
       </div>
     </div>
   </section>

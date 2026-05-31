@@ -39,6 +39,26 @@ namespace CRM.Services.notification
             notif.Lu = true;
             await _context.SaveChangesAsync();
         }
+
+        public async Task CreateAsync(Notification notification)
+        {
+            if (notification.Id == Guid.Empty) notification.Id = Guid.NewGuid();
+            if (notification.DateCreation == default) notification.DateCreation = DateTime.UtcNow;
+            _context.Set<Notification>().Add(notification);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task CreateManyAsync(IEnumerable<Notification> notifications)
+        {
+            var list = notifications.ToList();
+            foreach (var n in list)
+            {
+                if (n.Id == Guid.Empty) n.Id = Guid.NewGuid();
+                if (n.DateCreation == default) n.DateCreation = DateTime.UtcNow;
+            }
+            _context.Set<Notification>().AddRange(list);
+            await _context.SaveChangesAsync();
+        }
     }
 }
 

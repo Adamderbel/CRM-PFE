@@ -1,7 +1,11 @@
+using CRM.Entities.Security;
 using CRM.Services;
 using CRM.Services.LigneProspections;
+using CRM.Services.produitecerms;
 using CRM.Services.prospections;
+using CRM.Services.reclamations;
 using CRM.Services.StatutPrespection;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CRM.WebAPI.Controllers
@@ -14,17 +18,26 @@ namespace CRM.WebAPI.Controllers
         private readonly ILigneProspectionService _ligneProspectionService;
         private readonly IstatutProspectionService _statutProspectionService;
         private readonly IProspectService _prospectService;
+        private readonly IReclamationService _reclamationService;
+        private readonly IproduitCermService _produitCermService;
+        private readonly UserManager<SecUser> _userManager;
 
         public DashboardController(
             IProspectionServices prospectionServices,
             ILigneProspectionService ligneProspectionService,
             IstatutProspectionService statutProspectionService,
-            IProspectService prospectService)
+            IProspectService prospectService,
+            IReclamationService reclamationService,
+            IproduitCermService produitCermService,
+            UserManager<SecUser> userManager)
         {
             _prospectionServices = prospectionServices;
             _ligneProspectionService = ligneProspectionService;
             _statutProspectionService = statutProspectionService;
             _prospectService = prospectService;
+            _reclamationService = reclamationService;
+            _produitCermService = produitCermService;
+            _userManager = userManager;
         }
 
         [HttpGet("stats")]
@@ -109,6 +122,86 @@ namespace CRM.WebAPI.Controllers
                     monthlyTrend,
                     recentProspections
                 });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
+        [HttpGet("admin-stats")]
+        public async Task<IActionResult> GetAdminStats()
+        {
+            try
+            {
+                var prospections = (await _prospectionServices.GetAllAsync()).ToList();
+                var reclamations = (await _reclamationService.GetAllReclamations()).ToList();
+
+                // C. Réclamations par statut
+                var reclamationsByStatut = reclamations
+                    .GroupBy(r => string.IsNullOrWhiteSpace(r.Statut) ? "Inconnu" : r.Statut!.Trim())
+                    .Select(g => new { statut = g.Key, count = g.Count() })
+                    .OrderByDescending(x => x.count)
+                    .ToList();
+
+                // D. Tendance globale — toutes les prospections par mois (année courante)
+                var currentYear = DateTime.Now.Year;
+                var culture = new System.Globalization.CultureInfo("fr-FR");
+                var monthlyProspections = Enumerable.Range(1, 12).Select(m => new
+                {
+                    month = new DateTime(currentYear, m, 1).ToString("MMM", culture),
+                    count = prospections.Count(p =>
+                        p.DateDebut.HasValue &&
+                        p.DateDebut.Value.Year == currentYear &&
+                        p.DateDebut.Value.Month == m)
+                }).ToList();
+
+                // E. Top produits réclamés (top 5)
+                var topGroups = reclamations
+                    .GroupBy(r => r.ProduitRef)
+                    .Select(g => new { produitRef = g.Key, count = g.Count() })
+                    .OrderByDescending(x => x.count)
+                    .Take(5)
+                    .ToList();
+
+                var topProduitsReclames = new List<object>();
+                foreach (var g in topGroups)
+                {
+                    var produit = await _produitCermService.GetByIdAsync(g.produitRef);
+                    topProduitsReclames.Add(new
+                    {
+                        produit = produit?.Designation ?? $"Produit #{g.produitRef}",
+                        count = g.count
+                    });
+                }
+
+                return Ok(new
+                {
+                    reclamationsByStatut,
+                    monthlyProspections,
+                    topProduitsReclames
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
+        // Users grouped by role
+        [HttpGet("users-by-role")]
+        public async Task<IActionResult> GetUsersByRole()
+        {
+            try
+            {
+                var roles = new[] { "ADMIN", "COMMERCIAL", "CLIENT_USER" };
+                var result = new List<object>();
+                foreach (var role in roles)
+                {
+                    var users = await _userManager.GetUsersInRoleAsync(role);
+                    result.Add(new { role, count = users.Count });
+                }
+                return Ok(result);
             }
             catch (Exception ex)
             {

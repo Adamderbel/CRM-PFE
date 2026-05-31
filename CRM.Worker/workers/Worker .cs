@@ -26,12 +26,19 @@ namespace CRM.Worker.workers
 
                 try
                 {
-                   // await _sync.SyncClientsAsync();
-                   // await _sync.SyncProduitsAsync();
-                    //await _sync.SyncCommandesAsync();
-                    //await _sync.SyncCommandesLignesAsync();
-                  //  await _sync.SyncProspectClientCermAsync();
-                   // await _sync.SyncRefProduitProspectionAsync();
+
+                    Console.WriteLine("✅ SYNC CERM  START");
+
+
+                    await _sync.SyncClientsAsync();
+                    await _sync.SyncProduitsAsync();
+                    await _sync.SyncCommandesAsync();
+                    await _sync.SyncCommandesLignesAsync();
+
+                    Console.WriteLine("✅ SYNC CRM  START");
+
+                    await _sync.SyncProspectClientCermAsync();
+                    await _sync.SyncRefProduitProspectionAsync();
                     await _sync.SyncDevisProspectionAsync();
                     await _sync.SyncCommandesProspectionAsync();
                    
@@ -42,7 +49,7 @@ namespace CRM.Worker.workers
                     Console.WriteLine("❌ WORKER ERROR: " + ex.Message);
                 }
 
-                await Task.Delay(5000, stoppingToken);
+                await Task.Delay(20000, stoppingToken);
             }
         }
     }

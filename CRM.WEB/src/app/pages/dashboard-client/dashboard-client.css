@@ -2,6 +2,40 @@
    Espace Client CRM Hub - Custom Premium Styles
    ==================================================== */
 
+/* Dynamic additions */
+.alert-error-banner {
+  background: #fef2f2;
+  color: #ef4444;
+  border: 1px solid #fee2e2;
+  padding: 12px 16px;
+  border-radius: 10px;
+  margin-bottom: 16px;
+  font-size: 14px;
+}
+
+.analytics-grid-2 {
+  grid-template-columns: 1.5fr 1fr !important;
+}
+
+.donut-empty {
+  text-align: center;
+  color: #aaa;
+  padding: 40px 20px;
+  font-size: 14px;
+}
+
+.td-empty {
+  text-align: center;
+  color: #aaa;
+  padding: 28px;
+  font-size: 14px;
+}
+
+@media (max-width: 900px) {
+  .analytics-grid-2 { grid-template-columns: 1fr !important; }
+}
+
+
 .espace-client-container {
   max-width: 1300px;
   margin: 0 auto;

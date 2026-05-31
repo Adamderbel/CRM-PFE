@@ -23,6 +23,7 @@ export class Sidebar {
     { icon: 'dashboard', label: 'Dashboard', route: '/dashboard', roles: ['Commercial'] },
     { icon: 'dashboard', label: 'Dashboard', route: '/dashboard-client', roles: ['Client_User'] },
     { icon: 'receipt', label: 'Consulter mes commandes', route: '/commande-client', roles: ['Client_User'] },
+    { icon: 'report_problem', label: 'Mes Réclamations', route: '/mes-reclamations', roles: ['Client_User'] },
     { icon: 'dashboard', label: 'Dashboard', route: '/dashboard-admin', roles: ['Admin'] },
     { icon: 'people', label: 'Prospects', route: '/prospects', roles: ['Commercial'] },
     { icon: 'group', label: 'Clients', route: '/clients', roles: ['Commercial'] },

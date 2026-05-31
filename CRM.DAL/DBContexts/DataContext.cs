@@ -31,7 +31,8 @@ namespace CRM.DAL.DBContexts
 
         public DbSet<CermCommande> Commandes { get; set; }
         public DbSet<CermCommandeLigne> LignesCommande { get; set; }
-        
+        public DbSet<Notification> Notifications { get; set; }
+
         public DataContext()
         {
             

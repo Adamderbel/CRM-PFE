@@ -12,5 +12,9 @@ namespace CRM.Services.notification
         Task<List<Notification>> GetByUserAsync(Guid userId);
 
         Task MarkAsReadAsync(Guid notificationId);
+
+        Task CreateAsync(Notification notification);
+
+        Task CreateManyAsync(IEnumerable<Notification> notifications);
     }
 }

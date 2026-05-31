@@ -34,11 +34,41 @@ export interface DashboardStats {
   recentProspections: RecentProspection[];
 }
 
+export interface StatutCount {
+  statut: string;
+  count: number;
+}
+
+export interface ProduitCount {
+  produit: string;
+  count: number;
+}
+
+export interface AdminStats {
+  reclamationsByStatut: StatutCount[];
+  monthlyProspections: MonthlyCount[];
+  topProduitsReclames: ProduitCount[];
+}
+
+export interface RoleCount {
+  role: string;
+  count: number;
+}
+
+
 @Injectable({ providedIn: 'root' })
 export class DashboardAdminService {
   constructor(private http: HttpClient) {}
 
   getStats(): Observable<DashboardStats> {
     return this.http.get<DashboardStats>(`${environment.apiUrl}/Dashboard/stats`);
+  }
+
+  getAdminStats(): Observable<AdminStats> {
+    return this.http.get<AdminStats>(`${environment.apiUrl}/Dashboard/admin-stats`);
+  }
+
+  getUsersByRole(): Observable<RoleCount[]> {
+    return this.http.get<RoleCount[]>(`${environment.apiUrl}/Dashboard/users-by-role`);
   }
 }

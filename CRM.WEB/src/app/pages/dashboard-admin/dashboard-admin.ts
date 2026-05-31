@@ -2,7 +2,7 @@ import { Component, OnInit, AfterViewInit, OnDestroy, ElementRef, ViewChild, sig
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../core/services/auth.service';
-import { DashboardAdminService, DashboardStats, RecentProspection } from '../../core/services/dashboard-admin.service';
+import { DashboardAdminService, DashboardStats, AdminStats, RoleCount, RecentProspection } from '../../core/services/dashboard-admin.service';
 import Chart from 'chart.js/auto';
 
 @Component({
@@ -13,15 +13,18 @@ import Chart from 'chart.js/auto';
   styleUrl: './dashboard-admin.css',
 })
 export class DashboardAdmin implements OnInit, AfterViewInit, OnDestroy {
-  @ViewChild('prospectionsStatusChart') prospectionsStatusChartRef!: ElementRef<HTMLCanvasElement>;
-  @ViewChild('lignesStatusChart') lignesStatusChartRef!: ElementRef<HTMLCanvasElement>;
-  @ViewChild('monthlyTrendChart') monthlyTrendChartRef!: ElementRef<HTMLCanvasElement>;
+  @ViewChild('reclamationsStatutChart') reclamationsStatutChartRef!: ElementRef<HTMLCanvasElement>;
+  @ViewChild('monthlyProspectionsChart') monthlyProspectionsChartRef!: ElementRef<HTMLCanvasElement>;
+  @ViewChild('topProduitsChart') topProduitsChartRef!: ElementRef<HTMLCanvasElement>;
+  @ViewChild('usersByRoleChart') usersByRoleChartRef!: ElementRef<HTMLCanvasElement>;
 
-  private prospectionsStatusChartInstance: Chart | null = null;
-  private lignesStatusChartInstance: Chart | null = null;
-  private monthlyTrendChartInstance: Chart | null = null;
+  private reclamationsStatutChartInstance: Chart | null = null;
+  private monthlyProspectionsChartInstance: Chart | null = null;
+  private topProduitsChartInstance: Chart | null = null;
+  private usersByRoleChartInstance: Chart | null = null;
 
-  private statsData: DashboardStats | null = null;
+  private adminStats: AdminStats | null = null;
+  private usersByRole: RoleCount[] | null = null;
   private chartsReady = false;
 
   readonly currentYear = new Date().getFullYear();
@@ -51,9 +54,9 @@ export class DashboardAdmin implements OnInit, AfterViewInit, OnDestroy {
   recentProspections = signal<RecentProspection[]>([]);
 
   ngOnInit(): void {
+    // KPIs + recent prospections table
     this.dashboardService.getStats().subscribe({
       next: (data) => {
-        this.statsData = data;
         this.metrics.set([
           { label: 'Total Prospections', value: data.totalProspections.toString(), icon: 'business_center' },
           { label: 'Prospections Gagnées', value: data.prospectionsGagnees.toString(), icon: 'emoji_events' },
@@ -61,96 +64,67 @@ export class DashboardAdmin implements OnInit, AfterViewInit, OnDestroy {
         ]);
         this.recentProspections.set(data.recentProspections);
         this.isLoading.set(false);
-        if (this.chartsReady) {
-          this.buildCharts(data);
-        }
       },
       error: () => this.isLoading.set(false)
+    });
+
+    // Admin charts (C, D, E)
+    this.dashboardService.getAdminStats().subscribe({
+      next: (data) => {
+        this.adminStats = data;
+        if (this.chartsReady) this.buildCharts(data);
+      },
+      error: () => {}
+    });
+
+    // Users by role (bar)
+    this.dashboardService.getUsersByRole().subscribe({
+      next: (data) => {
+        this.usersByRole = data;
+        if (this.chartsReady) this.createUsersByRoleChart(data);
+      },
+      error: () => {}
     });
   }
 
   ngAfterViewInit(): void {
     this.chartsReady = true;
-    if (this.statsData) {
-      this.buildCharts(this.statsData);
+    if (this.adminStats) {
+      this.buildCharts(this.adminStats);
+    }
+    if (this.usersByRole) {
+      this.createUsersByRoleChart(this.usersByRole);
     }
   }
 
   ngOnDestroy(): void {
-    this.prospectionsStatusChartInstance?.destroy();
-    this.lignesStatusChartInstance?.destroy();
-    this.monthlyTrendChartInstance?.destroy();
+    this.reclamationsStatutChartInstance?.destroy();
+    this.monthlyProspectionsChartInstance?.destroy();
+    this.topProduitsChartInstance?.destroy();
+    this.usersByRoleChartInstance?.destroy();
   }
 
   private readonly STATUS_COLORS = ['#7c5cfc', '#2196f3', '#ff9800', '#f59e0b', '#10b981', '#ef4444'];
 
-  private buildCharts(data: DashboardStats): void {
-    this.createProspectionsStatusChart(data);
-    this.createLignesStatusChart(data);
-    this.createMonthlyTrendChart(data);
+  private buildCharts(data: AdminStats): void {
+    this.createReclamationsStatutChart(data);
+    this.createMonthlyProspectionsChart(data);
+    this.createTopProduitsChart(data);
   }
 
-  private createProspectionsStatusChart(data: DashboardStats): void {
-    const ctx = this.prospectionsStatusChartRef?.nativeElement.getContext('2d');
+  // C. Réclamations par statut (doughnut)
+  private createReclamationsStatutChart(data: AdminStats): void {
+    const ctx = this.reclamationsStatutChartRef?.nativeElement.getContext('2d');
     if (!ctx) return;
+    if (data.reclamationsByStatut.length === 0) return;
 
-    this.prospectionsStatusChartInstance?.destroy();
-    this.prospectionsStatusChartInstance = new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels: data.prospectionsByStatus.map(s => s.libelle ?? ''),
-        datasets: [{
-          label: 'Prospections',
-          data: data.prospectionsByStatus.map(s => s.count),
-          backgroundColor: this.STATUS_COLORS,
-          borderRadius: 6,
-          borderSkipped: false,
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            backgroundColor: '#fff',
-            titleColor: '#1e1b3a',
-            bodyColor: '#666',
-            borderColor: '#eee',
-            borderWidth: 1,
-            padding: 12,
-          }
-        },
-        scales: {
-          x: {
-            grid: { display: false },
-            ticks: { color: '#999', font: { size: 11 } },
-            border: { display: false }
-          },
-          y: {
-            grid: { color: 'rgba(0,0,0,0.04)' },
-            ticks: { color: '#999', font: { size: 11 }, stepSize: 1 },
-            border: { display: false },
-            beginAtZero: true,
-          }
-        }
-      }
-    });
-  }
-
-  private createLignesStatusChart(data: DashboardStats): void {
-    const ctx = this.lignesStatusChartRef?.nativeElement.getContext('2d');
-    if (!ctx) return;
-
-    if (data.lignesByStatus.length === 0) return;
-
-    this.lignesStatusChartInstance?.destroy();
-    this.lignesStatusChartInstance = new Chart(ctx, {
+    this.reclamationsStatutChartInstance?.destroy();
+    this.reclamationsStatutChartInstance = new Chart(ctx, {
       type: 'doughnut',
       data: {
-        labels: data.lignesByStatus.map(s => s.libelle ?? ''),
+        labels: data.reclamationsByStatut.map(s => s.statut),
         datasets: [{
-          data: data.lignesByStatus.map(s => s.count),
+          data: data.reclamationsByStatut.map(s => s.count),
           backgroundColor: this.STATUS_COLORS,
           borderColor: '#fff',
           borderWidth: 3,
@@ -185,22 +159,23 @@ export class DashboardAdmin implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-  private createMonthlyTrendChart(data: DashboardStats): void {
-    const ctx = this.monthlyTrendChartRef?.nativeElement.getContext('2d');
+  // D. Tendance globale — toutes prospections par mois (line)
+  private createMonthlyProspectionsChart(data: AdminStats): void {
+    const ctx = this.monthlyProspectionsChartRef?.nativeElement.getContext('2d');
     if (!ctx) return;
 
     const gradient = ctx.createLinearGradient(0, 0, 0, 240);
     gradient.addColorStop(0, 'rgba(124, 92, 252, 0.2)');
     gradient.addColorStop(1, 'rgba(124, 92, 252, 0.0)');
 
-    this.monthlyTrendChartInstance?.destroy();
-    this.monthlyTrendChartInstance = new Chart(ctx, {
+    this.monthlyProspectionsChartInstance?.destroy();
+    this.monthlyProspectionsChartInstance = new Chart(ctx, {
       type: 'line',
       data: {
-        labels: data.monthlyTrend.map(m => m.month),
+        labels: data.monthlyProspections.map(m => m.month),
         datasets: [{
-          label: 'Prospections Gagnées',
-          data: data.monthlyTrend.map(m => m.count),
+          label: 'Prospections',
+          data: data.monthlyProspections.map(m => m.count),
           borderColor: '#7c5cfc',
           backgroundColor: gradient,
           borderWidth: 2,
@@ -243,6 +218,117 @@ export class DashboardAdmin implements OnInit, AfterViewInit, OnDestroy {
           }
         },
         interaction: { intersect: false, mode: 'index' }
+      }
+    });
+  }
+
+  // E. Top produits réclamés (horizontal bar)
+  private createTopProduitsChart(data: AdminStats): void {
+    const ctx = this.topProduitsChartRef?.nativeElement.getContext('2d');
+    if (!ctx) return;
+    if (data.topProduitsReclames.length === 0) return;
+
+    this.topProduitsChartInstance?.destroy();
+    this.topProduitsChartInstance = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: data.topProduitsReclames.map(p => p.produit),
+        datasets: [{
+          label: 'Réclamations',
+          data: data.topProduitsReclames.map(p => p.count),
+          backgroundColor: this.STATUS_COLORS,
+          borderRadius: 6,
+          borderSkipped: false,
+        }]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#fff',
+            titleColor: '#1e1b3a',
+            bodyColor: '#666',
+            borderColor: '#eee',
+            borderWidth: 1,
+            padding: 12,
+          }
+        },
+        scales: {
+          x: {
+            grid: { color: 'rgba(0,0,0,0.04)' },
+            ticks: { color: '#999', font: { size: 11 }, stepSize: 1 },
+            border: { display: false },
+            beginAtZero: true,
+          },
+          y: {
+            grid: { display: false },
+            ticks: { color: '#999', font: { size: 11 } },
+            border: { display: false }
+          }
+        }
+      }
+    });
+  }
+
+  // Utilisateurs par rôle (vertical bar)
+  private createUsersByRoleChart(data: RoleCount[]): void {
+    const ctx = this.usersByRoleChartRef?.nativeElement.getContext('2d');
+    if (!ctx) return;
+
+    const roleLabels: Record<string, string> = {
+      ADMIN: 'Admins',
+      COMMERCIAL: 'Commerciaux',
+      CLIENT_USER: 'Clients',
+    };
+
+    this.usersByRoleChartInstance?.destroy();
+    this.usersByRoleChartInstance = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: data.map(d => roleLabels[d.role] ?? d.role),
+        datasets: [{
+          label: 'Utilisateurs',
+          data: data.map(d => d.count),
+          backgroundColor: ['#7c5cfc', '#2196f3', '#10b981'],
+          borderRadius: 8,
+          borderSkipped: false,
+          barThickness: 70,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#fff',
+            titleColor: '#1e1b3a',
+            bodyColor: '#666',
+            borderColor: '#eee',
+            borderWidth: 1,
+            padding: 12,
+            displayColors: false,
+            callbacks: {
+              label: (ctx) => ` ${ctx.raw} utilisateur(s)`
+            }
+          }
+        },
+        scales: {
+          x: {
+            grid: { display: false },
+            ticks: { color: '#1e1b3a', font: { size: 13, weight: 600 } },
+            border: { display: false }
+          },
+          y: {
+            grid: { color: 'rgba(0,0,0,0.04)' },
+            ticks: { color: '#999', font: { size: 11 }, stepSize: 1 },
+            border: { display: false },
+            beginAtZero: true,
+          }
+        }
       }
     });
   }

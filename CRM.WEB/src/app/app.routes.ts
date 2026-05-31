@@ -137,7 +137,13 @@ export const routes: Routes = [
         path: 'reclamations',
         loadComponent: () => import('./pages/reclamations/reclamation-list/reclamation-list').then((m) => m.ReclamationList),
         canActivate: [roleGuard],
-        data: { roles: ['Commercial', 'Client_User'] }
+        data: { roles: ['Commercial'] }
+      },
+      {
+        path: 'mes-reclamations',
+        loadComponent: () => import('./pages/mes-reclamations/mes-reclamations').then((m) => m.MesReclamations),
+        canActivate: [roleGuard],
+        data: { roles: ['Client_User'] }
       },
       {
         path: 'reclamations/create',

@@ -1,21 +1,11 @@
-import { Component, signal, computed, inject } from '@angular/core';
+import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
-
-interface CommandeRecente {
-  reference: string;
-  produit: string;
-  date: string;
-  statut: 'Livrée' | 'En cours' | 'Confirmée';
-  montant: string;
-}
-
-interface Activite {
-  titre: string;
-  date: string;
-  type: 'livraison' | 'telechargement' | 'expedition' | 'paiement';
-}
+import { ClientCermService } from '../../core/services/client-cerm.service';
+import { CommandeService } from '../../core/services/commande.service';
+import { ReclamationService } from '../../core/services/reclamation.service';
+import { Commande } from '../../core/models/commande.model';
 
 interface MonthlySeriesItem {
   label: string;
@@ -28,6 +18,22 @@ interface BreakdownItem {
   color: string;
 }
 
+interface StatCard {
+  label: string;
+  value: string;
+  icon: string;
+  color: string;
+  bg: string;
+}
+
+interface CommandeRow {
+  reference: string;
+  produit: string;
+  date: string;
+  statut: string;
+  statutClass: string;
+}
+
 @Component({
   selector: 'app-dashboard-client',
   standalone: true,
@@ -35,93 +41,188 @@ interface BreakdownItem {
   templateUrl: './dashboard-client.html',
   styleUrl: './dashboard-client.css',
 })
-export class DashboardClient {
+export class DashboardClient implements OnInit {
   private authService = inject(AuthService);
+  private clientService = inject(ClientCermService);
+  private commandeService = inject(CommandeService);
+  private reclamationService = inject(ReclamationService);
 
-  readonly monthlyCommandes: MonthlySeriesItem[] = [
-    { label: 'Jan', value: 18 },
-    { label: 'Fév', value: 24 },
-    { label: 'Mar', value: 22 },
-    { label: 'Avr', value: 31 },
-    { label: 'Mai', value: 36 },
-    { label: 'Juin', value: 42 },
-    { label: 'Juil', value: 39 },
-    { label: 'Août', value: 45 }
-  ];
+  // State
+  isLoading = signal(true);
+  errorMessage = signal<string | null>(null);
 
-  private readonly statusBreakdown: BreakdownItem[] = [
-    { label: 'Livrées', value: 58, color: '#12b76a' },
-    { label: 'En cours', value: 24, color: '#2f80ed' },
-    { label: 'Confirmées', value: 14, color: '#7c5cfc' },
-    { label: 'En attente', value: 8, color: '#ff9800' }
-  ];
+  private commandes = signal<Commande[]>([]);
+  private reclamationsCount = signal(0);
 
-  private readonly productBreakdown: BreakdownItem[] = [
-    { label: 'CRM Entreprise', value: 34, color: '#7c5cfc' },
-    { label: 'Support Premium', value: 27, color: '#2196f3' },
-    { label: 'Formation', value: 19, color: '#12b76a' },
-    { label: 'Personnalisation', value: 12, color: '#ff9800' }
-  ];
-
-  readonly monthlyMax = Math.max(...this.monthlyCommandes.map((item) => item.value));
-  readonly monthlyPath = this.buildLinePath(this.monthlyCommandes);
-  readonly monthlyAreaPath = `${this.monthlyPath} L 100 110 L 0 110 Z`;
-
-  readonly breakdownTotal = this.statusBreakdown.reduce((sum, item) => sum + item.value, 0);
-  readonly breakdownGradient = this.buildConicGradient(this.statusBreakdown);
-  readonly breakdownItems = this.statusBreakdown;
-  readonly productBars = this.productBreakdown;
-
-  // Dynamic naming based on auth context, with fallback to image's mock values
+  // Welcome name
   userName = computed(() => {
     const fullName = this.authService.userFullName();
-    if (fullName) {
-      const parts = fullName.split(' ');
-      return parts[0]; // Extract first name (e.g. "Mohamed")
-    }
-    return 'Mohamed';
+    if (fullName) return fullName.split(' ')[0];
+    return 'Client';
+  });
+  userFullName = computed(() => this.authService.userFullName() || 'Client');
+
+  // KPI stats — derived from commandes + reclamations
+  stats = computed<StatCard[]>(() => {
+    const all = this.commandes();
+    const total = all.length;
+    const enCours = all.filter(c => this.isEnCours(c.statutCommande)).length;
+    const livrees = all.filter(c => this.isLivree(c.statutCommande)).length;
+    const reclam = this.reclamationsCount();
+
+    return [
+      { label: 'Total commandes', value: total.toString(), icon: 'local_mall', color: '#7c5cfc', bg: '#f3e5f5' },
+      { label: 'En cours', value: enCours.toString(), icon: 'schedule', color: '#2196f3', bg: '#e3f2fd' },
+      { label: 'Livrées', value: livrees.toString(), icon: 'check_circle', color: '#4caf50', bg: '#e8f5e9' },
+      { label: 'Mes réclamations', value: reclam.toString(), icon: 'report_problem', color: '#ff9800', bg: '#fff3e0' },
+    ];
   });
 
-  userFullName = computed(() => this.authService.userFullName() || 'client KALLEL MOHAMED');
+  // Monthly commandes — last 8 months from real data
+  monthlyCommandes = computed<MonthlySeriesItem[]>(() => {
+    const all = this.commandes();
+    const monthNames = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
+    const now = new Date();
+    const buckets: MonthlySeriesItem[] = [];
 
-  // KPI stats row
-  stats = [
-    { label: 'Total commandes', value: '128', change: '18.2%', trend: 'up', icon: 'local_mall', color: '#7c5cfc', bg: '#f3e5f5' },
-    { label: 'En cours', value: '15', change: '8.1%', trend: 'up', icon: 'schedule', color: '#2196f3', bg: '#e3f2fd' },
-    { label: 'Livrées', value: '98', change: '22.7%', trend: 'up', icon: 'check_circle', color: '#4caf50', bg: '#e8f5e9' },
-    { label: 'Factures payées', value: '64', change: '16.3%', trend: 'up', icon: 'receipt_long', color: '#ff9800', bg: '#fff3e0' }
-  ];
+    for (let i = 7; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      buckets.push({ label: monthNames[d.getMonth()], value: 0 });
+    }
 
-  // Table exact mockup dataset
-  commandes: CommandeRecente[] = [
-    { reference: 'CMD-2024-00128', produit: 'Solution CRM Entreprise', date: '10 Mai 2024', statut: 'Livrée', montant: '2 450,00 MAD' },
-    { reference: 'CMD-2024-00127', produit: 'Support Premium', date: '08 Mai 2024', statut: 'En cours', montant: '980,00 MAD' },
-    { reference: 'CMD-2024-00126', produit: 'Formation Utilisateur', date: '06 Mai 2024', statut: 'Confirmée', montant: '1 500,00 MAD' },
-    { reference: 'CMD-2024-00125', produit: 'Personnalisation CRM', date: '02 Mai 2024', statut: 'Livrée', montant: '3 200,00 MAD' },
-    { reference: 'CMD-2024-00124', produit: 'Maintenance Annuelle', date: '28 Avr. 2024', statut: 'En cours', montant: '1 200,00 MAD' }
-  ];
+    for (const c of all) {
+      if (!c.dateCommande) continue;
+      const d = new Date(c.dateCommande);
+      if (isNaN(d.getTime())) continue;
+      const diffMonths = (now.getFullYear() - d.getFullYear()) * 12 + (now.getMonth() - d.getMonth());
+      if (diffMonths >= 0 && diffMonths < 8) {
+        buckets[7 - diffMonths].value++;
+      }
+    }
+    return buckets;
+  });
 
-  // Activities feed list
-  activites: Activite[] = [
-    { titre: 'Commande CMD-2024-00128 livrée', date: '10 Mai 2024 à 14:30', type: 'livraison' },
-    { titre: 'Facture FACT-2024-0056 téléchargée', date: '09 Mai 2024 à 11:15', type: 'telechargement' },
-    { titre: 'Commande CMD-2024-00127 expédiée', date: '08 Mai 2024 à 16:45', type: 'expedition' },
-    { titre: 'Paiement reçu pour FACT-2024-0055', date: '07 Mai 2024 à 09:20', type: 'paiement' }
-  ];
+  monthlyMax = computed(() => Math.max(1, ...this.monthlyCommandes().map(m => m.value)));
+  monthlyPath = computed(() => this.buildLinePath(this.monthlyCommandes()));
+  monthlyAreaPath = computed(() => `${this.monthlyPath()} L 280 110 L 0 110 Z`);
 
-  // Quick actions items
-  actions = [
-    { titre: 'Nouvelle commande', sub: 'Passer commande', icon: 'add_shopping_cart' },
-    { titre: 'Télécharger une facture', sub: 'Accéder aux PDF', icon: 'file_download' },
-    { titre: 'Contacter le support', sub: 'Nous sommes là', icon: 'support_agent' },
-    { titre: 'Mon profil', sub: 'Gérer mes données', icon: 'person' }
-  ];
+  // Status breakdown — real data
+  breakdownItems = computed<BreakdownItem[]>(() => {
+    const all = this.commandes();
+    if (all.length === 0) return [];
+
+    const groups: Record<string, number> = {};
+    for (const c of all) {
+      const key = (c.statutCommande || 'Inconnu').trim();
+      groups[key] = (groups[key] || 0) + 1;
+    }
+
+    const colorMap: Record<string, string> = {
+      livree: '#12b76a',
+      livrée: '#12b76a',
+      done: '#12b76a',
+      en_cours: '#2f80ed',
+      'en cours': '#2f80ed',
+      pending: '#2f80ed',
+      confirmee: '#7c5cfc',
+      confirmée: '#7c5cfc',
+      approved: '#7c5cfc',
+      attente: '#ff9800',
+      inconnu: '#9e9e9e',
+    };
+    const fallback = ['#7c5cfc', '#2196f3', '#12b76a', '#ff9800', '#ef4444', '#9e9e9e'];
+
+    return Object.entries(groups).map(([label, value], i) => {
+      const key = label.toLowerCase().trim().replace(/\s+/g, '_');
+      const color = colorMap[key] || colorMap[label.toLowerCase()] || fallback[i % fallback.length];
+      return { label, value, color };
+    });
+  });
+
+  breakdownTotal = computed(() => this.breakdownItems().reduce((s, i) => s + i.value, 0));
+  breakdownGradient = computed(() => this.buildConicGradient(this.breakdownItems()));
+
+  // Recent commandes table — top 5 by date desc
+  recentCommandes = computed<CommandeRow[]>(() => {
+    return [...this.commandes()]
+      .sort((a, b) => {
+        const da = a.dateCommande ? new Date(a.dateCommande).getTime() : 0;
+        const db = b.dateCommande ? new Date(b.dateCommande).getTime() : 0;
+        return db - da;
+      })
+      .slice(0, 5)
+      .map(c => ({
+        reference: c.referenceCommande || c.refCommande,
+        produit: c.siteId || '-',
+        date: this.formatDate(c.dateCommande),
+        statut: c.statutCommande || '-',
+        statutClass: this.getStatutClass(c.statutCommande),
+      }));
+  });
+
+  ngOnInit(): void {
+    const user = this.authService.user();
+    if (!user) {
+      this.errorMessage.set('Utilisateur non connecté.');
+      this.isLoading.set(false);
+      return;
+    }
+
+    this.clientService.getByUserId(user.id).subscribe({
+      next: (client) => {
+        if (!client || !client.refClient) {
+          this.errorMessage.set('Aucun profil client associé trouvé.');
+          this.isLoading.set(false);
+          return;
+        }
+
+        const refClient = client.refClient;
+
+        // Load commandes
+        this.commandeService.getByClient(refClient.toString()).subscribe({
+          next: (data) => {
+            this.commandes.set(data ?? []);
+            this.isLoading.set(false);
+          },
+          error: () => {
+            this.errorMessage.set('Impossible de charger vos commandes.');
+            this.isLoading.set(false);
+          },
+        });
+
+        // Load reclamations count (independent, non-blocking)
+        this.reclamationService.getByClient(refClient).subscribe({
+          next: (rec) => this.reclamationsCount.set(rec?.length ?? 0),
+          error: () => this.reclamationsCount.set(0),
+        });
+      },
+      error: () => {
+        this.errorMessage.set('Impossible de récupérer votre profil client.');
+        this.isLoading.set(false);
+      },
+    });
+  }
+
+  // ---------- helpers ----------
+
+  private isEnCours(statut?: string): boolean {
+    if (!statut) return false;
+    const s = statut.toLowerCase().trim();
+    return s.includes('cours') || s === 'pending' || s.includes('attente');
+  }
+
+  private isLivree(statut?: string): boolean {
+    if (!statut) return false;
+    const s = statut.toLowerCase().trim();
+    return s.includes('livr') || s === 'done';
+  }
 
   private buildLinePath(points: MonthlySeriesItem[]): string {
+    if (points.length === 0) return '';
     const width = 280;
     const height = 110;
-    const max = Math.max(...points.map((item) => item.value));
-    const stepX = width / (points.length - 1);
+    const max = Math.max(1, ...points.map(item => item.value));
+    const stepX = width / Math.max(1, points.length - 1);
 
     return points
       .map((point, index) => {
@@ -134,10 +235,10 @@ export class DashboardClient {
 
   private buildConicGradient(items: BreakdownItem[]): string {
     const total = items.reduce((sum, item) => sum + item.value, 0);
+    if (total === 0) return '#eee 0% 100%';
     let current = 0;
-
     return items
-      .map((item) => {
+      .map(item => {
         const start = (current / total) * 100;
         current += item.value;
         const end = (current / total) * 100;
@@ -146,12 +247,34 @@ export class DashboardClient {
       .join(', ');
   }
 
-  getStatutClass(statut: 'Livrée' | 'En cours' | 'Confirmée'): string {
-    switch (statut) {
-      case 'Livrée': return 'statut-livree';
-      case 'En cours': return 'statut-en-cours';
-      case 'Confirmée': return 'statut-confirmee';
-      default: return '';
+  getStatutClass(statut?: string): string {
+    if (!statut) return '';
+    if (this.isLivree(statut)) return 'statut-livree';
+    if (this.isEnCours(statut)) return 'statut-en-cours';
+    const s = statut.toLowerCase();
+    if (s.includes('confirm') || s === 'approved') return 'statut-confirmee';
+    return '';
+  }
+
+  private formatDate(dateStr?: string): string {
+    if (!dateStr) return '-';
+    try {
+      return new Date(dateStr).toLocaleDateString('fr-FR', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+      });
+    } catch {
+      return dateStr;
     }
+  }
+
+  cxFor(i: number): number {
+    const total = this.monthlyCommandes().length;
+    return i * (280 / Math.max(1, total - 1));
+  }
+
+  cyFor(value: number): number {
+    return 110 - (value / this.monthlyMax()) * 110;
   }
 }

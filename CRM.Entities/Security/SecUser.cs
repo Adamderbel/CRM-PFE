@@ -13,5 +13,6 @@ namespace CRM.Entities.Security
         public bool IsActive { get; set; }
         public string Nom { get; set; } = null!;
         public string Prenom { get; set; } = null!;
+        public DateTime? LastLoginAt { get; set; }
     }
 }
