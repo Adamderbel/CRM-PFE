@@ -19,7 +19,7 @@ namespace CRM.Worker.services
         // ===================== CLIENTS =====================
         public async Task SyncClientsAsync()
         {
-            Console.WriteLine("syncClient");
+            Console.WriteLine("----------------- syncClient   -----------------------------");
             var lastSyncDate = await _crm.GetLastSyncDateAsync("Clients");
 
             var clients = await _cerm.GetClientsAsync(lastSyncDate);
@@ -41,7 +41,7 @@ namespace CRM.Worker.services
         // ===================== PRODUITS =====================
         public async Task SyncProduitsAsync()
         {
-            Console.WriteLine("Product");
+            Console.WriteLine(" ----------- Sync  Product -------------------------");
             var lastSyncDate = await _crm.GetLastSyncDateAsync("Produits");
 
             var produits = await _cerm.GetProduitsAsync(lastSyncDate);
@@ -66,7 +66,7 @@ namespace CRM.Worker.services
         // =========================
         public async Task SyncCommandesAsync()
         {
-            Console.WriteLine("SYNC COMMANDES START");
+            Console.WriteLine("---------------------- SYNC COMMANDES START ------------------------------------------");
 
             try
             {
@@ -94,7 +94,7 @@ namespace CRM.Worker.services
         }
         public async Task SyncCommandesLignesAsync()
         {
-            Console.WriteLine("Sync Commandes Lignes");
+            Console.WriteLine("------------------ Sync Commandes Lignes  ------------------------------------");
 
             var lignes = await _cerm.GetCommandesLignesAsync();
 
@@ -106,7 +106,7 @@ namespace CRM.Worker.services
 
         public async Task SyncRefProduitProspectionAsync()
         {
-            Console.WriteLine("Sync Ref Produit Prospect");
+            Console.WriteLine(" --------------Sync Ref Produit Prospect -----------------");
 
             var lignes = await _crm.GetLignesSansRefProduitAsync();
 
@@ -134,7 +134,7 @@ namespace CRM.Worker.services
         }
         public async Task SyncProspectClientCermAsync()
         {
-            Console.WriteLine("Sync Prospect Client CERM");
+            Console.WriteLine(" -------------------- Sync Prospect Client CERM ------------------------");
 
             var prospects = await _crm.GetProspectsSansClientCermAsync();
 
@@ -162,7 +162,7 @@ namespace CRM.Worker.services
         }
         public async Task SyncCommandesProspectionAsync()
         {
-            Console.WriteLine("=== SYNC PROSPECTION → CERM ===");
+            Console.WriteLine("=== SYNC Commande Prospection  → CERM ===");
 
             var lignes = await _crm.GetLignesProspectionSansCmdAsync();
 

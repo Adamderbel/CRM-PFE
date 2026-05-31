@@ -1,4 +1,4 @@
-﻿using CRM.Entities;
+using CRM.Entities;
 using CRM.Entities.Comm;
 using CRM.Entities.Common;
 using CRM.Entities.Crm;
@@ -28,6 +28,11 @@ namespace CRM.DAL.DBContexts
         public DbSet<TypeActionProspection> TypeActionProspections { get; set; }
 
         public DbSet<ActionsProspection> ActionsProspections { get; set; }
+
+        public DbSet<CermCommande> Commandes { get; set; }
+        public DbSet<CermCommandeLigne> LignesCommande { get; set; }
+        public DbSet<Notification> Notifications { get; set; }
+
         public DataContext()
         {
             

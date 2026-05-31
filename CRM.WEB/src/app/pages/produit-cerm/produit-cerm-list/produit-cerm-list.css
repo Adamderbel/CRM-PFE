@@ -125,7 +125,8 @@
 }
 
 /* Loading & Empty State */
-.loading-container, .empty-state {
+.loading-container,
+.empty-state {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -145,7 +146,9 @@
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .empty-icon {

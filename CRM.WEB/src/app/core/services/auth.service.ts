@@ -41,6 +41,10 @@ export class AuthService {
     return this.http.post<void>(`${environment.apiUrl}/users`, request);
   }
 
+  getUsers(): Observable<AuthUser[]> {
+    return this.http.get<AuthUser[]>(`${environment.apiUrl}/users`);
+  }
+
   logout(): void {
     this.token.set(null);
     this.currentUser.set(null); 

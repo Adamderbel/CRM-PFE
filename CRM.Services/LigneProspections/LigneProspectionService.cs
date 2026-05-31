@@ -68,6 +68,7 @@ namespace CRM.Services.LigneProspections
             {
                 ligne.Concretisee = true;
                 ligne.CauseEchecId = null;
+                ligne.StatutId = 5;
             }
             // 🔴 LOSS
             else
@@ -77,6 +78,7 @@ namespace CRM.Services.LigneProspections
 
                 ligne.Concretisee = false;
                 ligne.CauseEchecId = causeEchecId;
+                ligne.StatutId = 6;
             }
 
             await _ligneProspectionRepository.UpdateAsync(ligne);

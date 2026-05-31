@@ -2,7 +2,7 @@
   <!-- En-tête -->
   <div class="dashboard-header">
     <div class="header-left">
-      <h1 class="page-title">Gestion des Employés & Analytiques</h1>
+      <h1 class="page-title">Tableau de Bord CRM</h1>
     </div>
     <div class="header-right">
       <span class="material-icons header-icon">calendar_today</span>
@@ -10,126 +10,18 @@
     </div>
   </div>
 
-  <!-- Cartes KPI -->
-  <section class="metrics-section">
-    @for (metric of metrics; track metric.label) {
-      <div class="kpi-card">
-        <div class="kpi-header">
-          <span class="kpi-label">{{ metric.label }}</span>
-          <span class="kpi-change" [class.positive]="metric.trend === 'up'">
-            <span class="material-icons kpi-trend-icon">trending_up</span>
-            {{ metric.change }}
-          </span>
-        </div>
-        <div class="kpi-value">{{ metric.value }}</div>
-      </div>
-    }
-  </section>
-
-  <!-- Graphiques -->
-  <section class="charts-section">
-    <!-- Graphique de rétention -->
-    <div class="chart-card chart-retention">
+  <!-- Utilisateurs par Rôle -->
+  <section class="charts-section-full">
+    <div class="chart-card">
       <div class="chart-header">
-        <h2 class="chart-title">Tendance de Rétention des Employés</h2>
+        <h2 class="chart-title">Utilisateurs par Rôle</h2>
         <div class="chart-legend">
-          <span class="material-icons legend-icon">show_chart</span>
-          <span class="legend-text">Tendance</span>
+          <span class="material-icons legend-icon">people</span>
+          <span class="legend-text">Répartition globale</span>
         </div>
       </div>
       <div class="chart-body">
-        <canvas #retentionChart></canvas>
-      </div>
-    </div>
-
-    <!-- Graphique de diversité -->
-    <div class="chart-card chart-diversity">
-      <div class="chart-header">
-        <h2 class="chart-title">Diversité & Composition</h2>
-      </div>
-      <div class="chart-body chart-body-donut">
-        <canvas #diversityChart></canvas>
-      </div>
-    </div>
-  </section>
-
-  <!-- Tableau de gestion des utilisateurs -->
-  <section class="table-section">
-    <div class="table-card">
-      <div class="table-header">
-        <h2 class="table-title">Tableau de Gestion des Utilisateurs</h2>
-        <div class="table-actions">
-          <div class="table-search">
-            <span class="material-icons">search</span>
-            <input
-              type="text"
-              placeholder="Rechercher..."
-              [ngModel]="searchQuery()"
-              (ngModelChange)="searchQuery.set($event)"
-            />
-          </div>
-        </div>
-      </div>
-
-      <div class="table-wrapper">
-        <table class="admin-table">
-          <thead>
-            <tr>
-              <th>
-                ID
-                <span class="material-icons sort-icon">unfold_more</span>
-              </th>
-              <th>
-                Nom
-                <span class="material-icons sort-icon">unfold_more</span>
-              </th>
-              <th>
-                Rôle
-                <span class="material-icons sort-icon">unfold_more</span>
-              </th>
-              <th>
-                Département
-                <span class="material-icons sort-icon">unfold_more</span>
-              </th>
-              <th>
-                Dernière Connexion
-                <span class="material-icons sort-icon">unfold_more</span>
-              </th>
-              <th>Statut</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (emp of employees; track emp.id) {
-              <tr>
-                <td class="td-id">{{ emp.id }}</td>
-                <td class="td-name">
-                  <div class="employee-info">
-                    <div class="employee-avatar">{{ emp.avatar }}</div>
-                    <span>{{ emp.name }}</span>
-                  </div>
-                </td>
-                <td>{{ emp.role }}</td>
-                <td>{{ emp.department }}</td>
-                <td>{{ emp.lastLogin }}</td>
-                <td>
-                  <span [class]="getStatusClass(emp.status)">{{ emp.status }}</span>
-                </td>
-                <td class="td-actions">
-                  <button class="action-btn" title="Modifier">
-                    <span class="material-icons">edit</span>
-                  </button>
-                  <button class="action-btn" title="Copier">
-                    <span class="material-icons">content_copy</span>
-                  </button>
-                  <button class="action-btn action-delete" title="Supprimer">
-                    <span class="material-icons">delete_outline</span>
-                  </button>
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
+        <canvas #usersByRoleChart></canvas>
       </div>
     </div>
   </section>

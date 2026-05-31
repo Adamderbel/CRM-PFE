@@ -81,7 +81,8 @@ namespace CRM.WebAPI.Controllers
                 {
                     return Unauthorized("Email ou mot de passe incorect");
                 }
-                // Récupérer les rôles 
+
+                // Récupérer les rôles
                 var roles = await _userManager.GetRolesAsync(user);
 
                 // Claims pour JWT 

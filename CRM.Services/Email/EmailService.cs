@@ -32,7 +32,7 @@ namespace CRM.Services.Email
             var famille = ligneProspection.FamilleProduit?.Libelle ?? "Non défini";
             var support = ligneProspection.SupportProduit?.Libelle ?? "Non défini";
             var nomProspect = ligneProspection.Prospection?.Prospect != null 
-                ? $"{ligneProspection.Prospection.Prospect.Nom} {ligneProspection.Prospection.Prospect.Prenom}".Trim() 
+                ? $"{ligneProspection.Prospection.Prospect.Nom}".Trim() 
                 : "Non défini";
 
             var mailMessage = new MailMessage

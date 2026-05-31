@@ -1,6 +1,6 @@
 import { Component, OnInit, signal, effect } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ReclamationService } from '../../../core/services/reclamation.service';
 import { ClientCermService } from '../../../core/services/client-cerm.service';
 import { ProduitCermService } from '../../../core/services/produit-cerm.service';
@@ -48,6 +48,7 @@ export class ReclamationForm implements OnInit {
     private reclamationService: ReclamationService,
     private clientService: ClientCermService,
     private produitService: ProduitCermService,
+    private route: ActivatedRoute,
     private router: Router
   ) {
     // Suggest clients as user types (Only by Name)
@@ -72,6 +73,32 @@ export class ReclamationForm implements OnInit {
   }
 
   ngOnInit(): void {
+    const params = this.route.snapshot.queryParamMap;
+    const numeroReference = params.get('numeroReference');
+    const clientId = params.get('clientId');
+    const produitId = params.get('produitId');
+
+    if (numeroReference) {
+      this.numeroReference.set(numeroReference);
+    }
+
+    const parsedClientId = clientId ? Number(clientId) : NaN;
+    if (!Number.isNaN(parsedClientId)) {
+      this.clientId.set(parsedClientId);
+      this.clientService.getById(parsedClientId).subscribe({
+        next: (client) => this.selectClient(client),
+        error: () => { /* formulaire reste utilisable via recherche manuelle */ }
+      });
+    }
+
+    const parsedProduitId = produitId ? Number(produitId) : NaN;
+    if (!Number.isNaN(parsedProduitId)) {
+      this.produitId.set(parsedProduitId);
+      this.produitService.getById(parsedProduitId).subscribe({
+        next: (product) => this.selectProduct(product),
+        error: () => { /* formulaire reste utilisable via recherche manuelle */ }
+      });
+    }
   }
 
   searchClients(query: string): void {

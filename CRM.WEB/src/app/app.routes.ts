@@ -17,12 +17,43 @@ export const routes: Routes = [
     component: Layout,
     canActivate: [authGuard],
     children: [
+      {
+        path: 'clients',
+        loadComponent: () => import('./pages/clients/clients-list/clients-list').then((m) => m.ClientsList),
+        canActivate: [roleGuard],
+        data: { roles: ['Commercial'] }
+      },
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
       {
         path: 'dashboard',
         loadComponent: () => import('./pages/dashboard/dashboard').then((m) => m.Dashboard),
         canActivate: [roleGuard],
         data: { roles: ['Commercial'] }
+      },
+      {
+        path: 'dashboard-client',
+        loadComponent: () => import('./pages/dashboard-client/dashboard-client').then((m) => m.DashboardClient),
+        canActivate: [roleGuard],
+        data: { roles: ['Client_User'] }
+      },
+      {
+        path: 'commande-client',
+        loadComponent: () => import('./pages/commandes-client/commandes-client').then((m) => m.CommandesClient),
+        pathMatch: 'full',
+        canActivate: [roleGuard],
+        data: { roles: ['Client_User'] }
+      },
+      {
+        path: 'commande-client/lignes/:refCommande',
+        loadComponent: () => import('./pages/ligne-commandes/ligne-commandes').then((m) => m.LigneCommandes),
+        canActivate: [roleGuard],
+        data: { roles: ['Client_User'] }
+      },
+      {
+        path: 'reclamation-client',
+        loadComponent: () => import('./pages/reclamation-client/reclamation-client').then((m) => m.ReclamationClient),
+        canActivate: [roleGuard],
+        data: { roles: ['Client_User'] }
       },
       {
         path: 'dashboard-admin',
@@ -109,10 +140,28 @@ export const routes: Routes = [
         data: { roles: ['Commercial'] }
       },
       {
+        path: 'mes-reclamations',
+        loadComponent: () => import('./pages/mes-reclamations/mes-reclamations').then((m) => m.MesReclamations),
+        canActivate: [roleGuard],
+        data: { roles: ['Client_User'] }
+      },
+      {
         path: 'reclamations/create',
         loadComponent: () => import('./pages/reclamations/reclamation-form/reclamation-form').then((m) => m.ReclamationForm),
         canActivate: [roleGuard],
         data: { roles: ['Commercial'] }
+      },
+      {
+        path: 'settings',
+        loadComponent: () => import('./pages/settings-admin/settings-admin').then((m) => m.SettingsAdmin),
+        canActivate: [roleGuard],
+        data: { roles: ['Admin'] }
+      },
+      {
+        path: 'employees',
+        loadComponent: () => import('./pages/commercials/commercials').then((m) => m.Commercials),
+        canActivate: [roleGuard],
+        data: { roles: ['Admin'] }
       }
     ],
   },

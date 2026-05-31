@@ -305,13 +305,15 @@ WHERE Id = @Id";
             await conn.OpenAsync();
 
             string query = @"
-SELECT 
-    Id, 
-    CodeCRM,
-    UserId
-FROM crm.prospect
-WHERE ClientCermId IS NULL
-AND CodeCRM IS NOT NULL";
+SELECT DISTINCT
+    p.Id, 
+    p.CodeCRM,
+    pr.UserId
+FROM crm.prospect p
+INNER JOIN crm.Prospection pr ON pr.ProspectId = p.Id
+WHERE p.ClientCermId IS NULL
+AND p.CodeCRM IS NOT NULL
+AND pr.UserId IS NOT NULL";
 
             using var cmd = new SqlCommand(query, conn);
             using var reader = await cmd.ExecuteReaderAsync();
@@ -498,15 +500,17 @@ VALUES
 SELECT
     lp.Id,
     lp.RefArt,
-    p.ClientCermId,
+    prosp.ClientCermId,
     p.UserId
 FROM crm.LigneProspections lp
 INNER JOIN crm.Prospection p
     ON lp.ProspectionId = p.Id
+INNER JOIN crm.prospect prosp
+    ON p.ProspectId = prosp.Id
 WHERE (lp.NumeroDevis IS NULL OR lp.NumeroDevis = '')
 AND lp.DateDevis IS NULL
 AND lp.RefArt IS NOT NULL
-AND p.ClientCermId IS NOT NULL";
+AND prosp.ClientCermId IS NOT NULL";
 
             using var cmd = new SqlCommand(query, conn);
 

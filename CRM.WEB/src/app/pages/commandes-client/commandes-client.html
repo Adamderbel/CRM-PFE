@@ -1,0 +1,101 @@
+<div class="commandes-client-container">
+
+  <!-- Page Header -->
+  <div class="page-header-card">
+    <div class="header-content">
+      <span class="header-badge">Mes Commandes</span>
+      <h1 class="header-title">Consulter mes commandes</h1>
+      <p class="header-subtitle">Consultez l'historique complet, suivez l'avancement et visualisez vos commandes.</p>
+    </div>
+    <div class="header-icon-container">
+      <span class="material-icons header-icon">receipt</span>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  @if (isLoading()) {
+  <div class="loading-wrapper">
+    <div class="spinner"></div>
+    <p>Chargement de vos commandes...</p>
+  </div>
+  }
+
+  <!-- Error Alert -->
+  @if (errorMessage()) {
+  <div class="error-alert">
+    <span class="material-icons error-icon">error_outline</span>
+    <div class="error-text-container">
+      <span class="error-title">Une erreur est survenue</span>
+      <p class="error-desc">{{ errorMessage() }}</p>
+    </div>
+    <button class="retry-btn" (click)="loadClientAndCommandes()">
+      <span class="material-icons">replay</span> Réessayer
+    </button>
+  </div>
+  }
+
+  <!-- Main Content Grid -->
+  @if (!isLoading() && !errorMessage()) {
+    @if (commandesList().length === 0) {
+      <!-- Empty State -->
+      <div class="empty-state-card">
+        <span class="material-icons empty-icon">shopping_bag</span>
+        <h2>Aucune commande trouvée</h2>
+        <p>Vous n'avez pas encore passé de commande ou aucune commande n'est associée à votre compte.</p>
+        <button class="empty-action-btn" (click)="loadClientAndCommandes()">
+          <span class="material-icons">refresh</span> Actualiser la page
+        </button>
+      </div>
+    } @else {
+      <!-- Orders Table Panel -->
+      <div class="panel-card table-panel">
+        <div class="panel-header">
+          <h2 class="panel-title">Toutes mes commandes ({{ commandesList().length }})</h2>
+        </div>
+
+        <div class="table-responsive">
+          <table class="orders-history-table">
+            <thead>
+              <tr>
+                <th>Référence</th>
+                <th>Réf. Commande</th>
+                <th>Date Commande</th>
+                <th>Livraison Prévue</th>
+                <th>Livraison Réelle</th>
+                <th>Statut</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (c of commandesList(); track c.refCommande) {
+              <tr>
+                <td class="ref-cell">
+                  <span class="material-icons ref-doc-icon">description</span>
+                  {{ c.refCommande }}
+                </td>
+                <td class="ref-sub-cell">{{ c.referenceCommande || '-' }}</td>
+                <td>{{ formatDate(c.dateCommande) }}</td>
+                <td>{{ formatDate(c.dateLivraisonPrevue) }}</td>
+                <td>{{ formatDate(c.dateLivraisonReelle) }}</td>
+                <td>
+                  <span class="status-badge" [class]="getStatutClass(c.statutCommande)">
+                    <span class="status-dot"></span>
+                    {{ c.statutCommande || 'Confirmée' }}
+                  </span>
+                </td>
+                <td>
+                  <button class="btn-action-primary" (click)="voirLignes(c.refCommande)">
+                    <span class="material-icons">list_alt</span>
+                    Lignes de commande
+                  </button>
+                </td>
+              </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    }
+  }
+
+</div>

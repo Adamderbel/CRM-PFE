@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -17,6 +17,7 @@ namespace CRM.Entities.Common
         public string? Nom { get; set; }
         public DateTime? LastModifiedDate { get; set; }
         public DateTime? LastSyncDate { get; set; }
+        [Column("user_id ")]
         public Guid? idUser { get; set; }
     }
 }

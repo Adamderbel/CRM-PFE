@@ -1,0 +1,80 @@
+<div class="ligne-commandes-page">
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">Commande</p>
+      <h1 class="title">Lignes de commande {{ refCommande() }}</h1>
+      <p class="subtitle">Détails des articles, quantités et statuts liés à cette commande.</p>
+    </div>
+
+    <button class="back-btn" (click)="goBack()">
+      <span class="material-icons">arrow_back</span>
+      Retour aux commandes
+    </button>
+  </header>
+
+  @if (isLoading()) {
+    <div class="state-card">
+      <p>Chargement des lignes de commande...</p>
+    </div>
+  } @else if (errorMessage()) {
+    <div class="state-card error">
+      <p>{{ errorMessage() }}</p>
+      <button class="retry-btn" (click)="loadLignes(refCommande())">Réessayer</button>
+    </div>
+  } @else if (lignes().length === 0) {
+    <div class="state-card">
+      <p>Aucune ligne trouvée pour cette commande.</p>
+    </div>
+  } @else {
+    <section class="table-card">
+      <div class="table-responsive">
+        <table class="lignes-table">
+          <thead>
+            <tr>
+              <th>Ligne</th>
+              <th>Produit</th>
+              <th>Client</th>
+              <th>Qté commandée</th>
+              <th>Qté expédiée</th>
+              <th>Date commande</th>
+              <th>Livraison prévue</th>
+              <th>Livraison réelle</th>
+              <th>Statut</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (ligne of lignes(); track ligne.ligneId) {
+              <tr>
+                <td>{{ ligne.ligneId }}</td>
+                <td>{{ ligne.produitId }}</td>
+                <td>{{ ligne.clientId }}</td>
+                <td>{{ ligne.qteCommandee ?? '-' }}</td>
+                <td>{{ ligne.qteExpediee ?? '-' }}</td>
+                <td>{{ formatDate(ligne.dateCommande) }}</td>
+                <td>{{ formatDate(ligne.dateLivraisonPrevue) }}</td>
+                <td>{{ formatDate(ligne.dateLivraisonReelle) }}</td>
+                <td>
+                  <span class="status-badge" [class]="getStatutClass(ligne.statutLigne)">
+                    {{ ligne.statutLigne || 'En attente' }}
+                  </span>
+                </td>
+                <td>
+                  <button
+                    type="button"
+                    class="btn-action-reclamation"
+                    title="Créer une réclamation"
+                    aria-label="Créer une réclamation"
+                    (click)="creerReclamation(ligne)"
+                  >
+                    <span class="material-icons">report_problem</span>
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+  }
+</div>

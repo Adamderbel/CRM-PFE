@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace CRM.Entities.Common
 {
+    [Table("Notifications", Schema = "crm")]
     public class Notification
     {
         public Guid Id { get; set; }

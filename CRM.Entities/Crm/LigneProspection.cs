@@ -1,4 +1,4 @@
-﻿using CRM.Entities.Comm;
+using CRM.Entities.Comm;
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -66,7 +66,9 @@ namespace CRM.Entities.Crm
         [ForeignKey("StatutId")]
         public StatutProspection? Statut { get; set; }
         public  String? CodeCRM { get; set; }
+        [NotMapped]
         public Guid UserId { get; set; }
+        [NotMapped]
         public string? ClientCermId { get; set; }
     }
 }

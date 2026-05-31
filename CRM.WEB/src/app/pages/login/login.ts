@@ -20,7 +20,7 @@ export class Login {
   constructor(
     private router: Router,
     private authService: AuthService
-  ) {}
+  ) { }
 
   togglePassword() {
     this.showPassword.update((v) => !v);
@@ -38,6 +38,8 @@ export class Login {
         // Redirect based on role
         if (this.authService.hasRole('Admin')) {
           this.router.navigate(['/dashboard-admin']);
+        } else if (this.authService.hasRole('Client_User')) {
+          this.router.navigate(['/dashboard-client']);
         } else {
           this.router.navigate(['/dashboard']);
         }

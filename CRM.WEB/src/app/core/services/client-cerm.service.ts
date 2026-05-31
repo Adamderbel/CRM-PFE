@@ -51,6 +51,19 @@ export class ClientCermService {
     );
   }
 
+  getByUserId(userId: string): Observable<ClientCerm> {
+    this.loading.set(true);
+    this.error.set(null);
+    return this.http.get<ClientCerm>(`${environment.apiUrl}/ClientCerm/user/${userId}`).pipe(
+      tap(() => this.loading.set(false)),
+      catchError((err) => {
+        this.loading.set(false);
+        this.error.set('Erreur lors du chargement du client associé.');
+        return throwError(() => err);
+      })
+    );
+  }
+
   clearError(): void {
     this.error.set(null);
   }
