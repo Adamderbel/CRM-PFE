@@ -49,33 +49,9 @@ namespace CRM.WebAPI.Controllers
         {
             try
             {
+                // Relations chargées via Include() dans le service (eager loading)
+                // → 1 seule requête SQL au lieu de N+1
                 var ligneProspections = await _ligneProspectionService.GetAllAsync();
-                foreach (var item in ligneProspections)
-                {
-                    if (item.StatutId.HasValue)
-                    {
-                        item.Statut = await _statutProspectionService.GetByIdAsync(item.StatutId.Value);
-                    }
-
-                    if (item.ProspectionId != Guid.Empty)
-                    {
-                        item.Prospection = await _prospectionServices.GetByIdAsync(item.ProspectionId);
-                    }
-                    if (item.FamilleProduitId != 0)
-                    {
-                        item.FamilleProduit = await _FamilleProduitService.GetByIdAsync(item.FamilleProduitId);
-                    }
-                    if (item.SupportProduitId.HasValue)
-                    {
-                        item.SupportProduit = await _SupportProduitService.GetByIdAsync(item.SupportProduitId.Value);
-                    }
-                    if (item.SocieteeId.HasValue)
-                    {
-                        item.Societee = await _societeeService.GetByIdAsync(item.SocieteeId.Value);
-
-                    }
-
-                }
                 return Ok(ligneProspections);
             }
             catch (Exception ex)

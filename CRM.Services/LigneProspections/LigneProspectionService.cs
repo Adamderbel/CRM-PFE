@@ -3,6 +3,7 @@ using CRM.DAL.GenericRepository;
 using CRM.DAL.RepositoriesDapper;
 using CRM.Entities.Crm;
 using CRM.Services.comm;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -39,9 +40,17 @@ namespace CRM.Services.LigneProspections
             await _context.SaveChangesAsync();
         }
 
-        public Task<IEnumerable<LigneProspection>> GetAllAsync()
+        public async Task<IEnumerable<LigneProspection>> GetAllAsync()
         {
-           return _ligneProspectionRepository.GetAllAsync();
+            return await _context.Set<LigneProspection>()
+                .AsNoTracking()
+                .Include(l => l.Statut)
+                .Include(l => l.FamilleProduit)
+                .Include(l => l.SupportProduit)
+                .Include(l => l.Societee)
+                .Include(l => l.Prospection)
+                    .ThenInclude(p => p!.Prospect)
+                .ToListAsync();
         }
 
         public async Task<LigneProspection?> GetByIdAsync(Guid id)
