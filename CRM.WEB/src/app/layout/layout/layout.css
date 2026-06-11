@@ -3,11 +3,30 @@
 }
 
 .main-content {
-  margin-left: 220px;
+  margin-left: var(--sidebar-width);
   margin-top: 64px;
-  padding: 28px 32px;
-  background: #f7f7fa;
+  padding: 24px 28px;
   min-height: calc(100vh - 64px);
+  background: var(--bg-body);
+  transition: margin-left 0.3s ease;
 }
 
+/* Page container wrapper for all pages */
+.page-wrapper {
+  max-width: 1600px;
+  margin: 0 auto;
+}
 
+/* Responsive */
+@media (max-width: 1024px) {
+  .main-content {
+    margin-left: 0;
+    padding: 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .main-content {
+    padding: 16px;
+  }
+}

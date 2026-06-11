@@ -11,6 +11,14 @@
     "src/**/*.ts"
   ],
   "exclude": [
-    "src/**/*.spec.ts"
+    "src/**/*.spec.ts",
+    "src/app/pages/clients/clients-list/**",
+    "src/app/pages/commandes-client/**",
+    "src/app/pages/commercials/**",
+    "src/app/pages/dashboard-client/**",
+    "src/app/pages/ligne-commandes/**",
+    "src/app/pages/mes-reclamations/**",
+    "src/app/pages/reclamation-client/**",
+    "src/app/pages/settings-admin/**"
   ]
 }

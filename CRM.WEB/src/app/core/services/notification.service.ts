@@ -1,20 +1,51 @@
-import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { environment } from '../../../environments/environment';
-import { Notification } from '../models/notification.model';
+import { Injectable, signal } from '@angular/core';
+
+export type NotificationType = 'success' | 'error' | 'warning' | 'info';
+
+export interface AppNotification {
+  id: number;
+  type: NotificationType;
+  title: string;
+  message: string;
+}
 
 @Injectable({ providedIn: 'root' })
 export class NotificationService {
-  private apiUrl = `${environment.apiUrl}/notifications`;
+  private notificationsSignal = signal<AppNotification[]>([]);
+  private nextId = 1;
 
-  constructor(private http: HttpClient) {}
+  readonly notifications = this.notificationsSignal.asReadonly();
 
-  getByUser(userId: string): Observable<Notification[]> {
-    return this.http.get<Notification[]>(`${this.apiUrl}/user/${userId}`);
+  show(type: NotificationType, title: string, message: string, duration = 4000): void {
+    const id = this.nextId++;
+    this.notificationsSignal.update((current) => [...current, { id, type, title, message }]);
+
+    if (duration > 0) {
+      window.setTimeout(() => this.dismiss(id), duration);
+    }
   }
 
-  markAsRead(id: string): Observable<any> {
-    return this.http.patch(`${this.apiUrl}/${id}/read`, {});
+  success(message: string, title = 'Succès', duration?: number): void {
+    this.show('success', title, message, duration);
+  }
+
+  error(message: string, title = 'Erreur', duration?: number): void {
+    this.show('error', title, message, duration);
+  }
+
+  warning(message: string, title = 'Avertissement', duration?: number): void {
+    this.show('warning', title, message, duration);
+  }
+
+  info(message: string, title = 'Information', duration?: number): void {
+    this.show('info', title, message, duration);
+  }
+
+  dismiss(id: number): void {
+    this.notificationsSignal.update((current) => current.filter((item) => item.id !== id));
+  }
+
+  clear(): void {
+    this.notificationsSignal.set([]);
   }
 }

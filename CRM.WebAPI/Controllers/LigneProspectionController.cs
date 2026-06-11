@@ -1,4 +1,5 @@
-﻿using CRM.Entities.Crm;
+using CRM.Entities.Crm;
+using CRM.Entities.Security;
 using CRM.Services;
 using CRM.Services.Email;
 using CRM.Services.FamilleProduits;
@@ -8,177 +9,200 @@ using CRM.Services.Societe;
 using CRM.Services.StatutPrespection;
 using CRM.Services.SupportProduits;
 using CRM.WebAPI.DTOs;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 
 namespace CRM.WebAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize(Roles = "COMMERCIAL,MANAGER,ADMIN")]
     public class LigneProspectionController : ControllerBase
     {
         private readonly ILigneProspectionService _ligneProspectionService;
-        private readonly IProspectService _ProspectService;
+        private readonly IProspectService _prospectService;
         private readonly IstatutProspectionService _statutProspectionService;
         private readonly IProspectionServices _prospectionServices;
-        private readonly ISupportProduitService _SupportProduitService;
-        private readonly IFamilleProduitService _FamilleProduitService;
+        private readonly ISupportProduitService _supportProduitService;
+        private readonly IFamilleProduitService _familleProduitService;
         private readonly ISocieteeService _societeeService;
         private readonly IEmailService _emailService;
+        private readonly UserManager<SecUser> _userManager;
 
-        public LigneProspectionController(ILigneProspectionService ligneProspectionService ,
-            IProspectService ProspectService,
-            IstatutProspectionService statutProspectionService, 
+        public LigneProspectionController(
+            ILigneProspectionService ligneProspectionService,
+            IProspectService prospectService,
+            IstatutProspectionService statutProspectionService,
             IProspectionServices prospectionServices,
-        ISupportProduitService SupportProduitService,
-        IFamilleProduitService FamilleProduitService,
-        ISocieteeService SocieteeService,
-        IEmailService emailService)
-        
+            ISupportProduitService supportProduitService,
+            IFamilleProduitService familleProduitService,
+            ISocieteeService societeeService,
+            IEmailService emailService,
+            UserManager<SecUser> userManager)
         {
             _ligneProspectionService = ligneProspectionService;
-            _ProspectService = ProspectService;
+            _prospectService = prospectService;
             _statutProspectionService = statutProspectionService;
             _prospectionServices = prospectionServices;
-            _SupportProduitService = SupportProduitService;
-            _FamilleProduitService = FamilleProduitService;
-            _societeeService = SocieteeService;
+            _supportProduitService = supportProduitService;
+            _familleProduitService = familleProduitService;
+            _societeeService = societeeService;
             _emailService = emailService;
+            _userManager = userManager;
         }
+
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            try
-            {
-                // Relations chargées via Include() dans le service (eager loading)
-                // → 1 seule requête SQL au lieu de N+1
-                var ligneProspections = await _ligneProspectionService.GetAllAsync();
-                return Ok(ligneProspections);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
-            }
+            var principal = await ResolveCurrentSecUserAsync(User);
+            var ligneProspections = await _ligneProspectionService.GetAllAsync(principal?.Id, GetCurrentRole());
+            return Ok(ligneProspections);
         }
 
-            [HttpGet("{id}")]
+        [HttpGet("{id}")]
         public async Task<IActionResult> GetById(Guid id)
         {
             var ligneProspection = await _ligneProspectionService.GetByIdAsync(id);
-            if (ligneProspection == null)
+            if (ligneProspection == null || !await CanAccessProspectionAsync(ligneProspection.ProspectionId))
                 return NotFound();
+
             return Ok(ligneProspection);
-
         }
+
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(Guid id, [FromBody] LigneProspectionUpdateDto ligneProspectionUpdateDto)
+        public async Task<IActionResult> Update(Guid id, [FromBody] LigneProspectionUpdateDto dto)
         {
-            try
-            {
-                var ligneP = await _ligneProspectionService.GetByIdAsync(id);
-                if (ligneP == null) return NotFound("Ligne Prospection not found.");
-                ligneP.Designation = ligneProspectionUpdateDto.Designation;
-                ligneP.FamilleProduitId = ligneProspectionUpdateDto.FamilleProduitId;
-                ligneP.SupportProduitId = ligneProspectionUpdateDto.SupportProduitId;
-                ligneP.ProspectionId = ligneProspectionUpdateDto.ProspectionId;
-                ligneP.SocieteeId = ligneProspectionUpdateDto.SocieteeId;
-                ligneP.StatutId = ligneProspectionUpdateDto.StatutId;
-                ligneP.Date = ligneProspectionUpdateDto.Date;
-                await _ligneProspectionService.UpdateAsync(ligneP);
-                return Ok("Ligne Prospection updated successfully.");
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
-            }
+            var ligne = await _ligneProspectionService.GetByIdAsync(id);
+            if (ligne == null || !await CanAccessProspectionAsync(ligne.ProspectionId))
+                return NotFound("Ligne Prospection not found.");
+
+            if (!await CanAccessProspectionAsync(dto.ProspectionId))
+                return NotFound("Prospection not found.");
+
+            ligne.Designation = dto.Designation;
+            ligne.FamilleProduitId = dto.FamilleProduitId;
+            ligne.SupportProduitId = dto.SupportProduitId;
+            ligne.ProspectionId = dto.ProspectionId;
+            ligne.SocieteeId = dto.SocieteeId;
+            ligne.StatutId = dto.StatutId;
+            ligne.Date = dto.Date;
+
+            await _ligneProspectionService.UpdateAsync(ligne);
+            return Ok("Ligne Prospection updated successfully.");
         }
+
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] LigneProspectionCreateDto ligneProspectionCreateDto)
+        public async Task<IActionResult> Create([FromBody] LigneProspectionCreateDto dto)
         {
-            try
-            {
-                if (ligneProspectionCreateDto == null)
-                    return BadRequest("Ligne Prospection data is null.");
-                if (ligneProspectionCreateDto.ProspectionId != Guid.Empty)
-                {
-                    var prospect = await _prospectionServices.GetByIdAsync(ligneProspectionCreateDto.ProspectionId);
-                    if (prospect == null) return BadRequest("Invalid ProspectionId: Prospection not found.");
-                }
-                 var statut = await _statutProspectionService.GetByIdAsync(ligneProspectionCreateDto.StatutId);
-                if  (statut == null) {return BadRequest("Invalid StatutId Not found  moush mawjoud."); }
+            if (dto == null)
+                return BadRequest("Ligne Prospection data is null.");
 
-                var supportProduit = await _SupportProduitService.GetByIdAsync(ligneProspectionCreateDto.SupportProduitId);
-                if (supportProduit == null) { return BadRequest("Invalid SupportProduitId Not found  moush mawjoud."); }
-                var familleProduit = await _FamilleProduitService.GetByIdAsync(ligneProspectionCreateDto.FamilleProduitId);
-                if (familleProduit == null) { return BadRequest("Invalid FamilleProduitId Not found  moush mawjoud."); }
-                var societee = await _societeeService.GetByIdAsync(ligneProspectionCreateDto.SocieteeId);
-                if (societee == null) { return BadRequest("Invalid SocieteeId Not found  moush mawjoud."); }
+            var prospection = await _prospectionServices.GetByIdAsync(dto.ProspectionId);
+            if (prospection == null || !await CanAccessProspectionAsync(dto.ProspectionId))
+                return BadRequest("Invalid ProspectionId: Prospection not found.");
 
-                var ligneProspection = new LigneProspection
-                {
-                    Designation = ligneProspectionCreateDto.Designation,
-                    
-                    FamilleProduitId = ligneProspectionCreateDto.FamilleProduitId,
-                    SupportProduitId = ligneProspectionCreateDto.SupportProduitId,
-                    ProspectionId = ligneProspectionCreateDto.ProspectionId,
-                    SocieteeId = ligneProspectionCreateDto.SocieteeId,
-                    StatutId = ligneProspectionCreateDto.StatutId,
-                    Date = ligneProspectionCreateDto.Date
-                };
-                
-                await _ligneProspectionService.CreateAsync(ligneProspection);
-                return Ok("ligneProspection  created successfully.");
-            }
-            catch (Exception ex)
+            var statut = await _statutProspectionService.GetByIdAsync(dto.StatutId);
+            if (statut == null)
+                return BadRequest("Invalid StatutId.");
+
+            var supportProduit = await _supportProduitService.GetByIdAsync(dto.SupportProduitId);
+            if (supportProduit == null)
+                return BadRequest("Invalid SupportProduitId.");
+
+            var familleProduit = await _familleProduitService.GetByIdAsync(dto.FamilleProduitId);
+            if (familleProduit == null)
+                return BadRequest("Invalid FamilleProduitId.");
+
+            var societee = await _societeeService.GetByIdAsync(dto.SocieteeId);
+            if (societee == null)
+                return BadRequest("Invalid SocieteeId.");
+
+            var ligneProspection = new LigneProspection
             {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
-            }
+                Designation = dto.Designation,
+                FamilleProduitId = dto.FamilleProduitId,
+                SupportProduitId = dto.SupportProduitId,
+                ProspectionId = dto.ProspectionId,
+                SocieteeId = dto.SocieteeId,
+                StatutId = dto.StatutId,
+                Date = dto.Date
+            };
+
+            await _ligneProspectionService.CreateAsync(ligneProspection);
+            return Ok("Ligne prospection created successfully.");
         }
 
         [HttpPost("{id}/close")]
         public async Task<IActionResult> Close(Guid id, int? causeEchecId)
         {
-            await _ligneProspectionService.CloseAsync(id, causeEchecId);
+            var ligne = await _ligneProspectionService.GetByIdAsync(id);
+            if (ligne == null || !await CanAccessProspectionAsync(ligne.ProspectionId))
+                return NotFound();
 
-            return Ok("Ligne clôturée");
+            await _ligneProspectionService.CloseAsync(id, causeEchecId);
+            return Ok("Ligne cloturee");
         }
 
         [HttpPost("{id}/devis")]
-        public async Task<IActionResult> DemanderDevis(Guid id, [FromBody] DevisRequestDto devisRequestDto)
+        public async Task<IActionResult> DemanderDevis(Guid id, [FromBody] DevisRequestDto dto)
         {
-            try
-            {
-                var ligneP = await _ligneProspectionService.GetByIdAsync(id);
-                if (ligneP == null) return NotFound("Ligne Prospection not found.");
+            var ligne = await _ligneProspectionService.GetByIdAsync(id);
+            if (ligne == null || !await CanAccessProspectionAsync(ligne.ProspectionId))
+                return NotFound("Ligne Prospection not found.");
 
-                // Populate related entities to include them in the email
-                if (ligneP.FamilleProduitId != 0)
-                {
-                    ligneP.FamilleProduit = await _FamilleProduitService.GetByIdAsync(ligneP.FamilleProduitId);
-                }
-                if (ligneP.SupportProduitId.HasValue)
-                {
-                    ligneP.SupportProduit = await _SupportProduitService.GetByIdAsync(ligneP.SupportProduitId.Value);
-                }
-                if (ligneP.ProspectionId != Guid.Empty)
-                {
-                    ligneP.Prospection = await _prospectionServices.GetByIdAsync(ligneP.ProspectionId);
-                    if (ligneP.Prospection != null && ligneP.Prospection.ProspectId.HasValue)
-                    {
-                        ligneP.Prospection.Prospect = await _ProspectService.GetByIdAsync(ligneP.Prospection.ProspectId.Value);
-                    }
-                }
+            if (ligne.FamilleProduitId != 0)
+                ligne.FamilleProduit = await _familleProduitService.GetByIdAsync(ligne.FamilleProduitId);
 
-                // Actual logic to send an email
-                await _emailService.SendDevisEmailAsync(ligneP, devisRequestDto.Email, devisRequestDto.Notes, devisRequestDto.Date);
-                ligneP.DateDemandeOffre = DateTime.Now;
-              await  _ligneProspectionService.UpdateAsync(ligneP);
-                return Ok("Demande de devis traitée avec succès.");
-            }
-            catch (Exception ex)
+            if (ligne.SupportProduitId.HasValue)
+                ligne.SupportProduit = await _supportProduitService.GetByIdAsync(ligne.SupportProduitId.Value);
+
+            if (ligne.ProspectionId != Guid.Empty)
             {
-                var innerMessage = ex.InnerException != null ? ex.InnerException.Message : "";
-                return StatusCode(500, $"Internal server error: {ex.Message}. Details: {innerMessage}");
+                ligne.Prospection = await _prospectionServices.GetByIdAsync(ligne.ProspectionId);
+                if (ligne.Prospection?.ProspectId.HasValue == true)
+                    ligne.Prospection.Prospect = await _prospectService.GetByIdAsync(ligne.Prospection.ProspectId.Value);
             }
+
+            await _emailService.SendDevisEmailAsync(ligne, dto.Email, dto.Notes, dto.Date);
+            ligne.DateDemandeOffre = DateTime.Now;
+            await _ligneProspectionService.UpdateAsync(ligne);
+
+            return Ok("Demande de devis traitee avec succes.");
+        }
+
+        private string? GetCurrentRole()
+            => User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role || c.Type.EndsWith("/role", StringComparison.OrdinalIgnoreCase))?.Value;
+
+        private bool IsCommercial()
+            => string.Equals(GetCurrentRole(), "COMMERCIAL", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(GetCurrentRole(), "Commercial", StringComparison.OrdinalIgnoreCase);
+
+        private async Task<bool> CanAccessProspectionAsync(Guid prospectionId)
+        {
+            if (!IsCommercial())
+                return true;
+
+            var principal = await ResolveCurrentSecUserAsync(User);
+            var prospection = await _prospectionServices.GetByIdAsync(prospectionId);
+            return prospection?.UserId == principal?.Id;
+        }
+
+        private async Task<SecUser?> ResolveCurrentSecUserAsync(ClaimsPrincipal claimsPrincipal)
+        {
+            var user = await _userManager.GetUserAsync(claimsPrincipal);
+            if (user != null)
+                return user;
+
+            var idStr = claimsPrincipal.FindFirstValue(ClaimTypes.NameIdentifier)
+                ?? claimsPrincipal.FindFirstValue(JwtRegisteredClaimNames.Sub)
+                ?? claimsPrincipal.FindFirstValue("sub");
+
+            return Guid.TryParse(idStr, out var id)
+                ? await _userManager.FindByIdAsync(id.ToString())
+                : null;
         }
     }
 }

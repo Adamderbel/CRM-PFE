@@ -1,30 +1,41 @@
-<div class="prospection-detail-page">
-  <div class="page-header">
-    <a routerLink="/prospections" class="back-link">
-      <span class="material-icons">arrow_back</span>
+<div class="page-wrapper">
+  <!-- Back Link -->
+  <div class="mb-16">
+    <a routerLink="/prospections" class="btn btn-ghost" style="padding-left: 0;">
+      <span class="material-icons md">arrow_back</span>
       Retour aux prospections
     </a>
-    <div class="header-content">
-      <div>
-        <h1 class="page-title">Détails de la Prospection</h1>
-        <p class="page-subtitle">Consultez les informations complètes sur cette prospection</p>
-      </div>
-      @if (prospection()) {
-        <a [routerLink]="['/prospections/edit', prospection()?.id]" class="btn-primary">
-          <span class="material-icons">edit</span>
-          Modifier
-        </a>
-      }
-    </div>
   </div>
 
+  <!-- Page Header -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Détails de la prospection</h1>
+      <p class="page-subtitle">Informations et suivi des actions commerciales</p>
+    </div>
+    @if (prospection()) {
+      <div class="d-flex gap-12">
+        <a [routerLink]="['/ligne-prospections', prospection()!.id]" class="btn btn-secondary">
+          <span class="material-icons md">list_alt</span>
+          Lignes de prospection
+        </a>
+        <a [routerLink]="['/prospections/edit', prospection()!.id]" class="btn btn-primary">
+          <span class="material-icons md">edit</span>
+          Modifier
+        </a>
+      </div>
+    }
+  </div>
+
+  <!-- Alerts -->
   @if (errorMessage()) {
-    <div class="alert alert-error">
+    <div class="alert alert-error mb-24">
       <span class="material-icons">error</span>
       {{ errorMessage() }}
     </div>
   }
 
+  <!-- Loading State -->
   @if (isLoading()) {
     <div class="loading-container">
       <div class="spinner"></div>
@@ -32,56 +43,155 @@
     </div>
   }
 
+  <!-- Content -->
   @if (!isLoading() && prospection()) {
-    <div class="detail-card">
-      <div class="detail-header">
-        <div class="detail-title-group">
-          <h2>Prospection chez {{ prospection()?.prospect?.nom }} {{ prospection()?.prospect?.prenom }}</h2>
-          <span class="status-badge">{{ prospection()?.statut?.libelle || 'Inconnu' }}</span>
+    <!-- Header Card -->
+    <div class="card mb-24">
+      <div class="card-header" style="background: linear-gradient(135deg, var(--primary-50) 0%, var(--primary-100) 100%);">
+        <div>
+          <h2 style="font-size: 20px; font-weight: 600; color: var(--text-primary);">
+            Prospection — {{ prospection()?.prospect?.nom }} {{ prospection()?.prospect?.prenom }}
+          </h2>
+        </div>
+        <span class="badge" [class.badge-success]="prospection()?.statut?.libelle === 'Gagnée'" [class.badge-warning]="prospection()?.statut?.libelle === 'En cours'" [class.badge-error]="prospection()?.statut?.libelle === 'Perdue'">{{ prospection()?.statut?.libelle || 'Inconnu' }}</span>
+      </div>
+    </div>
+
+    <!-- Info Grid -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 24px;">
+      <!-- Planification -->
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">
+            <span class="material-icons md" style="color: var(--primary-500);">event</span>
+            Planification
+          </h3>
+        </div>
+        <div class="card-body">
+          <div style="display: flex; flex-direction: column; gap: 16px;">
+            <div>
+              <span style="font-size: var(--font-size-xs); text-transform: uppercase; color: var(--text-muted); font-weight: 600;">Date de début</span>
+              <p style="margin: 4px 0 0; font-weight: 500; color: var(--text-primary);">{{ prospection()?.dateDebut | date : 'dd/MM/yyyy HH:mm' }}</p>
+            </div>
+            <div>
+              <span style="font-size: var(--font-size-xs); text-transform: uppercase; color: var(--text-muted); font-weight: 600;">Date de fin</span>
+              <p style="margin: 4px 0 0; font-weight: 500; color: var(--text-primary);">{{ prospection()?.dateFin | date : 'dd/MM/yyyy HH:mm' }}</p>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div class="detail-body">
-
-        <div class="detail-section">
-          <h3><span class="material-icons">person</span> Prospect</h3>
-          <div class="info-group">
-            <span class="info-label">Nom</span>
-            <span class="info-value">{{ prospection()?.prospect?.nom }} {{ prospection()?.prospect?.prenom }}</span>
+      <!-- Assignation -->
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">
+            <span class="material-icons md" style="color: var(--primary-500);">assignment_ind</span>
+            Assignation
+          </h3>
+        </div>
+        <div class="card-body">
+          <div>
+            <span style="font-size: var(--font-size-xs); text-transform: uppercase; color: var(--text-muted); font-weight: 600;">Utilisateur</span>
+            <p style="margin: 4px 0 0; font-weight: 500; color: var(--text-primary);">
+              {{ prospection()?.user ? prospection()?.user?.nom + ' ' + prospection()?.user?.prenom : 'Non assigné' }}
+            </p>
           </div>
         </div>
+      </div>
+    </div>
 
-        <div class="detail-section">
-          <h3><span class="material-icons">event</span> Planification</h3>
-          <div class="info-grid">
-            <div class="info-group">
-              <span class="info-label">Date de début</span>
-              <span class="info-value">{{ prospection()?.dateDebut | date:'dd/MM/yyyy HH:mm' }}</span>
+    <!-- Notes -->
+    <div class="card mb-24">
+      <div class="card-header">
+        <h3 class="card-title">
+          <span class="material-icons md" style="color: var(--primary-500);">notes</span>
+          Notes
+        </h3>
+      </div>
+      <div class="card-body">
+        <p style="color: var(--text-secondary); line-height: 1.6;">{{ prospection()?.notes || 'Aucune note pour cette prospection.' }}</p>
+      </div>
+    </div>
+
+    <!-- Actions commerciales -->
+    <div class="card mb-24">
+      <div class="card-header">
+        <h3 class="card-title">
+          <span class="material-icons md" style="color: var(--primary-500);">phone_in_talk</span>
+          Actions commerciales
+        </h3>
+      </div>
+      <div class="card-body">
+        @if (actionFeedback()) {
+          <div class="alert alert-success mb-24">
+            {{ actionFeedback() }}
+          </div>
+        }
+
+        <!-- Action Form -->
+        <div style="background: var(--gray-50); padding: 20px; border-radius: var(--radius-lg); margin-bottom: 24px;">
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; margin-bottom: 16px;">
+            <div class="form-group">
+              <label class="form-label">Type d'action</label>
+              <select class="form-control form-select" [(ngModel)]="typeActionId" name="typeActionId">
+                <option [ngValue]="null">Choisir…</option>
+                @for (t of typesActions(); track t.id) {
+                  <option [ngValue]="t.id">{{ t.libelle }}</option>
+                }
+              </select>
             </div>
-            <div class="info-group">
-              <span class="info-label">Date de fin</span>
-              <span class="info-value">{{ prospection()?.dateFin | date:'dd/MM/yyyy HH:mm' }}</span>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; margin-bottom: 16px;">
+            <div class="form-group">
+              <label class="form-label">Commentaire</label>
+              <textarea class="form-control" [(ngModel)]="commentaire" name="commentaire" rows="2"></textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Résultat</label>
+              <textarea class="form-control" [(ngModel)]="resultat" name="resultat" rows="2"></textarea>
             </div>
           </div>
+          <button type="button" class="btn btn-primary" [disabled]="savingAction()" (click)="enregistrerAction()">
+            @if (savingAction()) {
+              <span class="spinner" style="width: 16px; height: 16px; border-width: 2px; margin-right: 8px;"></span>
+              Enregistrement…
+            } @else {
+              <span class="material-icons md">add</span>
+              Enregistrer l'action
+            }
+          </button>
         </div>
 
-        <div class="detail-section">
-          <h3><span class="material-icons">assignment_ind</span> Utilisateur Assigné</h3>
-          <div class="info-group">
-            <span class="info-label">Utilisateur</span>
-            <span class="info-value">
-              {{ prospection()?.user ? (prospection()?.user?.nom + ' ' + prospection()?.user?.prenom) : 'Non assigné' }}
-            </span>
+        <!-- Actions Table -->
+        @if (actions().length > 0) {
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Type</th>
+                <th>Commentaire</th>
+                <th>Résultat</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (a of actions(); track a.id) {
+                <tr>
+                  <td class="fw-semibold">{{ a.dateAction | date : 'dd/MM/yyyy HH:mm' }}</td>
+                  <td>
+                    <span class="badge badge-info">{{ a.typeAction?.libelle || '—' }}</span>
+                  </td>
+                  <td>{{ a.commentaire || '—' }}</td>
+                  <td>{{ a.resultat || '—' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        } @else {
+          <div class="empty-state" style="padding: 40px 20px;">
+            <span class="material-icons" style="font-size: 48px; color: var(--gray-300);">phone_disabled</span>
+            <p class="text-muted">Aucune action commerciale pour l'instant.</p>
           </div>
-        </div>
-
-        <div class="detail-section full-width">
-          <h3><span class="material-icons">notes</span> Notes</h3>
-          <div class="notes-content">
-            {{ prospection()?.notes || 'Aucune note ajoutée pour cette prospection.' }}
-          </div>
-        </div>
-
+        }
       </div>
     </div>
   }

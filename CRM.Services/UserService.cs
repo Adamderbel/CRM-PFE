@@ -19,8 +19,19 @@ namespace CRM.Services
         {
             _userRepository = userRepository;
         }
+
+        public async Task<IEnumerable<SecUser>> GetAllUsersAsync()
+        {
+            return await _userRepository.GetAllAsync();
+        }
+
         public async Task<SecUser> CreateUserAsync(SecUser user, string plainPassword, string roleName)
         {
+            if (user.Id == Guid.Empty)
+            {
+                user.Id = Guid.NewGuid();
+            }
+
             user.PasswordHash = _passwordHasher.HashPassword(user, plainPassword);
             _userRepository.AddAsync(user);
             var role = await _userRepository.GetRoleByNameAsync(roleName);
@@ -46,7 +57,7 @@ namespace CRM.Services
 
         public async Task<IEnumerable<UserRole>> GetRolesByRoleIdAsync(Guid roleId)
         {
-            return await GetRolesByRoleIdAsync(roleId);
+            return await _userRepository.GetRolesByRoleIdAsync(roleId);
         }
         public async Task<SecUser?> GetUserByEmailAsync(string email)
         {

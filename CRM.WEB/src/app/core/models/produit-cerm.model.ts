@@ -1,6 +1,7 @@
 export interface ProduitCerm {
-  refProduit: number;
+  id: number;
   designation: string | null;
   lastModifiedDate?: string | null;
   lastSyncDate?: string | null;
+  codeCRM?: string | null;
 }

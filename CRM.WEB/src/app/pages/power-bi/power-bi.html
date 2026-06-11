@@ -1,0 +1,91 @@
+<div class="page-wrapper">
+  <!-- Back Link -->
+  <div class="mb-16">
+    <a routerLink="/dashboard" class="btn btn-ghost" style="padding-left: 0;">
+      <span class="material-icons md">arrow_back</span>
+      Retour au tableau de bord
+    </a>
+  </div>
+
+  <!-- Page Header -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">KPI et rapports Power BI</h1>
+      <p class="page-subtitle">Visualisez vos indicateurs de performance en temps réel</p>
+    </div>
+  </div>
+
+  <!-- Alerts -->
+  @if (errorMessage()) {
+    <div class="alert alert-error mb-24">
+      <span class="material-icons">error_outline</span>
+      {{ errorMessage() }}
+    </div>
+  }
+
+  <!-- Loading State -->
+  @if (isLoading()) {
+    <div class="loading-container">
+      <div class="spinner"></div>
+      <p>Chargement...</p>
+    </div>
+  }
+
+  <!-- Content -->
+  @if (!isLoading() && config(); as c) {
+    @if (!c.configured) {
+      <div class="card mb-24" style="border-left: 4px solid var(--warning);">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-12">
+            <span class="material-icons lg" style="color: var(--warning);">warning</span>
+            <div>
+              <p class="m-0 fw-semibold">{{ c.message || 'Configuration Power BI incomplète.' }}</p>
+              <p class="m-0 text-muted">Renseignez les variables d'environnement documentées dans .env.example.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    } @else if (safeEmbed(); as src) {
+      <div class="card mb-24" style="padding: 0; overflow: hidden;">
+        <iframe [title]="'Rapport Power BI'" [src]="src" style="width: 100%; height: 600px; border: none;" sandbox="allow-same-origin allow-scripts allow-popups allow-forms"></iframe>
+      </div>
+      <p class="text-muted" style="font-size: var(--font-size-sm);">
+        <span class="material-icons sm" style="vertical-align: middle;">info</span>
+        Si le rapport ne s'affiche pas, complétez l'authentification embarquée (jeton) côté backend selon votre architecture Power BI Service.
+      </p>
+    } @else {
+      <div class="card mb-24" style="border-left: 4px solid var(--warning);">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-12">
+            <span class="material-icons lg" style="color: var(--warning);">warning</span>
+            <p class="m-0">URL d'embedding non configurée (POWERBI_EMBED_URL).</p>
+          </div>
+        </div>
+      </div>
+    }
+  }
+
+  <!-- Reports List -->
+  @if (!isLoading() && reports().length) {
+    <div class="card mt-24">
+      <div class="card-header">
+        <h2 class="card-title">Rapports référencés</h2>
+      </div>
+      <div class="card-body">
+        <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px;">
+          @for (r of reports(); track r.id) {
+            <li style="padding: 12px 16px; background: var(--gray-50); border-radius: var(--radius-md); display: flex; align-items: center; gap: 12px;">
+              <span class="material-icons" style="color: var(--primary-500);">insert_drive_file</span>
+              <div>
+                <strong style="color: var(--text-primary);">{{ r.name }}</strong>
+                @if (r.description) {
+                  <span class="text-muted" style="margin-left: 8px;">— {{ r.description }}</span>
+                }
+              </div>
+            </li>
+          }
+        </ul>
+      </div>
+    </div>
+  }
+</div>

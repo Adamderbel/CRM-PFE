@@ -10,12 +10,13 @@ namespace CRM.DAL
 {
     public interface IUserRepository
     {
+        Task<IEnumerable<SecUser>> GetAllAsync();
         Task<SecUser?> GetByEmailAsync(string email);
         void AddAsync(SecUser user);
         Task AddUserRoleAsync(UserRole userRole);
         Task SaveAsync();
         Task<SecRole?> GetRoleByNameAsync(string roleName);
         Task<IEnumerable<UserRole>> GetRolesByRoleIdAsync(Guid roleId);
-        Task<SecUser> GetByIdAsync(Guid id);
+        Task<SecUser?> GetByIdAsync(Guid id);
     }
 }

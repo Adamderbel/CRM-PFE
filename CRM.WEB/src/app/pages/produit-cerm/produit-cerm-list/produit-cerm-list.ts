@@ -19,8 +19,7 @@ export class ProduitCermList implements OnInit {
   constructor(public produitCermService: ProduitCermService) {}
 
   ngOnInit(): void {
-    // Initial load will be empty because no filters are provided by default as per controller logic
-    // But we can trigger a search if desired.
+    this.search();
   }
 
   search(): void {

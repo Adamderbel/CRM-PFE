@@ -1,14 +1,14 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, ActivatedRoute, RouterLink } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { LigneProspectionService } from '../../../core/services/ligne-prospection.service';
 import { LigneProspectionCreateDto, LigneProspectionUpdateDto } from '../../../core/models/ligne-prospection.model';
 
 @Component({
   selector: 'app-ligne-prospection-form',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule],
   templateUrl: './ligne-prospection-form.html',
   styleUrl: './ligne-prospection-form.css'
 })
@@ -25,27 +25,39 @@ export class LigneProspectionForm implements OnInit {
   // Form fields
   designation = signal('');
   date = signal<string>('');
+  dateDemandeOffre = signal<string>('');
+  numeroDevis = signal('');
+  dateDevis = signal<string>('');
+  numeroCommande = signal('');
+  dateCommande = signal<string>('');
+  batEnvoyee = signal<boolean>(false);
+  dateEnvoieBat = signal<string>('');
+  concretisee = signal<boolean>(false);
+  causeEchecId = signal<number | null>(null);
+  artid = signal('');
+  societeId = signal<number | ''>('');
+  statutId = signal<number | ''>('');
   familleProduitId = signal<number | ''>('');
   supportProduitId = signal<number | ''>('');
-  societeeId = signal<number | ''>('');
-  statutId = signal<number | ''>('');
+  codeCRM = signal('');
 
   // Lists for selects
   familleProduits = signal<any[]>([]);
   societes = signal<any[]>([]);
   statuts = signal<any[]>([]);
   supportProduits = signal<any[]>([]);
+  causeEchecs = signal<any[]>([]);
+  produitsCerm = signal<any[]>([]);
 
   constructor(
-    private ligneService: LigneProspectionService,
-    private router: Router,
+    public ligneService: LigneProspectionService,
+    public router: Router,
     private route: ActivatedRoute
   ) {}
 
   ngOnInit(): void {
     this.loadDropdowns();
 
-    // Check url params
     this.route.paramMap.subscribe(params => {
       const id = params.get('id');
       if (id) {
@@ -61,10 +73,13 @@ export class LigneProspectionForm implements OnInit {
       }
     });
 
-    // Set default date to today
     if (!this.isEditMode()) {
-      const today = new Date();
-      this.date.set(today.toISOString().split('T')[0] + 'T00:00');
+      queueMicrotask(() => {
+        if (!this.isEditMode()) {
+          const today = new Date();
+          this.date.set(today.toISOString().split('T')[0] + 'T00:00');
+        }
+      });
     }
   }
 
@@ -73,29 +88,44 @@ export class LigneProspectionForm implements OnInit {
     this.ligneService.getSocietes().subscribe(data => this.societes.set(data));
     this.ligneService.getStatuts().subscribe(data => this.statuts.set(data));
     this.ligneService.getSupportProduits().subscribe(data => this.supportProduits.set(data));
+    this.ligneService.getCauseEchecs().subscribe(data => this.causeEchecs.set(data));
+    this.ligneService.getProduitsCerm().subscribe(data => this.produitsCerm.set(data));
   }
 
   loadLigne(id: string) {
     this.isLoading.set(true);
     this.ligneService.getById(id).subscribe({
       next: (ligne) => {
-        this.designation.set(ligne.designation || '');
-        this.prospectionId.set(ligne.prospectionId);
-        this.familleProduitId.set(ligne.familleProduitId);
-        this.supportProduitId.set(ligne.supportProduitId || '');
-        this.societeeId.set(ligne.societeeId || '');
-        this.statutId.set(ligne.statutId || '');
-
-        if (ligne.date) {
+        queueMicrotask(() => {
+          this.designation.set(ligne.designation || '');
+          this.prospectionId.set(ligne.prospectionId);
+          this.familleProduitId.set(ligne.familleProduitId);
+          this.supportProduitId.set(ligne.supportProduitId || '');
+          this.societeId.set(ligne.societeId || '');
+          this.statutId.set(ligne.statutId || '');
+          this.dateDemandeOffre.set(ligne.dateDemandeOffre ? new Date(ligne.dateDemandeOffre).toISOString().slice(0, 16) : '');
+          this.numeroDevis.set(ligne.numeroDevis || '');
+          this.dateDevis.set(ligne.dateDevis ? new Date(ligne.dateDevis).toISOString().slice(0, 16) : '');
+          this.numeroCommande.set(ligne.numeroCommande || '');
+          this.dateCommande.set(ligne.dateCommande ? new Date(ligne.dateCommande).toISOString().slice(0, 16) : '');
+          this.batEnvoyee.set(ligne.batEnvoyee || false);
+          this.dateEnvoieBat.set(ligne.dateEnvoieBat ? new Date(ligne.dateEnvoieBat).toISOString().slice(0, 16) : '');
+          this.concretisee.set(ligne.concretisee || false);
+          this.causeEchecId.set(ligne.causeEchecId || null);
+          this.artid.set(ligne.artid || '');
+          this.codeCRM.set(ligne.codeCRM || '');
+          if (ligne.date) {
             const d = new Date(ligne.date);
             this.date.set(new Date(d.getTime() - (d.getTimezoneOffset() * 60000)).toISOString().slice(0, 16));
-        }
-
-        this.isLoading.set(false);
+          }
+          this.isLoading.set(false);
+        });
       },
       error: () => {
-        this.errorMessage.set('Erreur lors du chargement des données.');
-        this.isLoading.set(false);
+        queueMicrotask(() => {
+          this.errorMessage.set('Erreur lors du chargement des données.');
+          this.isLoading.set(false);
+        });
       }
     });
   }
@@ -106,22 +136,34 @@ export class LigneProspectionForm implements OnInit {
     this.successMessage.set('');
 
     if (!this.prospectionId() || !this.familleProduitId()) {
-      this.errorMessage.set('Veuillez remplir tous les champs obligatoires.');
+      this.errorMessage.set('Veuillez remplir les champs obligatoires.');
       this.isSaving.set(false);
       return;
     }
 
-    if (this.isEditMode() && this.ligneId()) {
-      const dto: LigneProspectionUpdateDto = {
-        designation: this.designation(),
-        prospectionId: this.prospectionId()!,
-        familleProduitId: Number(this.familleProduitId()),
-        supportProduitId: this.supportProduitId() ? Number(this.supportProduitId()) : undefined,
-        societeeId: this.societeeId() ? Number(this.societeeId()) : undefined,
-        statutId: this.statutId() ? Number(this.statutId()) : undefined,
-        date: this.date()
-      };
+    const baseDto = {
+      designation: this.designation(),
+      prospectionId: this.prospectionId()!,
+      familleProduitId: Number(this.familleProduitId()),
+      supportProduitId: this.supportProduitId() ? Number(this.supportProduitId()) : undefined,
+      societeId: this.societeId() ? Number(this.societeId()) : undefined,
+      statutId: this.statutId() ? Number(this.statutId()) : undefined,
+      date: this.date(),
+      dateDemandeOffre: this.dateDemandeOffre() || undefined,
+      numeroDevis: this.numeroDevis() || undefined,
+      dateDevis: this.dateDevis() || undefined,
+      numeroCommande: this.numeroCommande() || undefined,
+      dateCommande: this.dateCommande() || undefined,
+      batEnvoyee: this.batEnvoyee(),
+      dateEnvoieBat: this.dateEnvoieBat() || undefined,
+      concretisee: this.concretisee(),
+      causeEchecId: this.causeEchecId() || undefined,
+      artid: this.artid() || undefined,
+      codeCRM: this.codeCRM() || undefined,
+    };
 
+    if (this.isEditMode() && this.ligneId()) {
+      const dto: LigneProspectionUpdateDto = { ...baseDto };
       this.ligneService.update(this.ligneId()!, dto).subscribe({
         next: () => {
           this.successMessage.set('Ligne mise à jour avec succès.');
@@ -134,16 +176,7 @@ export class LigneProspectionForm implements OnInit {
         }
       });
     } else {
-      const dto: LigneProspectionCreateDto = {
-        designation: this.designation(),
-        prospectionId: this.prospectionId()!,
-        familleProduitId: Number(this.familleProduitId()),
-        supportProduitId: this.supportProduitId() ? Number(this.supportProduitId()) : undefined,
-        societeeId: this.societeeId() ? Number(this.societeeId()) : undefined,
-        statutId: this.statutId() ? Number(this.statutId()) : undefined,
-        date: this.date()
-      };
-
+      const dto: LigneProspectionCreateDto = { ...baseDto };
       this.ligneService.create(dto).subscribe({
         next: () => {
           this.successMessage.set('Ligne créée avec succès.');

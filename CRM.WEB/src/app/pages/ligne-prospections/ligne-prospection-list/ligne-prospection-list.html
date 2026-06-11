@@ -1,476 +1,102 @@
-<div class="ligne-prospection-list-page">
-  <div class="back-link-container" style="margin-bottom: 20px;">
-    <a routerLink="/prospections" class="back-link">
-      <span class="material-icons">arrow_back</span>
+<div class="page-wrapper">
+  <!-- Back Link -->
+  <div class="mb-16">
+    <a routerLink="/prospections" class="btn btn-ghost" style="padding-left: 0;">
+      <span class="material-icons md">arrow_back</span>
       Retour aux prospections
     </a>
   </div>
 
+  <!-- Page Header -->
   <div class="page-header">
     <div>
       <h1 class="page-title">Lignes de Prospection</h1>
       <p class="page-subtitle">Gérez les détails de vos campagnes</p>
     </div>
-    <a [routerLink]="['/ligne-prospections/create']" [queryParams]="prospectionId() ? { prospectionId: prospectionId() } : null" class="btn-primary">
-      <span class="material-icons">add_task</span>
+    <a [routerLink]="['/ligne-prospections/create']" [queryParams]="prospectionId() ? { prospectionId: prospectionId() } : null" class="btn btn-primary">
+      <span class="material-icons md">add_task</span>
       Nouvelle Ligne
     </a>
   </div>
 
+  <!-- Alerts -->
   @if (ligneProspectionService.errorMessage()) {
-    <div class="alert alert-error">
+    <div class="alert alert-error mb-24">
       <span class="material-icons">error</span>
       {{ ligneProspectionService.errorMessage() }}
     </div>
   }
 
-  <div class="filters-bar">
-    <div class="search-box">
-      <span class="material-icons">search</span>
-      <input
-        type="text"
-        placeholder="Rechercher par désignation..."
-        [ngModel]="searchQuery()"
-        (ngModelChange)="searchQuery.set($event)"
-      />
-    </div>
-    <span class="results-count">{{ filteredLignes().length }} ligne(s)</span>
-  </div>
-
+  <!-- Loading State -->
   @if (ligneProspectionService.isLoading()) {
     <div class="loading-container">
       <div class="spinner"></div>
       <p>Chargement des lignes...</p>
     </div>
-  }
-
-  @if (!ligneProspectionService.isLoading()) {
-    <div class="content-container">
-      @if (filteredLignes().length === 0) {
-        <div class="table-card">
-          <div class="empty-state">
-            <span class="material-icons empty-icon">list_alt</span>
-            <h3>Aucune ligne de prospection trouvée</h3>
-            <p>Ajoutez une ligne pour détailler votre prospection.</p>
-            <a [routerLink]="['/ligne-prospections/create']" [queryParams]="prospectionId() ? { prospectionId: prospectionId() } : null" class="btn-primary">
-              <span class="material-icons">add_task</span>
-              Nouvelle Ligne
-            </a>
-          </div>
+  } @else {
+    <div class="table-container">
+      <!-- Filters -->
+      <div class="filters-bar">
+        <div class="search-box">
+          <span class="material-icons">search</span>
+          <input
+            type="text"
+            placeholder="Rechercher par désignation..."
+            [ngModel]="searchQuery()"
+            (ngModelChange)="searchQuery.set($event)"
+          />
         </div>
-      } @else {
-        <div class="cards-grid">
+        <span class="text-muted fw-medium">{{ filteredLignes().length }} ligne(s)</span>
+      </div>
+
+      <!-- Empty State -->
+      @if (filteredLignes().length === 0) {
+        <div class="empty-state">
+          <span class="material-icons empty-icon">list_alt</span>
+          <h3>Aucune ligne de prospection trouvée</h3>
+          <p>Ajoutez une ligne pour détailler votre prospection.</p>
+          <a [routerLink]="['/ligne-prospections/create']" [queryParams]="prospectionId() ? { prospectionId: prospectionId() } : null" class="btn btn-primary">
+            <span class="material-icons md">add_task</span>
+            Nouvelle Ligne
+          </a>
+        </div>
+      }
+
+      <!-- Cards Grid -->
+      @if (filteredLignes().length > 0) {
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; padding: 24px;">
           @for (ligne of filteredLignes(); track ligne.id) {
-            <div class="ligne-card">
-              <div class="ligne-card-header">
-                <span class="status-badge" [class.status-encours]="ligne.statut?.libelle?.toLowerCase().includes('cours')" [class.status-termine]="ligne.statut?.libelle?.toLowerCase().includes('clôtur')" [class.status-gagne]="ligne.statut?.libelle?.toLowerCase() === 'gagné'" [class.status-perdu]="ligne.statut?.libelle?.toLowerCase() === 'perdu'">{{ ligne.statut?.libelle || 'Inconnu' }}</span>
-                <div class="actions-cell">
-                  @if (!isStatusFinal(ligne)) {
-                    <button
-                      class="card-action-btn"
-                      title="Ajouter une action"
-                      aria-label="Ajouter une action"
-                      (click)="openTypeActionModal(ligne)"
-                    >
-                      <span class="material-icons">add_circle_outline</span>
-                    </button>
-                  }
-                  <button
-                    class="card-action-btn"
-                    title="Voir les actions"
-                    aria-label="Voir les actions de la ligne"
-                    (click)="openActionsListModal(ligne)"
-                  >
-                    <span class="material-icons">history</span>
-                  </button>
-                  @if (!isStatusFinal(ligne)) {
-                    <button class="card-action-btn" title="Demander un devis" (click)="openDevisModal(ligne)">
-                      <span class="material-icons" style="font-size: 18px;">request_quote</span>
-                    </button>
-                    <button
-                      class="card-action-btn"
-                      title="Changer le statut"
-                      aria-label="Changer le statut"
-                      (click)="openStatusChangeModal(ligne)"
-                    >
-                      <span class="material-icons">swap_horiz</span>
-                    </button>
-                    <button
-                      class="card-action-btn"
-                      title="Clôturer la ligne"
-                      aria-label="Clôturer la ligne"
-                      (click)="openCloseModal(ligne)"
-                    >
-                      <span class="material-icons">check_circle</span>
-                    </button>
-                    <a [routerLink]="['/ligne-prospections/edit', ligne.id]" class="card-action-btn" title="Modifier">
-                      <span class="material-icons">edit</span>
-                    </a>
-                  }
+            <div class="card card-hoverable">
+              <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <span class="badge" [class.badge-success]="ligne.statut?.libelle?.toLowerCase().includes('clôturé')" [class.badge-warning]="ligne.statut?.libelle?.toLowerCase().includes('cours')">{{ ligne.statut?.libelle || 'Inconnu' }}</span>
+                <div class="table-actions">
+                  <a [routerLink]="['/ligne-prospections/edit', ligne.id]" class="table-action-btn edit" title="Modifier">
+                    <span class="material-icons md">edit</span>
+                  </a>
                 </div>
               </div>
-              <div class="ligne-card-body">
-                <h3 class="ligne-designation">{{ ligne.designation || 'Sans désignation' }}</h3>
+              <div class="card-body">
+                <h3 style="font-size: 18px; font-weight: 600; color: var(--text-primary); margin-bottom: 16px;">{{ ligne.designation || 'Sans désignation' }}</h3>
 
-                <div class="info-row">
-                  <span class="material-icons info-icon">calendar_today</span>
-                  <span class="info-text">{{ formatDate(ligne.date) }}</span>
-                </div>
-
-                <div class="info-row">
-                  <span class="material-icons info-icon">category</span>
-                  <span class="info-text">{{ ligne.familleProduit?.libelle || '-' }}</span>
-                </div>
-
-                <div class="info-row">
-                  <span class="material-icons info-icon">business</span>
-                  <span class="info-text">{{ ligne.societee?.nom || '-' }}</span>
-                </div>
-                <div class="info-row info-row-commercial">
-                  <span class="material-icons info-icon">local_offer</span>
-                  <span class="info-text">
-                    <strong>Offre demandée :</strong>
-                    @if (isOffreDemandee(ligne)) {
-                      <span class="status-ok">Oui</span>
-                      <span class="info-date">le {{ formatDate(ligne.dateDemandeOffre) }}</span>
-                    } @else {
-                      <span class="status-no">Non</span>
-                    }
-                  </span>
-                </div>
-
-                <div class="info-row info-row-commercial">
-                  <span class="material-icons info-icon">request_quote</span>
-                  <span class="info-text">
-                    <strong>Devis :</strong>
-                    @if (isDevisOk(ligne)) {
-                      <span class="status-ok">OK</span>
-                      @if (ligne.dateDevis) {
-                        <span class="info-date">le {{ formatDate(ligne.dateDevis) }}</span>
-                      }
-                      @if (ligne.numeroDevis) {
-                        <span class="info-ref">({{ ligne.numeroDevis }})</span>
-                      }
-                    } @else {
-                      <span class="status-no">Non</span>
-                    }
-                  </span>
-                </div>
-
-                <div class="info-row info-row-commercial">
-                  <span class="material-icons info-icon">shopping_cart</span>
-                  <span class="info-text">
-                    <strong>Commande :</strong>
-                    @if (isCommandeOk(ligne)) {
-                      <span class="status-ok">OK</span>
-                      @if (ligne.dateCommande) {
-                        <span class="info-date">le {{ formatDate(ligne.dateCommande) }}</span>
-                      }
-                      @if (ligne.numeroCommande) {
-                        <span class="info-ref">({{ ligne.numeroCommande }})</span>
-                      }
-                    } @else {
-                      <span class="status-no">Non</span>
-                    }
-                  </span>
+                <div style="display: flex; flex-direction: column; gap: 12px; color: var(--text-secondary);">
+                  <div style="display: flex; align-items: center; gap: 12px;">
+                    <span class="material-icons" style="color: var(--primary-500);">calendar_today</span>
+                    <span>{{ formatDate(ligne.date) }}</span>
+                  </div>
+                  <div style="display: flex; align-items: center; gap: 12px;">
+                    <span class="material-icons" style="color: var(--primary-500);">category</span>
+                    <span>{{ ligne.familleProduit?.libelle || '-' }}</span>
+                  </div>
+                  <div style="display: flex; align-items: center; gap: 12px;">
+                    <span class="material-icons" style="color: var(--primary-500);">business</span>
+                    <span>{{ ligne.societe?.nom || '-' }}</span>
+                  </div>
                 </div>
               </div>
             </div>
           }
         </div>
       }
-    </div>
-  }
-
-  @if (isTypeActionModalOpen()) {
-    <div class="modal-overlay" (click)="closeTypeActionModal()">
-      <div class="modal-content" (click)="$event.stopPropagation()">
-        <div class="modal-header">
-          <h2>Ajouter une action</h2>
-          <button type="button" class="icon-button" (click)="closeTypeActionModal()">
-            <span class="material-icons">close</span>
-          </button>
-        </div>
-        <form class="modal-body" (submit)="submitAction(); $event.preventDefault()">
-          @if (selectedLigne(); as ligne) {
-            <div class="form-group info-summary">
-              <strong>Ligne :</strong> {{ ligne.designation || 'Sans désignation' }}
-            </div>
-          }
-
-          @if (actionErrorMessage()) {
-            <div class="alert alert-error action-form-alert">
-              <span class="material-icons">error</span>
-              {{ actionErrorMessage() }}
-            </div>
-          }
-
-          @if (isLoadingTypeActions()) {
-            <p class="type-action-loading">Chargement des types d'action...</p>
-          } @else {
-            <div class="form-group">
-              <label for="typeAction">Type d'action <span class="required">*</span></label>
-              <select
-                id="typeAction"
-                name="typeAction"
-                class="form-control"
-                [ngModel]="selectedTypeActionId()"
-                (ngModelChange)="onTypeActionChange($event)"
-                required
-              >
-                <option [ngValue]="null">Sélectionner un type</option>
-                @for (type of typeActions(); track type.id) {
-                  <option [ngValue]="type.id">{{ type.libelle }}</option>
-                }
-              </select>
-            </div>
-
-            <div class="form-group">
-              <label for="commentaire">Commentaire</label>
-              <textarea
-                id="commentaire"
-                name="commentaire"
-                rows="5"
-                class="form-control"
-                placeholder="Saisissez un commentaire..."
-                [ngModel]="commentaire()"
-                (ngModelChange)="commentaire.set($event)"
-              ></textarea>
-            </div>
-          }
-        </form>
-        <div class="modal-footer">
-          <button type="button" class="btn-cancel" (click)="closeTypeActionModal()">Annuler</button>
-          <button
-            type="button"
-            class="btn-primary"
-            [disabled]="isSavingAction() || isLoadingTypeActions()"
-            (click)="submitAction()"
-          >
-            @if (isSavingAction()) {
-              Enregistrement...
-            } @else {
-              Valider
-            }
-          </button>
-        </div>
-      </div>
-    </div>
-  }
-
-  @if (isActionsListModalOpen()) {
-    <div class="modal-overlay" (click)="closeActionsListModal()">
-      <div class="modal-content modal-content-wide" (click)="$event.stopPropagation()">
-        <div class="modal-header">
-          <h2>Actions de la ligne</h2>
-          <button type="button" class="icon-button" (click)="closeActionsListModal()">
-            <span class="material-icons">close</span>
-          </button>
-        </div>
-        <div class="modal-body">
-          @if (ligneForActionsList(); as ligne) {
-            <div class="form-group info-summary">
-              <strong>Ligne :</strong> {{ ligne.designation || 'Sans désignation' }}
-            </div>
-          }
-
-          @if (actionsListError()) {
-            <div class="alert alert-error action-form-alert">
-              <span class="material-icons">error</span>
-              {{ actionsListError() }}
-            </div>
-          }
-
-          @if (isLoadingLigneActions()) {
-            <p class="type-action-loading">Chargement des actions...</p>
-          } @else if (ligneActions().length === 0 && !actionsListError()) {
-            <p class="type-action-empty">Aucune action enregistr?e pour cette ligne.</p>
-          } @else {
-            <ul class="actions-history-list">
-              @for (action of ligneActions(); track action.id) {
-                <li class="actions-history-item">
-                  <div class="actions-history-header">
-                    <span class="actions-history-type">{{ action.typeAction?.libelle || 'Type inconnu' }}</span>
-                    <span class="actions-history-date">{{ formatDateTime(action.dateAction) }}</span>
-                  </div>
-                  @if (action.commentaire) {
-                    <p class="actions-history-comment">{{ action.commentaire }}</p>
-                  }
-                  @if (action.resultat) {
-                    <p class="actions-history-resultat"><strong>R?sultat :</strong> {{ action.resultat }}</p>
-                  }
-                </li>
-              }
-            </ul>
-          }
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn-cancel" (click)="closeActionsListModal()">Fermer</button>
-        </div>
-      </div>
-    </div>
-  }
-
-  @if (isDevisModalOpen()) {
-    <div class="modal-overlay" (click)="closeDevisModal()">
-      <div class="modal-content" (click)="$event.stopPropagation()">
-        <div class="modal-header">
-          <h2>Demander un devis</h2>
-          <button class="icon-button" (click)="closeDevisModal()">
-            <span class="material-icons">close</span>
-          </button>
-        </div>
-        <div class="modal-body">
-          <div class="form-group info-summary" *ngIf="devisData().ligne">
-            <strong>D?signation:</strong> {{ devisData().ligne.designation }}<br>
-            <strong>Soci?t?:</strong> {{ devisData().ligne.societee?.nom || '-' }}
-          </div>
-          <div class="form-group">
-            <label for="devisDate">Date</label>
-            <input type="date" id="devisDate" [ngModel]="devisData().date" (ngModelChange)="devisData().date = $event" disabled class="form-control" />
-          </div>
-          <div class="form-group">
-            <label for="devisEmail">Email</label>
-            <input type="email" id="devisEmail" placeholder="nom@exemple.com" [ngModel]="devisData().email" (ngModelChange)="devisData().email = $event" class="form-control" />
-          </div>
-          <div class="form-group">
-            <label for="devisNotes">Notes</label>
-            <textarea id="devisNotes" rows="4" placeholder="Vos notes pour le devis..." [ngModel]="devisData().notes" (ngModelChange)="devisData().notes = $event" class="form-control"></textarea>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn-cancel" (click)="closeDevisModal()">Annuler</button>
-          <button type="button" class="btn-primary" (click)="submitDevis()">Envoyer</button>
-        </div>
-      </div>
-    </div>
-  }
-
-  @if (isCloseModalOpen()) {
-    <div class="modal-overlay" (click)="closeCloseModal()">
-      <div class="modal-content" (click)="$event.stopPropagation()">
-        <div class="modal-header">
-          <h2>Clôturer la ligne de prospection</h2>
-          <button type="button" class="icon-button" (click)="closeCloseModal()">
-            <span class="material-icons">close</span>
-          </button>
-        </div>
-        <div class="modal-body">
-          @if (closeModalData().ligne; as ligne) {
-            <div class="form-group info-summary">
-              <strong>Ligne :</strong> {{ ligne.designation || 'Sans désignation' }}
-            </div>
-          }
-
-          @if (ligneToClose()?.concretisee) {
-            <p>Êtes-vous sûr de vouloir clôturer cette ligne de prospection concrétisée ?</p>
-          } @else {
-            <div class="form-group">
-              <label for="causeEchec">Cause d'échec <span class="required">*</span></label>
-              <select
-                id="causeEchec"
-                name="causeEchec"
-                class="form-control"
-                [ngModel]="selectedCauseEchecId()"
-                (ngModelChange)="onCauseEchecChange($event)"
-                required
-              >
-                <option [ngValue]="null">Sélectionner une cause</option>
-                @for (cause of causeEchecs(); track cause.id) {
-                  <option [ngValue]="cause.id">{{ cause.libelle }}</option>
-                }
-              </select>
-            </div>
-
-            @if (closeModalError()) {
-              <div class="alert alert-error">
-                <span class="material-icons">error</span>
-                {{ closeModalError() }}
-              </div>
-            }
-          }
-        </div>
-        <div class="modal-footer">
-          @if (!ligneToClose()?.concretisee) {
-            <button type="button" class="btn-cancel" (click)="closeCloseModal()">Annuler</button>
-          }
-          <button
-            type="button"
-            class="btn-primary"
-            [disabled]="isClosingLigne() || (!ligneToClose()?.concretisee && !selectedCauseEchecId())"
-            (click)="submitClose()"
-          >
-            @if (isClosingLigne()) {
-              Clôture en cours...
-            } @else {
-              @if (ligneToClose()?.concretisee) {
-                Confirmer
-              } @else {
-                Valider
-              }
-            }
-          </button>
-        </div>
-      </div>
-    </div>
-  }
-
-  @if (isStatusChangeModalOpen()) {
-    <div class="modal-overlay" (click)="closeStatusChangeModal()">
-      <div class="modal-content" (click)="$event.stopPropagation()">
-        <div class="modal-header">
-          <h2>Changer le statut</h2>
-          <button type="button" class="icon-button" (click)="closeStatusChangeModal()">
-            <span class="material-icons">close</span>
-          </button>
-        </div>
-        <div class="modal-body">
-          @if (statusChangeData().ligne; as ligne) {
-            <div class="form-group info-summary">
-              <strong>Ligne :</strong> {{ ligne.designation || 'Sans désignation' }}
-            </div>
-          }
-
-          <div class="form-group">
-            <label for="statut">Nouveau statut <span class="required">*</span></label>
-            <select
-              id="statut"
-              name="statut"
-              class="form-control"
-              [ngModel]="selectedStatutId()"
-              (ngModelChange)="onStatutChange($event)"
-              required
-            >
-              <option [ngValue]="null">Sélectionner un statut</option>
-              @for (statut of availableStatuts(); track statut.id) {
-                <option [ngValue]="statut.id">{{ statut.libelle }}</option>
-              }
-            </select>
-          </div>
-
-          @if (statusChangeError()) {
-            <div class="alert alert-error">
-              <span class="material-icons">error</span>
-              {{ statusChangeError() }}
-            </div>
-          }
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn-cancel" (click)="closeStatusChangeModal()">Annuler</button>
-          <button
-            type="button"
-            class="btn-primary"
-            [disabled]="isChangingStatus() || !selectedStatutId()"
-            (click)="submitStatusChange()"
-          >
-            @if (isChangingStatus()) {
-              Modification en cours...
-            } @else {
-              Valider
-            }
-          </button>
-        </div>
-      </div>
     </div>
   }
 </div>

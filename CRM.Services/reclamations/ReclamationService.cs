@@ -40,8 +40,13 @@ namespace CRM.Services.reclamations
             }
         }
 
-        public async Task<IEnumerable<Reclamation>> GetAllReclamations()
+        public async Task<IEnumerable<Reclamation>> GetAllReclamations(Guid? userId = null, string? role = null)
         {
+            if (IsCommercial(role) && userId.HasValue)
+            {
+                return await _reclamationRepository.FindAsync(r => r.CommercialId == userId.Value);
+            }
+
             return await _reclamationRepository.GetAllAsync();
         }
 
@@ -56,5 +61,9 @@ namespace CRM.Services.reclamations
             await _reclamationRepository.UpdateAsync(reclamation);
             await _context.SaveChangesAsync();
         }
+
+        private static bool IsCommercial(string? role)
+            => string.Equals(role, "COMMERCIAL", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(role, "Commercial", StringComparison.OrdinalIgnoreCase);
     }
 }

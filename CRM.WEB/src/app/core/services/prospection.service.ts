@@ -1,8 +1,9 @@
 import { Injectable, signal, computed } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable, tap, catchError, throwError } from 'rxjs';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { Observable, tap, catchError, throwError, map } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { Prospection, ProspectionCreateDto, ProspectionUpdateDto } from '../models/prospection.model';
+import { normalizeStatutRow } from '../utils/normalize-api';
 
 @Injectable({ providedIn: 'root' })
 export class ProspectionService {
@@ -17,8 +18,22 @@ export class ProspectionService {
 
   constructor(private http: HttpClient) { }
 
-  getStatuts(): Observable<any[]> {
-    return this.http.get<any[]>(`${environment.apiUrl}/StatutProspection`);
+  getStatuts(): Observable<{ id: number; libelle: string }[]> {
+    return this.http.get<unknown>(`${environment.apiUrl}/StatutProspection`).pipe(
+      map((raw) => {
+        const arr = Array.isArray(raw) ? raw : [];
+        return arr.map((item) => normalizeStatutRow(item as Record<string, unknown>));
+      })
+    );
+  }
+
+  getTypesActions(): Observable<{ id: number; libelle: string }[]> {
+    return this.http.get<unknown>(`${environment.apiUrl}/TypeActionProspection`).pipe(
+      map((raw) => {
+        const arr = Array.isArray(raw) ? raw : [];
+        return arr.map((item) => normalizeStatutRow(item as Record<string, unknown>));
+      })
+    );
   }
 
   getAll(): Observable<Prospection[]> {
@@ -73,14 +88,23 @@ export class ProspectionService {
   create(prospection: ProspectionCreateDto): Observable<any> {
     this.loading.set(true);
     this.error.set(null);
-    return this.http.post(`${environment.apiUrl}/Prospection`, prospection, { responseType: 'text' }).pipe(
+    return this.http.post<{ message?: string }>(`${environment.apiUrl}/Prospection`, prospection).pipe(
       tap(() => {
         this.loading.set(false);
-        this.getAll().subscribe(); // Refresh list after creation
+        this.getAll().subscribe();
       }),
-      catchError((err) => {
+      catchError((err: HttpErrorResponse) => {
         this.loading.set(false);
-        const errorMsg = err.error?.details || err.error?.error || err.error || 'Erreur lors de la création de la prospection.';
+        const build = err.headers?.get('X-CRM-Build');
+        console.error('[ProspectionService.create] Erreur', err.status, 'X-CRM-Build=', build ?? '(absent = ancienne API ?)', err.error);
+        let errorMsg = 'Erreur lors de la création de la prospection.';
+        const b = err.error;
+        if (typeof b === 'string') errorMsg = b;
+        else if (b && typeof b === 'object') {
+          errorMsg = (b as { detail?: string }).detail
+            || (b as { message?: string }).message
+            || JSON.stringify(b);
+        }
         this.error.set(errorMsg);
         return throwError(() => err);
       })

@@ -1,183 +1,171 @@
-<div class="reclamation-form-page">
-  <div class="page-header">
-    <a routerLink="/reclamations" class="back-link">
-      <span class="material-icons">arrow_back</span>
+<div class="page-wrapper">
+  <!-- Back Link -->
+  <div class="mb-16">
+    <a routerLink="/reclamations" class="btn btn-ghost" style="padding-left: 0;">
+      <span class="material-icons md">arrow_back</span>
       Retour à la liste
     </a>
-    <h1 class="page-title">Nouvelle Réclamation</h1>
-    <p class="page-subtitle">Saisissez le nom du client et du produit pour filtrer les suggestions</p>
   </div>
 
+  <!-- Page Header -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Nouvelle Réclamation</h1>
+      <p class="page-subtitle">Saisissez le nom du client et du produit pour filtrer les suggestions</p>
+    </div>
+  </div>
+
+  <!-- Alerts -->
   @if (errorMessage()) {
-    <div class="alert alert-error">
+    <div class="alert alert-error mb-24">
       <span class="material-icons">error</span>
       {{ errorMessage() }}
     </div>
   }
 
   @if (successMessage()) {
-    <div class="alert alert-success">
+    <div class="alert alert-success mb-24">
       <span class="material-icons">check_circle</span>
       {{ successMessage() }}
     </div>
   }
 
-  <div class="form-card">
-    <form (submit)="save(); $event.preventDefault()">
-      
-      <!-- Section 1: Informations Générales -->
-      <div class="form-section">
-        <h2 class="form-section-title">
-          <span class="material-icons">info</span>
+  <form (submit)="save(); $event.preventDefault()">
+    <!-- Section 1: Informations Générales -->
+    <div class="card mb-24">
+      <div class="card-header">
+        <h2 class="card-title">
+          <span class="material-icons md" style="color: var(--primary-500);">info</span>
           Informations Générales
         </h2>
-        <div class="form-grid">
-          <div class="form-group full-width">
-            <label for="titre">Titre de la réclamation <span class="required">*</span></label>
-            <input type="text" id="titre" [ngModel]="titre()" (ngModelChange)="titre.set($event)" name="titre" placeholder="Ex: Produit défectueux" required maxlength="200">
-          </div>
-          
-          <div class="form-group">
-            <label for="statut">Statut</label>
-            <select id="statut" [ngModel]="statut()" (ngModelChange)="statut.set($event)" name="statut">
-              <option value="Nouveau">Nouveau</option>
-              <option value="En cours">En cours</option>
-              <option value="En attente">En attente</option>
-              <option value="Résolu">Résolu</option>
-            </select>
+      </div>
+      <div class="card-body">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px;">
+          <div class="form-group" style="grid-column: 1 / -1;">
+            <label class="form-label" for="titre">Titre de la réclamation <span style="color: var(--error);">*</span></label>
+            <div class="form-control-wrapper">
+              <span class="material-icons">title</span>
+              <input type="text" id="titre" class="form-control" [ngModel]="titre()" (ngModelChange)="titre.set($event)" name="titre" placeholder="Ex: Produit défectueux" required maxlength="200">
+            </div>
           </div>
 
           <div class="form-group">
-            <label for="priorite">Priorité</label>
-            <select id="priorite" [ngModel]="priorite()" (ngModelChange)="priorite.set($event)" name="priorite">
-              <option value="Basse">Basse</option>
-              <option value="Normale">Normale</option>
-              <option value="Haute">Haute</option>
-              <option value="Urgente">Urgente</option>
-            </select>
+            <label class="form-label" for="statut">Statut</label>
+            <div class="form-control-wrapper">
+              <span class="material-icons">flag</span>
+              <select id="statut" class="form-control form-select" [ngModel]="statut()" (ngModelChange)="statut.set($event)" name="statut">
+                <option value="Nouveau">Nouveau</option>
+                <option value="En cours">En cours</option>
+                <option value="En attente">En attente</option>
+                <option value="Résolu">Résolu</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="priorite">Priorité</label>
+            <div class="form-control-wrapper">
+              <span class="material-icons">priority_high</span>
+              <select id="priorite" class="form-control form-select" [ngModel]="priorite()" (ngModelChange)="priorite.set($event)" name="priorite">
+                <option value="Basse">Basse</option>
+                <option value="Normale">Normale</option>
+                <option value="Haute">Haute</option>
+                <option value="Urgente">Urgente</option>
+              </select>
+            </div>
           </div>
         </div>
       </div>
+    </div>
 
-      <!-- Section 2: Client & Produit (Filtrage par Nom) -->
-      <div class="form-section">
-        <h2 class="form-section-title">
-          <span class="material-icons">business_center</span>
+    <!-- Section 2: Client & Produit -->
+    <div class="card mb-24">
+      <div class="card-header">
+        <h2 class="card-title">
+          <span class="material-icons md" style="color: var(--primary-500);">business_center</span>
           Sélection Client & Produit
         </h2>
-        <div class="form-grid">
-          
-          <!-- Recherche Client -->
-          <div class="form-group search-container">
-            <label for="clientSearch">Client (Nom) <span class="required">*</span></label>
-            <div class="input-with-icon">
-              <input type="text" id="clientSearch" 
-                     [ngModel]="clientSearchQuery()" 
-                     (ngModelChange)="clientSearchQuery.set($event)" 
-                     name="clientSearch" 
-                     placeholder="Saisissez le nom du client..." 
-                     autocomplete="off"
-                     [disabled]="!!selectedClient()">
-              @if (selectedClient()) {
-                <button type="button" class="btn-clear" (click)="clearClient()">
-                  <span class="material-icons">close</span>
-                </button>
-              }
-              @if (isSearchingClient()) {
-                <div class="searching-indicator">
-                  <div class="spinner-sm"></div>
-                </div>
-              }
-            </div>
-
-            @if (foundClients().length > 0 && !selectedClient()) {
-              <div class="search-results">
-                @for (client of foundClients(); track client.refClient) {
-                  <div class="search-item" (click)="selectClient(client)">
-                    <span class="search-item-title">{{ client.nom }}</span>
-                    <span class="search-item-subtitle">Référence: {{ client.refClient }}</span>
-                  </div>
+      </div>
+      <div class="card-body">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px;">
+          <!-- Sélection Client -->
+          <div class="form-group">
+            <label class="form-label" for="clientId">Client (Nom) <span style="color: var(--error);">*</span></label>
+            <div class="form-control-wrapper">
+              <span class="material-icons">business</span>
+              <select id="clientId" class="form-control form-select" [ngModel]="clientId()" (ngModelChange)="clientId.set($event)" name="clientId" required>
+                <option [ngValue]="null" disabled>Sélectionnez un client...</option>
+                @for (client of allClients(); track client.id) {
+                  <option [ngValue]="client.id">{{ client.nom }}</option>
                 }
-              </div>
-            }
+              </select>
+            </div>
           </div>
 
-          <!-- Recherche Produit -->
-          <div class="form-group search-container">
-            <label for="productSearch">Produit (Désignation) <span class="required">*</span></label>
-            <div class="input-with-icon">
-              <input type="text" id="productSearch" 
-                     [ngModel]="productSearchQuery()" 
-                     (ngModelChange)="productSearchQuery.set($event)" 
-                     name="productSearch" 
-                     placeholder="Saisissez la désignation..." 
-                     autocomplete="off"
-                     [disabled]="!!selectedProduct()">
-              @if (selectedProduct()) {
-                <button type="button" class="btn-clear" (click)="clearProduct()">
-                  <span class="material-icons">close</span>
-                </button>
-              }
-              @if (isSearchingProduct()) {
-                <div class="searching-indicator">
-                  <div class="spinner-sm"></div>
-                </div>
-              }
-            </div>
-
-            @if (foundProducts().length > 0 && !selectedProduct()) {
-              <div class="search-results">
-                @for (product of foundProducts(); track product.refProduit) {
-                  <div class="search-item" (click)="selectProduct(product)">
-                    <span class="search-item-title">{{ product.designation }}</span>
-                    <span class="search-item-subtitle">Référence: {{ product.refProduit }}</span>
-                  </div>
+          <!-- Sélection Produit -->
+          <div class="form-group">
+            <label class="form-label" for="produitId">Produit (Désignation) <span style="color: var(--error);">*</span></label>
+            <div class="form-control-wrapper">
+              <span class="material-icons">inventory_2</span>
+              <select id="produitId" class="form-control form-select" [ngModel]="produitId()" (ngModelChange)="produitId.set($event)" name="produitId" required>
+                <option [ngValue]="null" disabled>Sélectionnez un produit...</option>
+                @for (product of allProducts(); track product.id) {
+                  <option [ngValue]="product.id">{{ product.designation }}</option>
                 }
-              </div>
-            }
+              </select>
+            </div>
           </div>
 
           <div class="form-group">
-            <label for="source">Source</label>
-            <select id="source" [ngModel]="source()" (ngModelChange)="source.set($event)" name="source">
-              <option value="Email">Email</option>
-              <option value="Téléphone">Téléphone</option>
-              <option value="Portail Web">Portail Web</option>
-              <option value="Direct">Direct</option>
-            </select>
+            <label class="form-label" for="source">Source</label>
+            <div class="form-control-wrapper">
+              <span class="material-icons">source</span>
+              <input type="text" id="source" class="form-control" [ngModel]="source()" (ngModelChange)="source.set($event)" name="source" placeholder="Ex: Téléphone, Email, Visite...">
+            </div>
           </div>
 
           <div class="form-group">
-            <label for="ref">Référence Interne (Optionnel)</label>
-            <input type="text" id="ref" [ngModel]="numeroReference()" (ngModelChange)="numeroReference.set($event)" name="ref" placeholder="Ex: REC-2024-001">
+            <label class="form-label" for="ref">Référence Interne</label>
+            <div class="form-control-wrapper">
+              <span class="material-icons">tag</span>
+              <input type="text" id="ref" class="form-control" [ngModel]="numeroReference()" (ngModelChange)="numeroReference.set($event)" name="ref" placeholder="Généré automatiquement" readonly>
+            </div>
           </div>
         </div>
       </div>
+    </div>
 
-      <!-- Section 3: Description -->
-      <div class="form-section">
-        <h2 class="form-section-title">
-          <span class="material-icons">description</span>
+    <!-- Section 3: Description -->
+    <div class="card mb-24">
+      <div class="card-header">
+        <h2 class="card-title">
+          <span class="material-icons md" style="color: var(--primary-500);">description</span>
           Description
         </h2>
-        <div class="form-group full-width">
-          <label for="description">Détails de la réclamation</label>
-          <textarea id="description" [ngModel]="description()" (ngModelChange)="description.set($event)" name="description" placeholder="Saisissez ici les détails du problème..." rows="4"></textarea>
+      </div>
+      <div class="card-body">
+        <div class="form-group">
+          <label class="form-label" for="description">Détails de la réclamation</label>
+          <div class="form-control-wrapper" style="align-items: flex-start;">
+            <span class="material-icons" style="top: 14px;">comment</span>
+            <textarea id="description" class="form-control" [ngModel]="description()" (ngModelChange)="description.set($event)" name="description" placeholder="Saisissez ici les détails du problème..." rows="4"></textarea>
+          </div>
         </div>
       </div>
+    </div>
 
-      <div class="form-actions">
-        <a routerLink="/reclamations" class="btn-outline">Annuler</a>
-        <button type="submit" class="btn-primary" [disabled]="isSaving()">
-          @if (isSaving()) {
-            <div class="spinner-sm"></div>
-            Enregistrement...
-          } @else {
-            <span class="material-icons">save</span>
-            Enregistrer la Réclamation
-          }
-        </button>
-      </div>
-    </form>
-  </div>
+    <!-- Actions -->
+    <div style="display: flex; justify-content: flex-end; gap: 12px;">
+      <a routerLink="/reclamations" class="btn btn-secondary">Annuler</a>
+      <button type="submit" class="btn btn-primary" [disabled]="isSaving()">
+        @if (isSaving()) {
+          <span class="spinner" style="width: 20px; height: 20px; border-width: 2px;"></span>
+          Enregistrement...
+        } @else {
+          <span class="material-icons md">save</span>
+          Enregistrer la Réclamation
+        }
+      </button>
+    </div>
+  </form>
 </div>

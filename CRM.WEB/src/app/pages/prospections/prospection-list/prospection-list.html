@@ -1,49 +1,40 @@
-<div class="prospection-list-page">
-  <div class="back-link-container" style="margin-bottom: 20px;">
-    <a routerLink="/prospects" class="back-link">
-      <span class="material-icons">arrow_back</span>
+<div class="page-wrapper">
+  <!-- Back Link -->
+  <div class="mb-16">
+    <a routerLink="/prospects" class="btn btn-ghost" style="padding-left: 0;">
+      <span class="material-icons md">arrow_back</span>
       Retour aux prospects
     </a>
   </div>
 
+  <!-- Page Header -->
   <div class="page-header">
     <div>
       <h1 class="page-title">Prospections</h1>
       <p class="page-subtitle">Gérez vos campagnes de prospection</p>
     </div>
-    <a [routerLink]="['/prospections/create']" [queryParams]="prospectId() ? { prospectId: prospectId() } : null" class="btn-primary">
-      <span class="material-icons">add_task</span>
+    <a [routerLink]="['/prospections/create']" [queryParams]="prospectId() ? { prospectId: prospectId() } : null" class="btn btn-primary">
+      <span class="material-icons md">add_task</span>
       Nouvelle Prospection
     </a>
   </div>
 
+  <!-- Alerts -->
   @if (successMessage()) {
-    <div class="alert alert-success">
+    <div class="alert alert-success mb-24">
       <span class="material-icons">check_circle</span>
       {{ successMessage() }}
     </div>
   }
 
   @if (prospectionService.errorMessage()) {
-    <div class="alert alert-error">
+    <div class="alert alert-error mb-24">
       <span class="material-icons">error</span>
       {{ prospectionService.errorMessage() }}
     </div>
   }
 
-  <div class="filters-bar">
-    <div class="search-box">
-      <span class="material-icons">search</span>
-      <input
-        type="text"
-        placeholder="Rechercher par prospect, statut..."
-        [ngModel]="searchQuery()"
-        (ngModelChange)="searchQuery.set($event)"
-      />
-    </div>
-    <span class="results-count">{{ filteredProspections().length }} prospection(s)</span>
-  </div>
-
+  <!-- Loading State -->
   @if (prospectionService.isLoading()) {
     <div class="loading-container">
       <div class="spinner"></div>
@@ -51,53 +42,87 @@
     </div>
   }
 
+  <!-- Content -->
   @if (!prospectionService.isLoading()) {
-    <div class="table-card">
+    <div class="table-container">
+      <!-- Filters -->
+      <div class="filters-bar">
+        <div class="search-box">
+          <span class="material-icons">search</span>
+          <input
+            type="text"
+            placeholder="Rechercher par prospect, statut..."
+            [ngModel]="searchQuery()"
+            (ngModelChange)="onSearchChange($event)"
+          />
+        </div>
+        <select class="form-control" style="width: auto;" [ngModel]="pageSize()" (ngModelChange)="onPageSizeChange($event)">
+          @for (size of pageOptions; track size) {
+            <option [value]="size">{{ size }} / page</option>
+          }
+        </select>
+        <span class="text-muted fw-medium">{{ filteredProspections().length }} prospection(s)</span>
+      </div>
+
+      <!-- Empty State -->
       @if (filteredProspections().length === 0) {
         <div class="empty-state">
           <span class="material-icons empty-icon">assignment</span>
           <h3>Aucune prospection trouvée</h3>
           <p>Créez votre première prospection pour commencer.</p>
-          <a routerLink="/prospections/create" class="btn-primary">
-            <span class="material-icons">add_task</span>
+          <a routerLink="/prospections/create" class="btn btn-primary">
+            <span class="material-icons md">add_task</span>
             Nouvelle Prospection
           </a>
         </div>
-      } @else {
-        <table class="data-table">
+      }
+
+      <!-- Table -->
+      @if (filteredProspections().length > 0) {
+        <table class="table">
           <thead>
             <tr>
-              <th>Prospect</th>
+              <th>Cible (Prospect/Client)</th>
               <th>Date Début</th>
               <th>Date Fin</th>
               <th>Statut</th>
               <th>Utilisateur</th>
-              <th>Actions</th>
+              <th style="text-align: right;">Actions</th>
             </tr>
           </thead>
           <tbody>
-            @for (prospection of filteredProspections(); track prospection.id) {
+            @for (prospection of pagedProspections(); track prospection.id) {
               <tr>
-                <td>{{ prospection.prospect?.nom }} {{ prospection.prospect?.prenom }}</td>
+                <td class="fw-semibold">
+                  @if (prospection.prospect) {
+                    <span class="badge badge-info" style="margin-right: 8px;">Prospect</span>
+                    {{ prospection.prospect.nom }} {{ prospection.prospect.prenom }}
+                  } @else if (prospection.client) {
+                    <span class="badge badge-success" style="margin-right: 8px;">Client</span>
+                    {{ prospection.client.nom }}
+                  } @else {
+                    -
+                  }
+                </td>
                 <td>{{ formatDate(prospection.dateDebut) }}</td>
                 <td>{{ formatDate(prospection.dateFin) }}</td>
                 <td>
-                  <span class="status-badge">{{ prospection.statut?.libelle || 'Inconnu' }}</span>
+                  <span class="badge" [class.badge-success]="prospection.statut?.libelle === 'Gagnée'" [class.badge-warning]="prospection.statut?.libelle === 'En cours'" [class.badge-error]="prospection.statut?.libelle === 'Perdue'">{{ prospection.statut?.libelle || 'Inconnu' }}</span>
                 </td>
                 <td>{{ prospection.user?.nom }} {{ prospection.user?.prenom }}</td>
                 <td>
-                  <div class="actions-cell">
-                    <button class="table-action-btn" title="Lignes Prospection" (click)="viewLignes(prospection.id)">
-                      <span class="material-icons">list_alt</span>
+                  <div class="table-actions" style="justify-content: flex-end;">
+                    <button class="table-action-btn" style="color: var(--info);" title="Lignes Prospection" (click)="viewLignes(prospection.id)">
+                      <span class="material-icons md">list_alt</span>
                     </button>
-                    <button class="table-action-btn" title="Détails" (click)="viewProspection(prospection.id)">
-                      <span class="material-icons">visibility</span>
+                    <button class="table-action-btn view" title="Détails" (click)="viewProspection(prospection.id)">
+                      <span class="material-icons md">visibility</span>
                     </button>
-                    <button class="table-action-btn" title="Modifier" (click)="editProspection(prospection.id)">
-                      <span class="material-icons">edit</span>
+                    <button class="table-action-btn edit" title="Modifier" (click)="editProspection(prospection.id)">
+                      <span class="material-icons md">edit</span>
                     </button>
-                    <button class="table-action-btn btn-danger" title="Supprimer" (click)="confirmDelete(prospection)">
-                      <span class="material-icons">delete</span>
+                    <button class="table-action-btn delete" title="Supprimer" (click)="confirmDelete(prospection)">
+                      <span class="material-icons md">delete</span>
                     </button>
                   </div>
                 </td>
@@ -105,26 +130,44 @@
             }
           </tbody>
         </table>
+
+        <!-- Pagination -->
+        <div class="pagination">
+          <button class="pagination-btn" (click)="previousPage()" [disabled]="currentPage() === 1">
+            <span class="material-icons sm">chevron_left</span>
+            Précédent
+          </button>
+          <button class="pagination-btn active">{{ currentPage() }}</button>
+          <button class="pagination-btn" (click)="nextPage()" [disabled]="currentPage() >= totalPages()">
+            Suivant
+            <span class="material-icons sm">chevron_right</span>
+          </button>
+        </div>
       }
     </div>
   }
 </div>
 
+<!-- Delete Confirmation Modal -->
 @if (showDeleteConfirm()) {
   <div class="modal-overlay" (click)="cancelDelete()">
     <div class="modal-content" (click)="$event.stopPropagation()">
       <div class="modal-header">
-        <span class="material-icons modal-icon">warning</span>
+        <div class="modal-icon warning">
+          <span class="material-icons">warning</span>
+        </div>
         <h3>Confirmer la suppression</h3>
       </div>
-      <p class="modal-text">
-        Voulez-vous vraiment supprimer cette prospection pour le prospect
-        <strong>{{ prospectionToDelete()?.prospect?.prenom }} {{ prospectionToDelete()?.prospect?.nom }}</strong> ?
-        Cette action est irréversible.
-      </p>
-      <div class="modal-actions">
-        <button class="btn-outline" (click)="cancelDelete()">Annuler</button>
-        <button class="btn-danger-fill" (click)="deleteProspection()">Supprimer</button>
+      <div class="modal-body">
+        <p>
+          Voulez-vous vraiment supprimer cette prospection pour le prospect
+          <strong>{{ prospectionToDelete()?.prospect?.prenom }} {{ prospectionToDelete()?.prospect?.nom }}</strong> ?
+          Cette action est irréversible.
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="cancelDelete()">Annuler</button>
+        <button class="btn btn-danger" (click)="deleteProspection()">Supprimer</button>
       </div>
     </div>
   </div>

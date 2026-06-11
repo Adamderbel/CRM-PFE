@@ -5,13 +5,17 @@ using CRM.Services.produitecerms;
 using CRM.Services.prospections;
 using CRM.Services.reclamations;
 using CRM.Services.StatutPrespection;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 
 namespace CRM.WebAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize(Roles = "COMMERCIAL,MANAGER,ADMIN")]
     public class DashboardController : ControllerBase
     {
         private readonly IProspectionServices _prospectionServices;
@@ -45,8 +49,10 @@ namespace CRM.WebAPI.Controllers
         {
             try
             {
-                var prospections = (await _prospectionServices.GetAllAsync()).ToList();
-                var lignes = (await _ligneProspectionService.GetAllAsync()).ToList();
+                var principal = await ResolveCurrentSecUserAsync(User);
+                var role = GetCurrentRole();
+                var prospections = (await _prospectionServices.GetAllAsync(principal?.Id, role)).ToList();
+                var lignes = (await _ligneProspectionService.GetAllAsync(principal?.Id, role)).ToList();
                 var statuts = (await _statutProspectionService.GetAllAsync()).ToList();
 
                 int total = prospections.Count;
@@ -129,7 +135,88 @@ namespace CRM.WebAPI.Controllers
             }
         }
 
+        [HttpGet("metrics")]
+        public async Task<IActionResult> GetMetrics()
+        {
+            try
+            {
+                var principal = await ResolveCurrentSecUserAsync(User);
+                var role = GetCurrentRole();
+                var prospects = (await _prospectService.GetAllAsync(principal?.Id, role)).ToList();
+                var prospections = (await _prospectionServices.GetAllAsync(principal?.Id, role)).ToList();
+                var lignes = (await _ligneProspectionService.GetAllAsync(principal?.Id, role)).ToList();
+                var reclamations = (await _reclamationService.GetAllReclamations(principal?.Id, role)).ToList();
+
+                var lignesGagnees = new HashSet<Guid>(lignes.Where(l => l.Concretisee).Select(l => l.ProspectionId));
+                var gagnees = prospections.Count(p => p.StatutId == 5 || lignesGagnees.Contains(p.Id));
+                var tauxConversion = prospections.Count > 0
+                    ? Math.Round((double)gagnees / prospections.Count * 100, 1)
+                    : 0;
+
+                var now = DateTime.Now;
+                return Ok(new
+                {
+                    totalProspects = prospects.Count,
+                    totalProspections = prospections.Count,
+                    totalLignesProspection = lignes.Count,
+                    totalActionsCommerciales = 0,
+                    totalReclamations = reclamations.Count,
+                    tauxConversion,
+                    nouveauxProspectsMois = prospects.Count(p => p.DateCreation.HasValue && p.DateCreation.Value.Year == now.Year && p.DateCreation.Value.Month == now.Month),
+                    prospectionsEnCours = prospections.Count(p => p.StatutId != 5 && p.StatutId != 6 && !lignesGagnees.Contains(p.Id))
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
+        [HttpGet("historique-commercial")]
+        public async Task<IActionResult> GetHistoriqueCommercial([FromQuery] int limit = 120)
+        {
+            try
+            {
+                var principal = await ResolveCurrentSecUserAsync(User);
+                var role = GetCurrentRole();
+                var prospections = (await _prospectionServices.GetAllAsync(principal?.Id, role))
+                    .OrderByDescending(p => p.DateDebut ?? DateTime.MinValue)
+                    .Take(Math.Clamp(limit, 1, 500))
+                    .ToList();
+
+                var result = new List<object>();
+                foreach (var p in prospections)
+                {
+                    string? prospectName = null;
+                    if (p.ProspectId.HasValue)
+                    {
+                        var prospect = await _prospectService.GetByIdAsync(p.ProspectId.Value);
+                        prospectName = $"{prospect?.Prenom} {prospect?.Nom}".Trim();
+                    }
+
+                    result.Add(new
+                    {
+                        actionId = p.Id,
+                        dateAction = p.DateDebut,
+                        typeActionLibelle = "Prospection",
+                        prospectionId = p.Id,
+                        prospectNomComplet = string.IsNullOrWhiteSpace(prospectName) ? null : prospectName,
+                        commentaire = p.Notes,
+                        resultat = p.StatutId?.ToString(),
+                        ligneProspectionId = (string?)null
+                    });
+                }
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
         [HttpGet("admin-stats")]
+        [Authorize(Roles = "MANAGER,ADMIN")]
         public async Task<IActionResult> GetAdminStats()
         {
             try
@@ -190,11 +277,12 @@ namespace CRM.WebAPI.Controllers
 
         // Users grouped by role
         [HttpGet("users-by-role")]
+        [Authorize(Roles = "ADMIN")]
         public async Task<IActionResult> GetUsersByRole()
         {
             try
             {
-                var roles = new[] { "ADMIN", "COMMERCIAL", "CLIENT_USER" };
+                var roles = new[] { "ADMIN", "MANAGER", "COMMERCIAL" };
                 var result = new List<object>();
                 foreach (var role in roles)
                 {
@@ -207,6 +295,24 @@ namespace CRM.WebAPI.Controllers
             {
                 return StatusCode(500, new { message = ex.Message });
             }
+        }
+
+        private string? GetCurrentRole()
+            => User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role || c.Type.EndsWith("/role", StringComparison.OrdinalIgnoreCase))?.Value;
+
+        private async Task<SecUser?> ResolveCurrentSecUserAsync(ClaimsPrincipal claimsPrincipal)
+        {
+            var user = await _userManager.GetUserAsync(claimsPrincipal);
+            if (user != null)
+                return user;
+
+            var idStr = claimsPrincipal.FindFirstValue(ClaimTypes.NameIdentifier)
+                ?? claimsPrincipal.FindFirstValue(JwtRegisteredClaimNames.Sub)
+                ?? claimsPrincipal.FindFirstValue("sub");
+
+            return Guid.TryParse(idStr, out var id)
+                ? await _userManager.FindByIdAsync(id.ToString())
+                : null;
         }
     }
 }

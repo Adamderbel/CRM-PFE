@@ -1,9 +1,13 @@
-import { Component, OnInit, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { HttpErrorResponse } from '@angular/common/http';
+import { Component, OnInit, computed, signal } from '@angular/core';
+import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { ReclamationService } from '../../../core/services/reclamation.service';
+import { NotificationService } from '../../../core/services/notification.service';
+import { UserService } from '../../../core/services/user.service';
 import { Reclamation } from '../../../core/models/reclamation.model';
+import { UserDto } from '../../../core/models/user.model';
 
 @Component({
   selector: 'app-reclamation-list',
@@ -14,246 +18,197 @@ import { Reclamation } from '../../../core/models/reclamation.model';
 })
 export class ReclamationList implements OnInit {
   reclamations = signal<Reclamation[]>([]);
+  users = signal<UserDto[]>([]);
   isLoading = signal(false);
   errorMessage = signal('');
+  searchQuery = signal('');
+  statusFilter = signal('');
+  pageSize = signal(10);
+  currentPage = signal(1);
+  pageOptions = [10, 20, 50];
 
-  // Control popup visibility
-  showAnalysePopup = signal(false);
-  showExecutionPopup = signal(false);
-  showControlePopup = signal(false);
-  showCloturePopup = signal(false);
-  showConsulterPopup = signal(false);
+  // Process Modal state
+  showProcessModal = signal(false);
   selectedReclamation = signal<Reclamation | null>(null);
+  processStatus = signal('');
+  processResponsibleId = signal<string | null>(null);
+  isProcessing = signal(false);
 
-  // Form fields for analyse
-  analyseText = signal('');
-  justifiee = signal<boolean>(false);
-  commentaireJustification = signal('');
+  // Delete Modal state
+  showDeleteModal = signal(false);
+  reclamationToDelete = signal<Reclamation | null>(null);
 
-  // Form fields for execution
-  dateExecution = signal('');
+  filteredReclamations = computed(() => {
+    let list = this.reclamations();
+    const q = this.searchQuery().toLowerCase();
+    const status = this.statusFilter().toLowerCase();
 
-  // Form fields for controle execution
-  dateControleExecution = signal('');
-  commentaireControleExecution = signal('');
+    if (q) {
+      list = list.filter((rec) =>
+        [rec.numeroReference, rec.titre, rec.nomClient, rec.designationProduit, rec.statut, rec.priorite]
+          .some((value) => (value || '').toLowerCase().includes(q))
+      );
+    }
 
-  // Form fields for cloture
-  dateClotureReclamation = signal('');
-  rapport = signal('');
-  responsableFaute = signal('');
-  degats = signal<number | null>(null);
+    if (status) {
+      list = list.filter((rec) => (rec.statut || '').toLowerCase().includes(status));
+    }
 
-  constructor(private reclamationService: ReclamationService) { }
+    return list;
+  });
+
+  pagedReclamations = computed(() => {
+    const start = (this.currentPage() - 1) * this.pageSize();
+    return this.filteredReclamations().slice(start, start + this.pageSize());
+  });
+
+  totalPages = computed(() => Math.max(1, Math.ceil(this.filteredReclamations().length / this.pageSize())));
+
+  constructor(
+    private reclamationService: ReclamationService,
+    private userService: UserService,
+    private notificationService: NotificationService,
+    private router: Router
+  ) { }
 
   ngOnInit(): void {
     this.loadReclamations();
+    this.loadUsers();
   }
 
   loadReclamations(): void {
+    console.log('[ReclamationList] Chargement des réclamations...');
     this.isLoading.set(true);
     this.reclamationService.getAll().subscribe({
       next: (data) => {
+        console.log('[ReclamationList] Réclamations chargées:', data);
         this.reclamations.set(data);
         this.isLoading.set(false);
+        this.currentPage.set(1);
       },
-      error: () => {
+      error: (err: HttpErrorResponse) => {
+        console.error('[ReclamationList] Erreur de chargement:', err);
         this.errorMessage.set('Erreur lors du chargement des réclamations.');
+        this.notificationService.error('Erreur lors du chargement des réclamations.');
         this.isLoading.set(false);
       }
     });
   }
 
-  openAnalysePopup(reclamation: Reclamation): void {
-    this.selectedReclamation.set(reclamation);
-    this.analyseText.set(reclamation.analyseReclamation || '');
-    this.justifiee.set(reclamation.justifiee || false);
-    this.commentaireJustification.set(reclamation.commentaireJustification || '');
-    this.showAnalysePopup.set(true);
+  loadUsers(): void {
+    this.userService.getUsers().subscribe({
+      next: (data) => this.users.set(data),
+      error: (err: HttpErrorResponse) => console.error('Erreur chargement users', err)
+    });
   }
 
-  closeAnalysePopup(): void {
-    this.showAnalysePopup.set(false);
+  onSearchChange(value: string): void {
+    this.searchQuery.set(value);
+    this.currentPage.set(1);
+  }
+
+  onStatusChange(value: string): void {
+    this.statusFilter.set(value);
+    this.currentPage.set(1);
+  }
+
+  onPageSizeChange(value: string): void {
+    this.pageSize.set(Number(value));
+    this.currentPage.set(1);
+  }
+
+  previousPage(): void {
+    this.currentPage.update((page) => Math.max(1, page - 1));
+  }
+
+  nextPage(): void {
+    this.currentPage.update((page) => Math.min(this.totalPages(), page + 1));
+  }
+
+  openProcessModal(rec: Reclamation): void {
+    this.selectedReclamation.set(rec);
+    this.processStatus.set(rec.statut || '');
+    this.processResponsibleId.set(rec.responsableId || null);
+    this.showProcessModal.set(true);
+  }
+
+  closeProcessModal(): void {
+    this.showProcessModal.set(false);
     this.selectedReclamation.set(null);
   }
 
-  saveAnalyse(): void {
-    const reclamation = this.selectedReclamation();
-    if (!reclamation || !reclamation.id) return;
+  saveProcess(): void {
+    const rec = this.selectedReclamation();
+    if (!rec) return;
 
-    // Update locally
-    const updatedReclamation = {
-      ...reclamation,
-      statut: 'En cours',
-      analyseReclamation: this.analyseText(),
-      justifiee: this.justifiee(),
-      commentaireJustification: this.commentaireJustification()
+    console.log('[ReclamationList] Tentative de traitement de la réclamation:', rec.id);
+    this.isProcessing.set(true);
+
+    // Construction du DTO propre pour correspondre à ReclamationDtoCreate du backend
+    const updateDto = {
+      titre: rec.titre,
+      description: rec.description,
+      statut: this.processStatus(),
+      priorite: rec.priorite,
+      source: rec.source,
+      numeroReference: rec.numeroReference,
+      clientId: Number(rec.clientId),
+      produitId: Number(rec.produitId),
+      responsableId: this.processResponsibleId() || null
     };
 
-    this.reclamationService.update(reclamation.id, updatedReclamation).subscribe({
-      next: () => {
+    console.log('[ReclamationList] Payload envoyé au serveur:', updateDto);
+
+    this.reclamationService.update(rec.id, updateDto).subscribe({
+      next: (res) => {
+        console.log('[ReclamationList] Réclamation traitée avec succès:', res);
+        this.notificationService.success('Réclamation mise à jour avec succès.');
         this.loadReclamations();
-        this.closeAnalysePopup();
+        this.closeProcessModal();
+        this.isProcessing.set(false);
       },
-      error: (err) => {
-        console.error('Error details:', err);
-        alert(`Erreur lors de la sauvegarde de l'analyse : ${err.message || 'Voir console'}`);
+      error: (err: HttpErrorResponse) => {
+        console.error('[ReclamationList] Erreur lors du traitement de la réclamation:', err);
+        if (err.status === 400 && err.error && err.error.errors) {
+          console.error('[ReclamationList] Détails des erreurs de validation (brut):', JSON.stringify(err.error.errors, null, 2));
+          Object.keys(err.error.errors).forEach(key => {
+            console.error(`[ReclamationList] Erreur sur ${key}:`, err.error.errors[key]);
+          });
+        }
+        this.notificationService.error('Erreur lors du traitement.');
+        this.isProcessing.set(false);
       }
     });
   }
 
-  openExecutionPopup(reclamation: Reclamation): void {
-    this.selectedReclamation.set(reclamation);
-
-    // Convert existing date to YYYY-MM-DD input format if exists
-    if (reclamation.dateExecution) {
-      const d = new Date(reclamation.dateExecution);
-      this.dateExecution.set(d.toISOString().split('T')[0]);
-    } else {
-      this.dateExecution.set('');
-    }
-
-    this.showExecutionPopup.set(true);
+  editReclamation(id: string): void {
+    this.router.navigate(['/reclamations/edit', id]);
   }
 
-  closeExecutionPopup(): void {
-    this.showExecutionPopup.set(false);
-    this.selectedReclamation.set(null);
+  confirmDelete(rec: Reclamation): void {
+    this.reclamationToDelete.set(rec);
+    this.showDeleteModal.set(true);
   }
 
-  saveExecution(): void {
-    const reclamation = this.selectedReclamation();
-    if (!reclamation || !reclamation.id) return;
+  cancelDelete(): void {
+    this.showDeleteModal.set(false);
+    this.reclamationToDelete.set(null);
+  }
 
-    if (!this.dateExecution()) {
-      alert("Veuillez sélectionner une date d'exécution.");
-      return;
-    }
+  deleteReclamation(): void {
+    const rec = this.reclamationToDelete();
+    if (!rec) return;
 
-    const updatedReclamation = {
-      ...reclamation,
-      statut: 'En execution',
-      dateExecution: new Date(this.dateExecution()).toISOString()
-    };
-
-    this.reclamationService.update(reclamation.id, updatedReclamation).subscribe({
+    this.reclamationService.delete(rec.id).subscribe({
       next: () => {
+        this.notificationService.success('Réclamation supprimée.');
         this.loadReclamations();
-        this.closeExecutionPopup();
+        this.cancelDelete();
       },
-      error: (err) => {
-        console.error('Error details:', err);
-        alert(`Erreur lors de la sauvegarde de l'exécution : ${err.message || 'Voir console'}`);
+      error: (err: HttpErrorResponse) => {
+        console.error('Erreur suppression réclamation', err);
+        this.notificationService.error('Erreur lors de la suppression.');
       }
     });
-  }
-
-  openControlePopup(reclamation: Reclamation): void {
-    this.selectedReclamation.set(reclamation);
-
-    // Convert existing date to YYYY-MM-DD input format if exists
-    if (reclamation.dateControleExecution) {
-      const d = new Date(reclamation.dateControleExecution);
-      this.dateControleExecution.set(d.toISOString().split('T')[0]);
-    } else {
-      this.dateControleExecution.set('');
-    }
-
-    this.commentaireControleExecution.set(reclamation.commentaireControleExecution || '');
-    this.showControlePopup.set(true);
-  }
-
-  closeControlePopup(): void {
-    this.showControlePopup.set(false);
-    this.selectedReclamation.set(null);
-  }
-
-  saveControle(): void {
-    const reclamation = this.selectedReclamation();
-    if (!reclamation || !reclamation.id) return;
-
-    if (!this.dateControleExecution()) {
-      alert("Veuillez sélectionner une date de contrôle.");
-      return;
-    }
-
-    const updatedReclamation = {
-      ...reclamation,
-      statut: 'Controle',
-      commentaireControleExecution: this.commentaireControleExecution(),
-      dateControleExecution: new Date(this.dateControleExecution()).toISOString()
-    };
-
-    this.reclamationService.update(reclamation.id, updatedReclamation).subscribe({
-      next: () => {
-        this.loadReclamations();
-        this.closeControlePopup();
-      },
-      error: (err) => {
-        console.error('Error details:', err);
-        alert(`Erreur lors de la sauvegarde du contrôle : ${err.message || 'Voir console'}`);
-      }
-    });
-  }
-
-  openCloturePopup(reclamation: Reclamation): void {
-    this.selectedReclamation.set(reclamation);
-
-    if (reclamation.dateClotureReclamation) {
-      const d = new Date(reclamation.dateClotureReclamation);
-      this.dateClotureReclamation.set(d.toISOString().split('T')[0]);
-    } else {
-      this.dateClotureReclamation.set('');
-    }
-
-    this.rapport.set(reclamation.rapport || '');
-    this.responsableFaute.set(reclamation.responsableFaute || '');
-    this.degats.set(reclamation.degats || null);
-
-    this.showCloturePopup.set(true);
-  }
-
-  closeCloturePopup(): void {
-    this.showCloturePopup.set(false);
-    this.selectedReclamation.set(null);
-  }
-
-  saveCloture(): void {
-    const reclamation = this.selectedReclamation();
-    if (!reclamation || !reclamation.id) return;
-
-    if (!this.dateClotureReclamation()) {
-      alert("Veuillez sélectionner une date de clôture.");
-      return;
-    }
-
-    const updatedReclamation = {
-      ...reclamation,
-      statut: 'Cloturé',
-      dateClotureReclamation: new Date(this.dateClotureReclamation()).toISOString(),
-      rapport: this.rapport(),
-      responsableFaute: this.responsableFaute(),
-      degats: this.degats() ?? undefined
-    };
-
-    this.reclamationService.update(reclamation.id, updatedReclamation).subscribe({
-      next: () => {
-        this.loadReclamations();
-        this.closeCloturePopup();
-      },
-      error: (err) => {
-        console.error('Error details:', err);
-        alert(`Erreur lors de la sauvegarde de la clôture : ${err.message || 'Voir console'}`);
-      }
-    });
-  }
-
-  openConsulterPopup(reclamation: Reclamation): void {
-    this.selectedReclamation.set(reclamation);
-    this.showConsulterPopup.set(true);
-  }
-
-  closeConsulterPopup(): void {
-    this.showConsulterPopup.set(false);
-    this.selectedReclamation.set(null);
   }
 }

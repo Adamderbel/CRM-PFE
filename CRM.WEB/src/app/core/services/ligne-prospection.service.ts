@@ -30,9 +30,18 @@ export class LigneProspectionService {
     return this.http.get<any[]>(`${environment.apiUrl}/StatutProspection`);
   }
 
-  getSupportProduits(): Observable<any[]> {
-    return this.http.get<any[]>(`${environment.apiUrl}/SupportProduit`);
-  }
+   getSupportProduits(): Observable<any[]> {
+     return this.http.get<any[]>(`${environment.apiUrl}/SupportProduit`);
+   }
+
+   getCauseEchecs(): Observable<any[]> {
+     return this.http.get<any[]>(`${environment.apiUrl}/CauseEchec`);
+   }
+
+   getProduitsCerm(): Observable<any[]> {
+     return this.http.get<any[]>(`${environment.apiUrl}/ProduitCerm`);
+   }
+
 
   getAll(): Observable<LigneProspection[]> {
     this.isLoading.set(true);
@@ -75,40 +84,6 @@ export class LigneProspectionService {
     this.errorMessage.set(null);
 
     return this.http.put(`${this.apiUrl}/${id}`, dto, { responseType: 'text' }).pipe(
-      tap(() => {
-        this.isLoading.set(false);
-        this.getAll().subscribe(); // Refresh the list
-      }),
-      catchError((error) => this.handleError(error))
-    );
-  }
-
-  demanderDevis(ligneId: string, data: { date: string, email: string, notes: string }): Observable<any> {
-    this.isLoading.set(true);
-    this.errorMessage.set(null);
-
-    // Assuming the backend endpoint will be /api/LigneProspection/{id}/devis
-    return this.http.post(`${this.apiUrl}/${ligneId}/devis`, data, { responseType: 'text' }).pipe(
-      tap(() => {
-        this.isLoading.set(false);
-      }),
-      catchError((error) => this.handleError(error))
-    );
-  }
-
-  close(ligneId: string, causeEchecId?: number): Observable<any> {
-    this.isLoading.set(true);
-    this.errorMessage.set(null);
-
-    const params: any = {};
-    if (causeEchecId !== undefined && causeEchecId !== null) {
-      params.causeEchecId = causeEchecId;
-    }
-
-    return this.http.post(`${this.apiUrl}/${ligneId}/close`, null, {
-      params,
-      responseType: 'text'
-    }).pipe(
       tap(() => {
         this.isLoading.set(false);
         this.getAll().subscribe(); // Refresh the list

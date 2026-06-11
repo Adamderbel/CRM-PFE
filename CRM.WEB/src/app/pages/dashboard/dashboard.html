@@ -1,104 +1,160 @@
 <div class="dashboard">
-  <!-- Welcome -->
-  <h1 class="welcome-title">Bienvenue, {{ userName() }} !</h1>
+  <!-- Page Header -->
+  <div class="section-header">
+    <div>
+      <h1 class="page-title">Bonjour, {{ userName() }} 👋</h1>
+      <p class="page-subtitle">Voici un aperçu de la performance commerciale d'aujourd'hui</p>
+    </div>
+    <div class="section-actions">
+      <button class="outline-btn">
+        <span class="material-icons">calendar_today</span>
+        Mai 2026
+      </button>
+      <a routerLink="/prospects/create" class="btn btn-primary">
+        <span class="material-icons">add</span>
+        Nouveau Prospect
+      </a>
+    </div>
+  </div>
 
-  <!-- KPI Metrics -->
-  <section class="section">
-    <h2 class="section-title">Aperçu CRM</h2>
-    <div class="metrics-grid metrics-grid-3">
+  <!-- Stats Grid -->
+  @if (isLoading()) {
+    <div class="loading-container">
+      <div class="spinner"></div>
+      <p>Analyse des données en cours...</p>
+    </div>
+  } @else {
+    <div class="stats-grid">
       @for (metric of metrics(); track metric.label) {
-        <div class="metric-card">
-          <div class="metric-header">
-            <span class="metric-label">{{ metric.label }}</span>
-            <span class="material-icons metric-icon">{{ metric.icon }}</span>
+        <div class="stat-card">
+          <div class="stat-header">
+            <span class="stat-label">{{ metric.label }}</span>
+            <div class="stat-icon" [ngClass]="metric.color || 'primary'">
+              <span class="material-icons">{{ metric.icon }}</span>
+            </div>
           </div>
-          <div class="metric-value">
-            @if (isLoading()) {
-              <span class="metric-skeleton"></span>
-            } @else {
-              {{ metric.value }}
-            }
+          <div class="stat-value">{{ metric.value }}</div>
+          <div class="stat-change" [ngClass]="metric.trend === 'up' ? 'positive' : (metric.trend === 'down' ? 'negative' : 'neutral')">
+            <span class="material-icons trend-icon">
+              {{ metric.trend === 'up' ? 'trending_up' : (metric.trend === 'down' ? 'trending_down' : 'horizontal_rule') }}
+            </span>
+            {{ metric.change }}
           </div>
         </div>
       }
     </div>
-  </section>
 
-  <!-- Charts -->
-  <section class="section">
-    <h2 class="section-title">Analyses</h2>
-    <div class="charts-row">
-      <div class="chart-card">
-        <div class="chart-card-header">
-          <h3 class="chart-title">Prospections par Statut</h3>
+    <!-- Main Content Area -->
+    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 32px; margin-top: 40px;">
+      
+      <!-- Left Column: Recent Activities -->
+      <div class="section">
+        <div class="section-header">
+          <h2 class="section-title">
+            <span class="material-icons">history</span>
+            Activités Récentes
+          </h2>
+          <a routerLink="/historique-commercial" class="view-all-link">Voir tout l'historique</a>
         </div>
-        <div class="chart-body">
-          <canvas #prospectionsStatusChart></canvas>
-        </div>
-      </div>
-
-      <div class="chart-card">
-        <div class="chart-card-header">
-          <h3 class="chart-title">Tendance Mensuelle — Gagnées</h3>
-          <span class="chart-year">{{ currentYear }}</span>
-        </div>
-        <div class="chart-body">
-          <canvas #monthlyTrendChart></canvas>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Recent Prospections -->
-  <section class="section">
-    <div class="section-header">
-      <h2 class="section-title">Prospections Récentes</h2>
-      <div class="section-actions">
-        <div class="search-box-sm">
-          <span class="material-icons">search</span>
-          <input
-            type="text"
-            placeholder="Rechercher..."
-            [ngModel]="searchQuery()"
-            (ngModelChange)="searchQuery.set($event)"
-          />
-        </div>
-      </div>
-    </div>
-    <div class="table-card">
-      <table class="data-table">
-        <thead>
-          <tr>
-            <th>Prospect</th>
-            <th>Statut</th>
-            <th>Date Début</th>
-            <th>Date Fin</th>
-          </tr>
-        </thead>
-        <tbody>
-          @if (isLoading()) {
-            <tr><td colspan="4" class="td-empty">Chargement...</td></tr>
-          } @else if (recentProspections().length === 0) {
-            <tr><td colspan="4" class="td-empty">Aucune prospection trouvée.</td></tr>
-          } @else {
-            @for (p of recentProspections(); track p.id) {
+        
+        <div class="table-card">
+          <table class="data-table">
+            <thead>
               <tr>
-                <td>
-                  <div class="prospect-info">
-                    <div class="prospect-avatar">{{ getProspectInitials(p.prospect) }}</div>
-                    <span>{{ p.prospect }}</span>
-                  </div>
-                </td>
-                <td>
-                  <span [class]="getStatutClass(p.statutId)">{{ p.statut }}</span>
-                </td>
-                <td>{{ p.dateDebut || '-' }}</td>
-                <td>{{ p.dateFin || '-' }}</td>
+                <th>Date</th>
+                <th>Prospect</th>
+                <th>Action</th>
+                <th>Résultat</th>
               </tr>
-            }
-          }
-        </tbody>
-      </table>
+            </thead>
+            <tbody>
+              @for (action of recentActions(); track action.actionId) {
+                <tr>
+                  <td style="font-weight: 600; font-size: 13px;">{{ action.dateAction | date:'dd MMM' }}</td>
+                  <td>
+                    <div style="display: flex; flex-direction: column; gap: 4px;">
+                      <span style="font-weight: 700; color: var(--text-primary); font-size: 14px;">{{ action.prospectNomComplet }}</span>
+                      <span style="font-size: 12px; color: var(--text-muted); font-weight: 500;">{{ action.typeActionLibelle }}</span>
+                    </div>
+                  </td>
+                  <td style="min-width: 250px;">
+                    <div class="text-truncate" style="color: var(--text-secondary); font-size: 13.5px; line-height: 1.5; max-width: 280px;">
+                      {{ action.commentaire }}
+                    </div>
+                  </td>
+                  <td>
+                    <span class="badge" 
+                      [class.badge-success]="action.resultat?.includes('envoyé') || action.resultat?.includes('Gagné')"
+                      [class.badge-warning]="action.resultat?.includes('cours')"
+                      [class.badge-info]="action.resultat?.includes('suivre')"
+                      [class.badge-outline]="!action.resultat?.includes('envoyé') && !action.resultat?.includes('Gagné') && !action.resultat?.includes('cours') && !action.resultat?.includes('suivre')">
+                      {{ action.resultat || 'A suivre' }}
+                    </span>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+          <div class="table-footer">
+            <span class="text-muted" style="font-size: 12px;">Affichage des 5 dernières actions</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column: Shortcuts & Quick Stats -->
+      <div class="section">
+        <div class="section-header">
+          <h2 class="section-title">
+            <span class="material-icons">bolt</span>
+            Raccourcis
+          </h2>
+        </div>
+        
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+          <a routerLink="/reclamations" class="team-card" style="text-decoration: none;">
+            <div class="team-avatar" style="background: var(--error-light); color: var(--error);">
+              <span class="material-icons">report_problem</span>
+            </div>
+            <div class="team-info">
+              <span class="team-name">Réclamations SAV</span>
+              <span class="team-role">Gérer les tickets urgents</span>
+            </div>
+          </a>
+
+          <a routerLink="/produits" class="team-card" style="text-decoration: none;">
+            <div class="team-avatar" style="background: var(--primary-light); color: var(--primary);">
+              <span class="material-icons">inventory_2</span>
+            </div>
+            <div class="team-info">
+              <span class="team-name">Catalogue Produits</span>
+              <span class="team-role">Consulter les tarifs CERM</span>
+            </div>
+          </a>
+
+          <a routerLink="/utilisateur" class="team-card" style="text-decoration: none;">
+            <div class="team-avatar" style="background: var(--success-light); color: var(--success);">
+              <span class="material-icons">admin_panel_settings</span>
+            </div>
+            <div class="team-info">
+              <span class="team-name">Administration</span>
+              <span class="team-role">Droits et accès utilisateurs</span>
+            </div>
+          </a>
+        </div>
+
+        <!-- Conversion Chart Simulation -->
+        <div class="card mt-24" style="background: linear-gradient(135deg, var(--primary-700) 0%, var(--primary-900) 100%); color: white; border: none;">
+          <div class="card-body">
+            <h4 style="margin: 0 0 16px; font-size: 14px; opacity: 0.8; text-transform: uppercase; letter-spacing: 1px;">Objectif Annuel</h4>
+            <div style="font-size: 28px; font-weight: 800; margin-bottom: 8px;">85%</div>
+            <div style="height: 8px; background: rgba(255,255,255,0.2); border-radius: 4px; overflow: hidden;">
+              <div style="width: 85%; height: 100%; background: #ffffff; border-radius: 4px;"></div>
+            </div>
+            <p style="margin: 12px 0 0; font-size: 12px; opacity: 0.7;">Vous êtes à 5% de l'objectif trimestriel.</p>
+          </div>
+        </div>
+      </div>
+
     </div>
-  </section>
+  }
 </div>

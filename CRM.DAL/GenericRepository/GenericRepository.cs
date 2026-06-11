@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Linq.Expressions;
 
 namespace CRM.DAL.GenericRepository
 {
@@ -22,6 +23,11 @@ namespace CRM.DAL.GenericRepository
         public async Task<IEnumerable<T>> GetAllAsync()
         {
             return await _table.ToListAsync();
+        }
+
+        public async Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> predicate)
+        {
+            return await _table.Where(predicate).ToListAsync();
         }
 
         public async Task<T?> GetByIdAsync(object id)

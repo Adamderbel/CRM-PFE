@@ -1,110 +1,228 @@
-<div class="prospection-form-page">
-  <div class="page-header">
-    <a [routerLink]="['/prospections']"
-      [queryParams]="isProspectFixed() && prospectId() ? { prospectId: prospectId() } : null" class="back-link">
-      <span class="material-icons">arrow_back</span>
-      Retour aux prospections
+<div class="page-wrapper">
+  <!-- Back Link -->
+  <div class="mb-16">
+    <a [routerLink]="isClientFixed() ? ['/clients'] : isProspectFixed() ? ['/prospects'] : ['/prospections']" 
+       [queryParams]="!isClientFixed() && isProspectFixed() && prospectId() ? { prospectId: prospectId() } : null" 
+       class="btn btn-ghost" style="padding-left: 0;">
+      <span class="material-icons md">arrow_back</span>
+      {{ isClientFixed() ? 'Retour aux clients' : isProspectFixed() ? 'Retour aux prospects' : 'Retour aux prospections' }}
     </a>
-    <h1 class="page-title">{{ isEditMode() ? 'Modifier la prospection' : 'Nouvelle prospection' }}</h1>
-    <p class="page-subtitle">
-      {{ isEditMode() ? 'Modifiez les informations de la prospection' : 'Remplissez les informations pour créer une
-      nouvelle prospection' }}
-    </p>
   </div>
 
-  @if (errorMessage()) {
-  <div class="alert alert-error">
-    <span class="material-icons">error</span>
-    {{ errorMessage() }}
+  <!-- Page Header -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">{{ isEditMode() ? 'Modifier la prospection' : 'Nouvelle prospection' }}</h1>
+      <p class="page-subtitle">
+        {{ isEditMode() ? 'Modifiez les informations de la prospection' : 'Remplissez les informations pour créer une nouvelle prospection' }}
+      </p>
+    </div>
   </div>
+
+  <!-- Alerts -->
+  @if (errorMessage()) {
+    <div class="alert alert-error mb-24">
+      <span class="material-icons">error</span>
+      {{ errorMessage() }}
+    </div>
   }
 
   @if (successMessage()) {
-  <div class="alert alert-success">
-    <span class="material-icons">check_circle</span>
-    {{ successMessage() }}
-  </div>
+    <div class="alert alert-success mb-24">
+      <span class="material-icons">check_circle</span>
+      {{ successMessage() }}
+    </div>
   }
 
+  @if (prospectsLoadError()) {
+    <div class="alert alert-error mb-24">
+      <span class="material-icons">error</span>
+      {{ prospectsLoadError() }}
+    </div>
+  }
+
+  <!-- Loading State -->
   @if (isLoading()) {
-  <div class="loading-container">
-    <div class="spinner"></div>
-    <p>Chargement des données...</p>
-  </div>
+    <div class="loading-container">
+      <div class="spinner"></div>
+      <p>Chargement des données...</p>
+    </div>
   }
 
+  <!-- Form -->
   @if (!isLoading()) {
-  <form class="form-card" (submit)="$event.preventDefault(); save()" #form="ngForm">
-
-    <div class="form-section">
-      <h2 class="form-section-title">
-        <span class="material-icons">person</span>
-        Informations Générales
-      </h2>
-      <div class="form-grid">
-        <div class="form-group">
-          <label for="prospectId">Prospect <span class="required">*</span></label>
-          <select id="prospectId" name="prospectId" [ngModel]="prospectId()" (ngModelChange)="prospectId.set($event)"
-            [disabled]="isProspectFixed()" required>
-            <option value="" disabled selected>Sélectionner un prospect</option>
-            @for (p of prospects(); track p.id) {
-            <option [value]="p.id">{{ p.nom }} {{ p.prenom }}</option>
-            }
-          </select>
+    <form (submit)="$event.preventDefault(); save()" #form="ngForm">
+      <!-- Section 1: Informations de base -->
+      <div class="card mb-24">
+        <div class="card-header">
+          <h2 class="card-title">
+            <span class="material-icons md" style="color: var(--primary-500);">person</span>
+            Informations de base
+          </h2>
         </div>
-
-        <div class="form-group">
-          <label for="statutId">Statut <span class="required">*</span></label>
-          <select id="statutId" name="statutId" [ngModel]="statutId()" (ngModelChange)="statutId.set($event)"
-            [disabled]="!isEditMode()" required>
-            <option value="" disabled selected>Sélectionner un statut</option>
-            @for (s of statuts(); track s.id) {
-            <option [value]="s.id">{{ s.libelle }}</option>
-            }
-          </select>
+        <div class="card-body">
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px;">
+            <div class="form-group">
+              <label class="form-label" for="prospectId">
+                {{ clientId() ? 'Client' : 'Prospect' }} <span style="color: var(--error);">*</span>
+              </label>
+              @if (!clientId() && listsLoading()) {
+                <p class="text-muted" style="font-size: var(--font-size-sm); margin-bottom: 8px;">Chargement des prospects...</p>
+              }
+              <div class="form-control-wrapper">
+                @if (clientId()) {
+                  <span class="material-icons">business</span>
+                  <input type="text" class="form-control" [value]="clientName()" readonly />
+                } @else {
+                  <span class="material-icons">person</span>
+                  <select id="prospectId" name="prospectId" class="form-control form-select"
+                          [ngModel]="prospectId()" (ngModelChange)="prospectId.set($event)"
+                          [disabled]="isProspectFixed() || isEditMode()" required>
+                    <option value="">Sélectionnez un prospect...</option>
+                    @for (p of prospects(); track p.id) {
+                      <option [value]="p.id">{{ prospectLabel(p) }}</option>
+                    }
+                  </select>
+                }
+              </div>
+              @if (!clientId() && !listsLoading() && !prospectsLoadError() && prospects().length === 0) {
+                <p class="text-muted" style="font-size: var(--font-size-sm); margin-top: 8px;">
+                  Aucun prospect enregistré.
+                  <a routerLink="/prospects/create" style="color: var(--primary-600);">Créer un prospect</a>
+                </p>
+              }
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="statutId">Statut de prospection <span style="color: var(--error);">*</span></label>
+              <div class="form-control-wrapper">
+                <span class="material-icons">flag</span>
+                <select id="statutId" name="statutId" class="form-control form-select"
+                        [ngModel]="statutId()" (ngModelChange)="statutId.set($event)" required>
+                  <option value="">Sélectionnez un statut...</option>
+                  @for (s of statuts(); track s.id) {
+                    <option [value]="s.id">{{ s.libelle }}</option>
+                  }
+                </select>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
 
-    <div class="form-section">
-      <h2 class="form-section-title">
-        <span class="material-icons">event</span>
-        Planification
-      </h2>
-      <div class="form-grid">
-        <div class="form-group">
-          <label for="dateDebut">Date et heure de début <span class="required">*</span></label>
-          <input type="datetime-local" id="dateDebut" name="dateDebut" [ngModel]="dateDebut()"
-            (ngModelChange)="dateDebut.set($event)" required />
+      <!-- Section 2: Planification -->
+      <div class="card mb-24">
+        <div class="card-header">
+          <h2 class="card-title">
+            <span class="material-icons md" style="color: var(--primary-500);">event</span>
+            Planification
+          </h2>
+        </div>
+        <div class="card-body">
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px;">
+            <div class="form-group">
+              <label class="form-label" for="dateDebut">Date et heure de début <span style="color: var(--error);">*</span></label>
+              <div class="form-control-wrapper">
+                <span class="material-icons">calendar_today</span>
+                <input type="datetime-local" id="dateDebut" name="dateDebut" class="form-control"
+                       [ngModel]="dateDebut()" (ngModelChange)="dateDebut.set($event)" required />
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="dateFin">Date et heure de fin</label>
+              <div class="form-control-wrapper">
+                <span class="material-icons">event_available</span>
+                <input type="datetime-local" id="dateFin" name="dateFin" class="form-control"
+                       [ngModel]="dateFin()" (ngModelChange)="dateFin.set($event)" />
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
 
-    <div class="form-section">
-      <h2 class="form-section-title">
-        <span class="material-icons">notes</span>
-        Détails
-      </h2>
-      <div class="form-group full-width">
-        <label for="notes">Notes</label>
-        <textarea id="notes" name="notes" rows="4" maxlength="500"
-          placeholder="Saisissez vos notes ou compte-rendu ici..." [ngModel]="notes()"
-          (ngModelChange)="notes.set($event)"></textarea>
+      <!-- Section 3: Action commerciale initiale -->
+      @if (!isEditMode()) {
+        <div class="card mb-24">
+          <div class="card-header">
+            <h2 class="card-title">
+              <span class="material-icons md" style="color: var(--primary-500);">phone_in_talk</span>
+              Action commerciale initiale (Optionnel)
+            </h2>
+          </div>
+          <div class="card-body">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px;">
+              <div class="form-group">
+                <label class="form-label" for="typeActionId">Type d'action</label>
+                <div class="form-control-wrapper">
+                  <span class="material-icons">category</span>
+                  <select id="typeActionId" name="typeActionId" class="form-control form-select"
+                          [ngModel]="typeActionId()" (ngModelChange)="typeActionId.set(+$event)">
+                    <option [value]="null">Aucune action initiale</option>
+                    @for (t of typesActions(); track t.id) {
+                      <option [value]="t.id">{{ t.libelle }}</option>
+                    }
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; margin-top: 16px;">
+              <div class="form-group">
+                <label class="form-label" for="commentaireAction">Commentaire</label>
+                <div class="form-control-wrapper" style="align-items: flex-start;">
+                  <span class="material-icons" style="top: 14px;">comment</span>
+                  <textarea id="commentaireAction" name="commentaireAction" rows="2" class="form-control"
+                            placeholder="Commentaire de l'action..."
+                            [ngModel]="commentaireAction()" (ngModelChange)="commentaireAction.set($event)"></textarea>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="resultatAction">Résultat</label>
+                <div class="form-control-wrapper" style="align-items: flex-start;">
+                  <span class="material-icons" style="top: 14px;">task_alt</span>
+                  <textarea id="resultatAction" name="resultatAction" rows="2" class="form-control"
+                            placeholder="Résultat de l'action..."
+                            [ngModel]="resultatAction()" (ngModelChange)="resultatAction.set($event)"></textarea>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- Section 4: Détails -->
+      <div class="card mb-24">
+        <div class="card-header">
+          <h2 class="card-title">
+            <span class="material-icons md" style="color: var(--primary-500);">notes</span>
+            Détails
+          </h2>
+        </div>
+        <div class="card-body">
+          <div class="form-group">
+            <label class="form-label" for="notes">Notes et compte-rendu</label>
+            <div class="form-control-wrapper" style="align-items: flex-start;">
+              <span class="material-icons" style="top: 14px;">edit_note</span>
+              <textarea id="notes" name="notes" rows="4" maxlength="500" class="form-control"
+                        placeholder="Saisissez vos notes ou compte-rendu détaillé ici..."
+                        [ngModel]="notes()" (ngModelChange)="notes.set($event)"></textarea>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
 
-    <div class="form-actions">
-      <a routerLink="/prospections" class="btn-outline">Annuler</a>
-      <button type="submit" class="btn-primary" [disabled]="isSaving() || !form.valid">
-        @if (isSaving()) {
-        <div class="spinner-sm"></div>
-        Enregistrement...
-        } @else {
-        <span class="material-icons">save</span>
-        {{ isEditMode() ? 'Mettre à jour' : 'Créer la prospection' }}
-        }
-      </button>
-    </div>
-  </form>
+      <!-- Actions -->
+      <div style="display: flex; justify-content: flex-end; gap: 12px;">
+        <a [routerLink]="isClientFixed() ? ['/clients'] : isProspectFixed() ? ['/prospects'] : ['/prospections']" 
+           class="btn btn-secondary">Annuler</a>
+        <button type="submit" class="btn btn-primary" [disabled]="isSaving() || !form.valid">
+          @if (isSaving()) {
+            <span class="spinner" style="width: 20px; height: 20px; border-width: 2px;"></span>
+            Enregistrement...
+          } @else {
+            <span class="material-icons md">save</span>
+            {{ isEditMode() ? 'Mettre à jour' : 'Créer la prospection' }}
+          }
+        </button>
+      </div>
+    </form>
   }
 </div>

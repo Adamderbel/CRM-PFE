@@ -41,10 +41,6 @@ export class AuthService {
     return this.http.post<void>(`${environment.apiUrl}/users`, request);
   }
 
-  getUsers(): Observable<AuthUser[]> {
-    return this.http.get<AuthUser[]>(`${environment.apiUrl}/users`);
-  }
-
   logout(): void {
     this.token.set(null);
     this.currentUser.set(null); 
@@ -55,6 +51,24 @@ export class AuthService {
 
   getToken(): string | null {
     return this.token();
+  }
+
+  /** Identifiant du sujet JWT (`sub`), plus fiable que le profil localStorage si celui-ci est obsolète. */
+  getUserIdFromAccessToken(): string | null {
+    const t = this.token();
+    if (!t) return null;
+    const parts = t.split('.');
+    if (parts.length < 2) return null;
+    try {
+      const base64Url = parts[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const padded = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), '=');
+      const json = JSON.parse(atob(padded)) as Record<string, unknown>;
+      const sub = json['sub'];
+      return typeof sub === 'string' ? sub : null;
+    } catch {
+      return null;
+    }
   }
 
   hasRole(role: string): boolean {

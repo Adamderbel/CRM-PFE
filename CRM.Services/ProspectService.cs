@@ -32,8 +32,13 @@ namespace CRM.Services
              _codeGeneratorService = codeGenerator;
         }
 
-        public async Task<IEnumerable<Prospect>> GetAllAsync()
+        public async Task<IEnumerable<Prospect>> GetAllAsync(Guid? userId = null, string? role = null)
         {
+            if (IsCommercial(role) && userId.HasValue)
+            {
+                return await _prospectRepository.FindAsync(p => p.UserId == userId.Value);
+            }
+
             return await _prospectRepository.GetAllAsync();
         }
 
@@ -68,9 +73,18 @@ namespace CRM.Services
             await _prospectRepository.DeleteAsync(id);
             await _context.SaveChangesAsync();
         }
-        public async Task<IEnumerable<Prospect>> GetAllAsyncDapper()
+        public async Task<IEnumerable<Prospect>> GetAllAsyncDapper(Guid? userId = null, string? role = null)
         {
+            if (IsCommercial(role) && userId.HasValue)
+            {
+                return (await _prospectRepository.GetAllAsync()).Where(p => p.UserId == userId.Value).ToList();
+            }
+
             return await _prospectRepositoryDapper.GetAllProspect();
         }
+
+        private static bool IsCommercial(string? role)
+            => string.Equals(role, "COMMERCIAL", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(role, "Commercial", StringComparison.OrdinalIgnoreCase);
     }
 }

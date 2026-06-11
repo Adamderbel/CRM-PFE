@@ -3,8 +3,11 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ProspectionService } from '../../../core/services/prospection.service';
 import { ProspectService } from '../../../core/services/prospect.service';
+import { ClientCermService } from '../../../core/services/client-cerm.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { NotificationService } from '../../../core/services/notification.service';
 import { ProspectionCreateDto, ProspectionUpdateDto } from '../../../core/models/prospection.model';
+import { Prospect } from '../../../core/models/prospect.model';
 
 @Component({
   selector: 'app-prospection-form',
@@ -21,20 +24,34 @@ export class ProspectionForm implements OnInit {
   errorMessage = signal('');
   successMessage = signal('');
 
-  prospects = signal<any[]>([]);
-  statuts = signal<any[]>([]);
+  prospects = signal<Prospect[]>([]);
+  statuts = signal<{ id: number; libelle: string }[]>([]);
+  listsLoading = signal(true);
+  prospectsLoadError = signal('');
 
   dateDebut = signal('');
+  dateFin = signal('');
   notes = signal('');
   statutId = signal('');
   prospectId = signal('');
+  clientId = signal<number | null>(null);
+  clientName = signal<string>('');
   userId = signal('');
   isProspectFixed = signal(false);
+  isClientFixed = signal(false);
+
+  // Initial Action fields
+  typesActions = signal<{ id: number; libelle: string }[]>([]);
+  typeActionId = signal<number | null>(null);
+  commentaireAction = signal('');
+  resultatAction = signal('');
 
   constructor(
     private prospectionService: ProspectionService,
     private prospectService: ProspectService,
+    private clientCermService: ClientCermService,
     private authService: AuthService,
+    private notificationService: NotificationService,
     private route: ActivatedRoute,
     private router: Router
   ) { }
@@ -42,9 +59,12 @@ export class ProspectionForm implements OnInit {
   ngOnInit(): void {
     this.loadProspects();
     this.loadStatuts();
-
-    // Set the initial user to the connected user from local storage
-    const connectedUserId = this.authService.user()?.id;
+    this.loadTypesActions();
+    // Préférer le `sub` du JWT au profil stocké (évite Guid obsolètes après reset BDD / seeder)
+    const fromJwt = this.authService.getUserIdFromAccessToken();
+    const fromProfile = this.authService.user()?.id;
+    const connectedUserId = fromJwt ?? fromProfile;
+    console.log('[ProspectionForm] Utilisateur connecté (userId)', connectedUserId, { fromJwt, fromProfile });
     if (connectedUserId) {
       this.userId.set(connectedUserId);
     }
@@ -59,19 +79,90 @@ export class ProspectionForm implements OnInit {
       if (qProspectId) {
         this.prospectId.set(qProspectId);
         this.isProspectFixed.set(true);
+      } else {
+        const qClientCermId = this.route.snapshot.queryParamMap.get('clientCermId');
+        if (qClientCermId) {
+          const cId = Number(qClientCermId);
+          this.clientId.set(cId);
+          this.isClientFixed.set(true);
+          this.loadClientName(cId);
+        }
       }
     }
   }
 
+  loadClientName(id: number): void {
+    this.clientCermService.getById(id).subscribe({
+      next: (client) => {
+        this.clientName.set(client.nom || 'Client ' + id);
+      },
+      error: () => this.clientName.set('Client ' + id)
+    });
+  }
+
+  handleClientCermRedirect(clientCermId: number): void {
+    this.isLoading.set(true);
+    this.prospectService.getByClientCermId(clientCermId).subscribe({
+      next: (prospect) => {
+        if (prospect && prospect.id) {
+          this.prospectId.set(prospect.id);
+          this.isProspectFixed.set(true);
+          this.isLoading.set(false);
+        } else {
+          // Créer automatiquement le prospect pour ce client
+          this.clientCermService.getById(clientCermId).subscribe({
+            next: (client) => {
+              const newProspect: any = {
+                nom: client.nom || 'Client CERM',
+                prenom: '',
+                email: 'client@cerm.local', // Default or from client if available
+                telephone: '',
+                idDomaineActivite: 1, // Default domain
+                clientCermId: clientCermId,
+                notes: 'Créé automatiquement depuis la liste des clients.'
+              };
+              this.prospectService.create(newProspect).subscribe({
+                next: () => {
+                  // Re-fetch to get the ID
+                  this.prospectService.getByClientCermId(clientCermId).subscribe({
+                    next: (p) => {
+                      if (p) {
+                        this.prospectId.set(p.id);
+                        this.isProspectFixed.set(true);
+                      }
+                      this.isLoading.set(false);
+                    }
+                  });
+                },
+                error: () => this.isLoading.set(false)
+              });
+            },
+            error: () => this.isLoading.set(false)
+          });
+        }
+      },
+      error: () => this.isLoading.set(false)
+    });
+  }
+
   loadProspects(): void {
+    this.prospectsLoadError.set('');
     this.prospectService.getAll().subscribe({
       next: (data) => {
         if (this.isProspectFixed()) {
-          this.prospects.set(data.filter(p => p.id === this.prospectId()));
+          this.prospects.set(data.filter((p) => p.id === this.prospectId()));
         } else {
           this.prospects.set(data);
         }
-      }
+        this.listsLoading.set(false);
+      },
+      error: () => {
+        this.prospectsLoadError.set(
+          'Impossible de charger la liste des prospects. Vérifiez la connexion ou vos droits d’accès.'
+        );
+        this.prospects.set([]);
+        this.listsLoading.set(false);
+      },
     });
   }
 
@@ -80,19 +171,34 @@ export class ProspectionForm implements OnInit {
       next: (data) => {
         this.statuts.set(data);
         if (!this.isEditMode()) {
-          const defaultStatut = data.find(s => {
-            const label = (s.libelle || s.nom || '').toLowerCase().replace(/\s+/g, '');
+          const defaultStatut = data.find((s) => {
+            const label = (s.libelle || '').toLowerCase().replace(/\s+/g, '');
             return label === 'encours' || label === 'en-cours' || label.includes('cours');
           });
           if (defaultStatut) {
-            this.statutId.set(defaultStatut.id);
+            this.statutId.set(String(defaultStatut.id));
           } else if (data.length > 0) {
-            // Fallback just in case spelling differs
-            this.statutId.set(data[0].id);
+            this.statutId.set(String(data[0].id));
           }
         }
-      }
+      },
+      error: () => {
+        this.errorMessage.set('Impossible de charger les statuts de prospection.');
+        this.statuts.set([]);
+      },
     });
+  }
+
+  loadTypesActions(): void {
+    this.prospectionService.getTypesActions().subscribe({
+      next: (data) => this.typesActions.set(data),
+      error: () => console.error('Erreur lors du chargement des types d\'actions')
+    });
+  }
+
+  prospectLabel(p: Prospect): string {
+    const n = `${p.nom ?? ''} ${p.prenom ?? ''}`.trim();
+    return n || '(Sans nom)';
   }
 
   loadProspection(id: string): void {
@@ -103,11 +209,23 @@ export class ProspectionForm implements OnInit {
           const d = new Date(prospection.dateDebut);
           this.dateDebut.set(d.toISOString().slice(0, 16)); // format for datetime-local
         }
+        if (prospection.dateFin) {
+          const d = new Date(prospection.dateFin);
+          this.dateFin.set(d.toISOString().slice(0, 16)); // format for datetime-local
+        }
 
         this.notes.set(prospection.notes || '');
-        this.statutId.set(prospection.statutId || '');
-        this.prospectId.set(prospection.prospectId || '');
-        this.userId.set(prospection.userId || '');
+        this.statutId.set(
+          prospection.statutId !== undefined && prospection.statutId !== null
+            ? String(prospection.statutId)
+            : ''
+        );
+        this.prospectId.set(prospection.prospectId ? String(prospection.prospectId) : '');
+        this.clientId.set(prospection.clientId ?? null);
+        if (prospection.clientId) {
+          this.loadClientName(prospection.clientId);
+        }
+        this.userId.set(prospection.userId ? String(prospection.userId) : '');
 
         this.isLoading.set(false);
       },
@@ -121,8 +239,13 @@ export class ProspectionForm implements OnInit {
   save(): void {
     this.errorMessage.set('');
 
-    if (!this.prospectId() || !this.statutId() || !this.userId()) {
-      this.errorMessage.set('Veuillez remplir les champs obligatoires (Prospect, Statut, Utilisateur).');
+    if (!this.prospectId() && !this.clientId() && !this.isEditMode()) {
+      this.errorMessage.set('Veuillez remplir Prospect ou Client.');
+      return;
+    }
+
+    if (!this.statutId()) {
+      this.errorMessage.set('Veuillez remplir le Statut.');
       return;
     }
 
@@ -136,50 +259,104 @@ export class ProspectionForm implements OnInit {
       return;
     }
 
+    const isElevated =
+      this.authService.hasRole('MANAGER') || this.authService.hasRole('ADMIN');
+    // Création : le commercial n’envoie pas userId — le serveur utilise uniquement le JWT.
+    if (isElevated && !this.userId()) {
+      this.errorMessage.set('Sélectionnez le commercial assigné à la prospection.');
+      return;
+    }
+
     this.isSaving.set(true);
 
-    const payload = {
+    const basePayload = {
       dateDebut: this.dateDebut() ? new Date(this.dateDebut()).toISOString() : undefined,
+      dateFin: this.dateFin() ? new Date(this.dateFin()).toISOString() : undefined,
       notes: this.notes(),
-      statutId: this.statutId(),
-      prospectId: this.prospectId() ? this.prospectId() : undefined,
-      userId: this.userId() ? this.userId() : undefined,
+      statutId: Number(this.statutId()),
+      prospectId: this.prospectId() || undefined,
+      clientId: this.clientId() || undefined,
     };
 
+    const createPayload: ProspectionCreateDto = { 
+      ...basePayload,
+      typeActionId: this.typeActionId() || undefined,
+      commentaireAction: this.commentaireAction() || undefined,
+      resultatAction: this.resultatAction() || undefined
+    };
+    if (isElevated && this.userId()) {
+      createPayload.userId = this.userId();
+    }
+
+    console.log('[ProspectionForm] Payload création / mise à jour', createPayload, {
+      isElevated,
+      edit: this.isEditMode(),
+    });
+
     if (this.isEditMode() && this.prospectionId()) {
-      this.prospectionService.update(this.prospectionId()!, payload as ProspectionUpdateDto).subscribe({
+      const updatePayload: ProspectionUpdateDto = {
+        ...basePayload,
+        userId: this.userId() || undefined,
+      };
+      this.prospectionService.update(this.prospectionId()!, updatePayload).subscribe({
         next: () => {
           this.isSaving.set(false);
           this.successMessage.set('Prospection mise à jour avec succès.');
+          this.notificationService.success('Prospection mise à jour avec succès.');
           setTimeout(() => {
-            if (this.prospectId()) {
+            if (this.isClientFixed()) {
+              this.router.navigate(['/clients']);
+            } else if (this.isProspectFixed() && this.prospectId()) {
               this.router.navigate(['/prospections'], { queryParams: { prospectId: this.prospectId() } });
             } else {
               this.router.navigate(['/prospections']);
             }
           }, 1500);
         },
-        error: () => {
+        error: (err) => {
           this.isSaving.set(false);
-          this.errorMessage.set('Erreur lors de la mise à jour.');
+          this.notificationService.error('Erreur lors de la mise à jour de la prospection.');
+          console.error('[ProspectionForm] Erreur mise à jour HTTP', err.status, err.error);
+          const body = err.error;
+          let msg = 'Erreur lors de la mise à jour.';
+          if (typeof body === 'string') msg = body;
+          else if (body && typeof body === 'object') {
+            msg = (body as { detail?: string }).detail
+              || (body as { message?: string }).message
+              || JSON.stringify(body);
+          }
+          this.errorMessage.set(msg);
         },
       });
     } else {
-      this.prospectionService.create(payload as ProspectionCreateDto).subscribe({
+      this.prospectionService.create(createPayload).subscribe({
         next: () => {
           this.isSaving.set(false);
           this.successMessage.set('Prospection créée avec succès.');
+          this.notificationService.success('Prospection créée avec succès.');
           setTimeout(() => {
-            if (this.prospectId()) {
+            if (this.isClientFixed()) {
+              this.router.navigate(['/clients']);
+            } else if (this.isProspectFixed() && this.prospectId()) {
               this.router.navigate(['/prospections'], { queryParams: { prospectId: this.prospectId() } });
             } else {
               this.router.navigate(['/prospections']);
             }
           }, 1500);
         },
-        error: () => {
+        error: (err) => {
           this.isSaving.set(false);
-          this.errorMessage.set('Erreur lors de la création.');
+          this.notificationService.error('Erreur lors de la création de la prospection.');
+          console.error('[ProspectionForm] Erreur création HTTP', err.status, err.error);
+          const body = err.error;
+          let msg = 'Erreur lors de la création.';
+          if (typeof body === 'string') msg = body;
+          else if (body && typeof body === 'object') {
+            msg = (body as { detail?: string }).detail
+              || (body as { message?: string }).message
+              || JSON.stringify(body);
+          }
+          this.errorMessage.set(msg);
         },
       });
     }

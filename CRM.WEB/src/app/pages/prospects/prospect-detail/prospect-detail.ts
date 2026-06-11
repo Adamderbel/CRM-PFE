@@ -1,23 +1,28 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { DatePipe } from '@angular/common';
 import { ProspectService } from '../../../core/services/prospect.service';
+import { ProspectionService } from '../../../core/services/prospection.service';
 import { Prospect } from '../../../core/models/prospect.model';
+import { Prospection } from '../../../core/models/prospection.model';
 
 @Component({
   selector: 'app-prospect-detail',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, DatePipe],
   templateUrl: './prospect-detail.html',
   styleUrl: './prospect-detail.css',
 })
 export class ProspectDetail implements OnInit {
   prospect = signal<Prospect | null>(null);
+  prospections = signal<Prospection[]>([]);
   isLoading = signal(true);
   errorMessage = signal('');
   showDeleteConfirm = signal(false);
 
   constructor(
     private prospectService: ProspectService,
+    private prospectionService: ProspectionService,
     private route: ActivatedRoute,
     private router: Router
   ) {}
@@ -35,6 +40,10 @@ export class ProspectDetail implements OnInit {
       next: (data) => {
         this.prospect.set(data);
         this.isLoading.set(false);
+        this.prospectionService.getByProspectId(id).subscribe({
+          next: (list) => this.prospections.set(list ?? []),
+          error: () => this.prospections.set([]),
+        });
       },
       error: () => {
         this.isLoading.set(false);
@@ -64,6 +73,7 @@ export class ProspectDetail implements OnInit {
 
     this.prospectService.delete(p.id).subscribe({
       next: () => {
+        this.showDeleteConfirm.set(false);
         this.router.navigate(['/prospects']);
       },
     });

@@ -1,5 +1,6 @@
 using CRM.Entities.Common;
 using CRM.Entities.Crm;
+using CRM.Entities.Security;
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -33,6 +34,8 @@ namespace CRM.Entities
         public int ClientId { get; set; }
 
         public int ProduitRef { get; set; }
+
+        public Guid? CommercialId { get; set; }
 
         // Dates
         public DateTime? CreatedAt { get; set; }
@@ -76,5 +79,8 @@ namespace CRM.Entities
 
         [ForeignKey(nameof(ProduitRef))]
         public virtual ProduitCerm? Produit { get; set; }
+
+        [ForeignKey(nameof(CommercialId))]
+        public virtual SecUser? Commercial { get; set; }
     }
 }

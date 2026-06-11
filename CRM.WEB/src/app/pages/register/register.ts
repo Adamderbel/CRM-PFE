@@ -16,7 +16,7 @@ export class Register {
   prenom = signal('');
   email = signal('');
   password = signal('');
-  selectedRole = signal<'ADMIN' | 'COMMERCIAL'>('ADMIN');
+  selectedRole = signal<'MANAGER' | 'COMMERCIAL'>('MANAGER');
   showPassword = signal(false);
   isLoading = signal(false);
   errorMessage = signal('');
@@ -27,7 +27,7 @@ export class Register {
     private authService: AuthService
   ) {}
 
-  selectRole(role: 'ADMIN' | 'COMMERCIAL') {
+  selectRole(role: 'MANAGER' | 'COMMERCIAL') {
     this.selectedRole.set(role);
   }
 

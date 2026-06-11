@@ -16,15 +16,19 @@ export class ReclamationService {
     return this.http.get<Reclamation[]>(this.apiUrl);
   }
 
-  getByClient(clientId: number): Observable<Reclamation[]> {
-    return this.http.get<Reclamation[]>(`${this.apiUrl}/client/${clientId}`);
-  }
-
   create(data: ReclamationCreateDto): Observable<any> {
     return this.http.post(this.apiUrl, data);
   }
 
-  update(id: string, data: ReclamationCreateDto | Reclamation): Observable<any> {
+  getById(id: string): Observable<Reclamation> {
+    return this.http.get<Reclamation>(`${this.apiUrl}/${id}`);
+  }
+
+  update(id: string, data: Partial<Reclamation>): Observable<any> {
     return this.http.put(`${this.apiUrl}/${id}`, data);
+  }
+
+  delete(id: string): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/${id}`);
   }
 }

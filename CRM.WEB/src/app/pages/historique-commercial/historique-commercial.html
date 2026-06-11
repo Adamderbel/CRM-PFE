@@ -1,0 +1,90 @@
+<div class="page-wrapper">
+  <!-- Back Link -->
+  <div class="mb-16">
+    <a routerLink="/dashboard" class="btn btn-ghost" style="padding-left: 0;">
+      <span class="material-icons md">arrow_back</span>
+      Retour au tableau de bord
+    </a>
+  </div>
+
+  <!-- Page Header -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Historique commercial</h1>
+      <p class="page-subtitle">Vue agrégée des actions (appels, e-mails, visites, tâches) sur toutes les prospections</p>
+    </div>
+  </div>
+
+  <!-- Alerts -->
+  @if (errorMessage()) {
+    <div class="alert alert-error mb-24">
+      <span class="material-icons">error_outline</span>
+      {{ errorMessage() }}
+    </div>
+  }
+
+  <!-- Loading State -->
+  @if (isLoading()) {
+    <div class="loading-container">
+      <div class="spinner"></div>
+      <p>Chargement...</p>
+    </div>
+  } @else {
+    <div class="table-container">
+      <!-- Empty State -->
+      @if (items().length === 0) {
+        <div class="empty-state">
+          <span class="material-icons empty-icon">history</span>
+          <h3>Aucune action enregistrée</h3>
+          <p>Les actions commerciales apparaîtront ici.</p>
+        </div>
+      }
+
+      <!-- Table -->
+      @if (items().length > 0) {
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Type</th>
+              <th>Prospect</th>
+              <th>Commentaire</th>
+              <th>Résultat</th>
+              <th style="text-align: right;">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of items(); track row.actionId) {
+              <tr>
+                <td class="fw-semibold">{{ row.dateAction | date : 'dd/MM/yyyy HH:mm' }}</td>
+                <td>
+                  <span class="badge badge-info">{{ row.typeActionLibelle || '—' }}</span>
+                </td>
+                <td>{{ row.prospectNomComplet || '—' }}</td>
+                <td>{{ row.commentaire || '—' }}</td>
+                <td>
+                  <span class="badge"
+                    [class.badge-info]="row.resultat === 'A suivre' || row.resultat === 'Relance prévue'"
+                    [class.badge-success]="row.resultat === 'Devis envoye' || row.resultat === 'Devis envoyé' || row.resultat === 'Gagné'"
+                    [class.badge-warning]="row.resultat === 'Negociation en cours' || row.resultat === 'Négociation en cours'"
+                    [class.badge-error]="row.resultat === 'Echantillon demande' || row.resultat === 'Échantillon demandé' || row.resultat === 'Perdu'"
+                    [class.badge-outline]="row.resultat === 'Rendez-vous confirme' || row.resultat === 'Rendez-vous confirmé' || row.resultat === 'Decideur identifie' || row.resultat === 'Décideur identifié'">
+                    {{ row.resultat || '—' }}
+                  </span>
+                </td>
+                <td>
+                  <div class="table-actions" style="justify-content: flex-end;">
+                    <a [routerLink]="['/prospections/detail', row.prospectionId]" class="btn btn-sm btn-outline">
+                      <span class="material-icons sm">visibility</span>
+                      Prospection
+                    </a>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </div>
+  }
+</div>

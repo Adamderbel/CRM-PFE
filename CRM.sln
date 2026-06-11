@@ -19,22 +19,23 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CRM.Core", "CRM.Core\CRM.Co
 EndProject
 Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "CRM.WEB", "CRM.WEB\", "{E222E95D-4562-4CF3-2761-C8D507B6DBB0}"
 	ProjectSection(WebsiteProperties) = preProject
-		TargetFrameworkMoniker = ".NETFramework,Version%3Dv4.0"
-		Debug.AspNetCompiler.VirtualPath = "/localhost_61019"
+		TargetFrameworkMoniker = ".NETFramework,Version%3Dv4.8"
+		Debug.AspNetCompiler.VirtualPath = "/localhost_54875"
 		Debug.AspNetCompiler.PhysicalPath = "CRM.WEB\"
-		Debug.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_61019\"
+		Debug.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_54875\"
 		Debug.AspNetCompiler.Updateable = "true"
 		Debug.AspNetCompiler.ForceOverwrite = "true"
 		Debug.AspNetCompiler.FixedNames = "false"
 		Debug.AspNetCompiler.Debug = "True"
-		Release.AspNetCompiler.VirtualPath = "/localhost_61019"
+		Release.AspNetCompiler.VirtualPath = "/localhost_54875"
 		Release.AspNetCompiler.PhysicalPath = "CRM.WEB\"
-		Release.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_61019\"
+		Release.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_54875\"
 		Release.AspNetCompiler.Updateable = "true"
 		Release.AspNetCompiler.ForceOverwrite = "true"
 		Release.AspNetCompiler.FixedNames = "false"
 		Release.AspNetCompiler.Debug = "False"
-		VWDPort = "61019"
+		VWDPort = "54875"
+		SlnRelativePath = "CRM.WEB\"
 	EndProjectSection
 EndProject
 Global

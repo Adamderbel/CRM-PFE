@@ -1,0 +1,18 @@
+<div class="notifications-container" aria-live="polite" aria-atomic="true">
+  @for (notification of notificationService.notifications(); track trackById($index, notification)) {
+    <div class="toast" [class.toast-success]="notification.type === 'success'" [class.toast-error]="notification.type === 'error'" [class.toast-warning]="notification.type === 'warning'" [class.toast-info]="notification.type === 'info'">
+      <div class="toast-icon">
+        <span class="material-icons">
+          {{ notification.type === 'success' ? 'check_circle' : notification.type === 'error' ? 'error' : notification.type === 'warning' ? 'warning' : 'info' }}
+        </span>
+      </div>
+      <div class="toast-body">
+        <strong>{{ notification.title }}</strong>
+        <p>{{ notification.message }}</p>
+      </div>
+      <button class="toast-close" type="button" (click)="notificationService.dismiss(notification.id)" aria-label="Fermer">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+  }
+</div>

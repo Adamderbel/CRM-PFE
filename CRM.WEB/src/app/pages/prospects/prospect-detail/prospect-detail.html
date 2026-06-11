@@ -1,20 +1,21 @@
-<div class="prospect-detail-page">
-  <div class="page-header">
-    <a routerLink="/prospects" class="back-link">
-      <span class="material-icons">arrow_back</span>
+<div class="page-wrapper">
+  <!-- Back Link -->
+  <div class="mb-16">
+    <a routerLink="/prospects" class="btn btn-ghost" style="padding-left: 0;">
+      <span class="material-icons md">arrow_back</span>
       Retour aux prospects
     </a>
   </div>
 
-  <!-- Error -->
+  <!-- Alerts -->
   @if (errorMessage()) {
-    <div class="alert alert-error">
+    <div class="alert alert-error mb-24">
       <span class="material-icons">error</span>
       {{ errorMessage() }}
     </div>
   }
 
-  <!-- Loading -->
+  <!-- Loading State -->
   @if (isLoading()) {
     <div class="loading-container">
       <div class="spinner"></div>
@@ -22,85 +23,170 @@
     </div>
   }
 
+  <!-- Content -->
   @if (!isLoading() && prospect()) {
-    <div class="detail-header">
-      <div class="prospect-avatar">
-        {{ prospect()!.prenom.charAt(0) }}{{ prospect()!.nom.charAt(0) }}
-      </div>
-      <div class="prospect-identity">
-        <h1 class="prospect-name">{{ prospect()!.prenom }} {{ prospect()!.nom }}</h1>
-        @if (prospect()!.domaineActivite?.activitee) {
-          <span class="domaine-badge">{{ prospect()!.domaineActivite!.activitee }}</span>
-        }
-      </div>
-      <div class="header-actions">
-        <button class="btn-outline" (click)="editProspect()">
-          <span class="material-icons">edit</span>
-          Modifier
-        </button>
-        <button class="btn-danger-outline" (click)="confirmDelete()">
-          <span class="material-icons">delete</span>
-          Supprimer
-        </button>
+    <!-- Header Card -->
+    <div class="card detail-header-card mb-24">
+      <div class="card-body">
+        <div class="header-content">
+          <div class="avatar-circle">
+            {{ prospect()!.prenom.charAt(0) }}{{ prospect()!.nom.charAt(0) }}
+          </div>
+          <div class="header-info">
+            <h1 class="prospect-name">{{ prospect()!.prenom }} {{ prospect()!.nom }}</h1>
+            <div class="header-badges">
+              @if (prospect()!.domaineActivite?.activitee) {
+                <span class="badge badge-info">{{ prospect()!.domaineActivite!.activitee }}</span>
+              }
+              <span class="badge badge-outline">ID: {{ prospect()!.codeCRM || 'N/A' }}</span>
+            </div>
+          </div>
+          <div class="header-actions">
+            <button class="btn btn-outline" (click)="editProspect()">
+              <span class="material-icons">edit</span>
+              Modifier
+            </button>
+            <button class="btn btn-danger" (click)="confirmDelete()">
+              <span class="material-icons">delete</span>
+              Supprimer
+            </button>
+          </div>
+        </div>
       </div>
     </div>
 
-    <div class="detail-grid">
-      <div class="detail-card">
-        <h2 class="card-title">
-          <span class="material-icons">contact_mail</span>
-          Coordonnées
-        </h2>
-        <div class="info-list">
-          <div class="info-item">
-            <span class="info-label">Email</span>
-            <a class="info-value email-link" [href]="'mailto:' + prospect()!.email">
-              {{ prospect()!.email || '-' }}
-            </a>
-          </div>
-          <div class="info-item">
-            <span class="info-label">Téléphone</span>
-            <span class="info-value">{{ prospect()!.telephone || '-' }}</span>
+    <!-- Info Grid -->
+    <div class="info-grid mb-24">
+      <!-- Coordonnées -->
+      <div class="card info-card">
+        <div class="card-header">
+          <h2 class="card-title">
+            <span class="material-icons">contact_mail</span>
+            Coordonnées
+          </h2>
+        </div>
+        <div class="card-body">
+          <div class="info-list">
+            <div class="info-item">
+              <span class="info-label">Email</span>
+              <p class="info-value">
+                <a [href]="'mailto:' + prospect()!.email">{{ prospect()!.email || '-' }}</a>
+              </p>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Téléphone</span>
+              <p class="info-value">{{ prospect()!.telephone || '-' }}</p>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Source d'acquisition</span>
+              <p class="info-value">{{ prospect()!.source || '-' }}</p>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Date d'enregistrement</span>
+              <p class="info-value">{{ formatDate(prospect()!.dateCreation) }}</p>
+            </div>
           </div>
         </div>
       </div>
 
-      <div class="detail-card">
-        <h2 class="card-title">
-          <span class="material-icons">info</span>
-          Informations
-        </h2>
-        <div class="info-list">
-          <div class="info-item">
-            <span class="info-label">Source</span>
-            <span class="info-value">
-              @if (prospect()!.source) {
-                <span class="source-badge">{{ prospect()!.source }}</span>
-              } @else {
-                -
-              }
-            </span>
-          </div>
-          <div class="info-item">
-            <span class="info-label">Date de création</span>
-            <span class="info-value">{{ formatDate(prospect()!.dateCreation) }}</span>
-          </div>
-          <div class="info-item">
-            <span class="info-label">Domaine d'activité</span>
-            <span class="info-value">{{ prospect()!.domaineActivite?.activitee || '-' }}</span>
+      <!-- Informations Business -->
+      <div class="card info-card">
+        <div class="card-header">
+          <h2 class="card-title">
+            <span class="material-icons">business</span>
+            Business
+          </h2>
+        </div>
+        <div class="card-body">
+          <div class="info-list">
+            <div class="info-item">
+              <span class="info-label">Domaine d'activité</span>
+              <p class="info-value">{{ prospect()!.domaineActivite?.activitee || '-' }}</p>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Référence CRM</span>
+              <p class="info-value"><code>{{ prospect()!.codeCRM || '-' }}</code></p>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Client CERM Associé</span>
+              <p class="info-value">{{ prospect()!.clientCerm?.nom || 'Non lié' }}</p>
+            </div>
           </div>
         </div>
       </div>
+    </div>
 
-      @if (prospect()!.notes) {
-        <div class="detail-card full-width">
+    <!-- Notes -->
+    @if (prospect()!.notes) {
+      <div class="card mb-24">
+        <div class="card-header">
           <h2 class="card-title">
             <span class="material-icons">notes</span>
-            Notes
+            Notes complémentaires
           </h2>
+        </div>
+        <div class="card-body">
           <p class="notes-text">{{ prospect()!.notes }}</p>
         </div>
-      }
+      </div>
+    }
+
+    <!-- Prospections -->
+    <div class="card">
+      <div class="card-header section-header">
+        <h2 class="card-title">
+          <span class="material-icons">description</span>
+          Historique des Prospections
+        </h2>
+        <a [routerLink]="['/prospections/create']" [queryParams]="{ prospectId: prospect()!.id }" class="btn btn-primary btn-sm">
+          <span class="material-icons">add</span>
+          Nouvelle action
+        </a>
+      </div>
+      <div class="card-body p-0">
+        @if (prospections().length === 0) {
+          <div class="empty-state">
+            <span class="material-icons">folder_open</span>
+            <p>Aucune action de prospection enregistrée pour ce prospect.</p>
+          </div>
+        } @else {
+          <div class="table-container no-border">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Date de l'action</th>
+                  <th>État / Statut</th>
+                  <th>Commentaires</th>
+                  <th class="text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (pr of prospections(); track pr.id) {
+                  <tr>
+                    <td class="fw-semibold">{{ pr.dateDebut | date : 'dd/MM/yyyy HH:mm' }}</td>
+                    <td>
+                      <span class="badge"
+                        [class.badge-success]="pr.statut?.libelle === 'Gagnée' || pr.statut?.libelle === 'Gagné'"
+                        [class.badge-warning]="pr.statut?.libelle === 'En cours'"
+                        [class.badge-error]="pr.statut?.libelle === 'Perdue' || pr.statut?.libelle === 'Perdu'"
+                        [class.badge-info]="pr.statut?.libelle === 'Nouveau' || pr.statut?.libelle === 'A suivre'">
+                        {{ pr.statut?.libelle ?? '—' }}
+                      </span>
+                    </td>
+                    <td class="text-truncate-2">{{ pr.notes || '—' }}</td>
+                    <td class="text-right">
+                      <a [routerLink]="['/prospections/detail', pr.id]" class="btn btn-sm btn-outline">
+                        <span class="material-icons">visibility</span>
+                        Détails
+                      </a>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </div>
     </div>
   }
 </div>
@@ -110,17 +196,21 @@
   <div class="modal-overlay" (click)="cancelDelete()">
     <div class="modal-content" (click)="$event.stopPropagation()">
       <div class="modal-header">
-        <span class="material-icons modal-icon">warning</span>
+        <div class="modal-icon warning">
+          <span class="material-icons">warning</span>
+        </div>
         <h3>Confirmer la suppression</h3>
       </div>
-      <p class="modal-text">
-        Voulez-vous vraiment supprimer le prospect
-        <strong>{{ prospect()!.prenom }} {{ prospect()!.nom }}</strong> ?
-        Cette action est irréversible.
-      </p>
-      <div class="modal-actions">
-        <button class="btn-outline" (click)="cancelDelete()">Annuler</button>
-        <button class="btn-danger-fill" (click)="deleteProspect()">Supprimer</button>
+      <div class="modal-body">
+        <p>
+          Voulez-vous vraiment supprimer le prospect
+          <strong>{{ prospect()!.prenom }} {{ prospect()!.nom }}</strong> ?
+          Cette action est irréversible.
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="cancelDelete()">Annuler</button>
+        <button class="btn btn-danger" (click)="deleteProspect()">Supprimer</button>
       </div>
     </div>
   </div>

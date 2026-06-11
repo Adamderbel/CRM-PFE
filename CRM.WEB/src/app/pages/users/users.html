@@ -1,0 +1,113 @@
+<div class="page-wrapper">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Gestion des utilisateurs</h1>
+      <p class="page-subtitle">Liste des comptes, validation et attribution des rôles (Commercial, Manager, Administrateur)</p>
+    </div>
+  </div>
+
+  <!-- Alerts -->
+  @if (errorMessage()) {
+    <div class="alert alert-error mb-24">
+      <span class="material-icons">error_outline</span>
+      {{ errorMessage() }}
+    </div>
+  }
+  @if (successMessage()) {
+    <div class="alert alert-success mb-24">
+      <span class="material-icons">check_circle</span>
+      {{ successMessage() }}
+    </div>
+  }
+
+  <div class="table-container">
+    <!-- Filters -->
+    <div class="filters-bar">
+      <div class="search-box">
+        <span class="material-icons">search</span>
+        <input type="text" placeholder="Rechercher par utilisateur, email, nom ou prénom" [ngModel]="searchQuery()" (ngModelChange)="onSearchChange($event)" />
+      </div>
+      <select class="form-control form-select" style="width: auto;" [ngModel]="roleFilter()" (ngModelChange)="onRoleChange($event)">
+        <option value="">Tous les rôles</option>
+        @for (role of roleOptions; track role) {
+          <option [value]="role">{{ role }}</option>
+        }
+      </select>
+      <span class="text-muted fw-medium">{{ filteredUsers().length }} utilisateur(s)</span>
+    </div>
+
+    <!-- Table -->
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Utilisateur</th>
+          <th>Email</th>
+          <th>Nom</th>
+          <th>Prénom</th>
+          <th>Rôle</th>
+          <th>Statut</th>
+          <th style="text-align: right;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (user of pagedUsers(); track user.id) {
+          <tr>
+            <td class="fw-semibold">{{ user.userName }}</td>
+            <td>{{ user.email }}</td>
+            <td>{{ user.nom }}</td>
+            <td>{{ user.prenom }}</td>
+            <td>
+              <select class="form-control form-select" style="width: auto;" [(ngModel)]="user.selectedRole" name="role-{{ user.id }}">
+                @for (role of roleOptions; track role) {
+                  <option [value]="role">{{ role }}</option>
+                }
+              </select>
+            </td>
+            <td>
+              <span class="badge" [class.badge-success]="user.isActive" [class.badge-warning]="!user.isActive">
+                {{ user.isActive ? 'Actif' : 'En attente' }}
+              </span>
+            </td>
+            <td>
+              <div class="table-actions" style="justify-content: flex-end;">
+                <button class="table-action-btn" style="color: var(--success);" title="Approuver" (click)="approve(user)">
+                  <span class="material-icons md">check_circle</span>
+                </button>
+                <button class="table-action-btn" style="color: var(--error);" title="Rejeter" (click)="reject(user)">
+                  <span class="material-icons md">cancel</span>
+                </button>
+                <button class="table-action-btn edit" title="Mettre à jour le rôle" (click)="updateRole(user)">
+                  <span class="material-icons md">edit</span>
+                </button>
+              </div>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+
+    <!-- Pagination -->
+    <div class="pagination">
+      <div class="d-flex align-items-center gap-16">
+        <select class="form-control form-select-sm" style="width: auto; height: 38px; border-radius: var(--radius-md);" [ngModel]="pageSize()" (ngModelChange)="onPageSizeChange($event)">
+          @for (size of pageOptions; track size) {
+            <option [value]="size">{{ size }} / page</option>
+          }
+        </select>
+      </div>
+
+      <div class="d-flex gap-8">
+        <button class="pagination-btn" (click)="previousPage()" [disabled]="currentPage() === 1">
+          <span class="material-icons sm">chevron_left</span>
+          Précédent
+        </button>
+        <button class="pagination-btn active">{{ currentPage() }}</button>
+        <button class="pagination-btn" (click)="nextPage()" [disabled]="currentPage() >= totalPages()">
+          Suivant
+          <span class="material-icons sm">chevron_right</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

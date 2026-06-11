@@ -18,6 +18,10 @@ namespace CRM.DAL
         }
         public  void AddAsync(SecUser user)
           => _securityDbContext.Users.Add(user);
+
+        public async Task<IEnumerable<SecUser>> GetAllAsync()
+            => await _securityDbContext.Users.ToListAsync();
+
         public async Task AddUserRoleAsync(UserRole userRole)
         {
              await _securityDbContext.UserRoles.AddAsync(userRole);
@@ -38,7 +42,7 @@ namespace CRM.DAL
             return await _securityDbContext.UserRoles.Where(ur => ur.RoleId == roleId).ToListAsync();
         }
 
-        public Task<SecUser> GetByIdAsync(Guid id)
+        public Task<SecUser?> GetByIdAsync(Guid id)
         {
             return _securityDbContext.Users.FirstOrDefaultAsync(u => u.Id == id);
         }

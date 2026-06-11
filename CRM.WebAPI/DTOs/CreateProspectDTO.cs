@@ -34,5 +34,11 @@ namespace CRM.WebAPI.DTOs
 
         [Required(ErrorMessage = "Le domaine d'activité est obligatoire.")]
         public int idDomaineActivitee { get; set; }
+
+        public int? IdDomaineActivite { get; set; }
+
+        public string? ClientCermId { get; set; }
+
+        public string? CodeCRM { get; set; }
     }
 }

@@ -6,10 +6,17 @@
 
   <nav class="sidebar-nav">
     @for (item of menuItems(); track item.route) {
-    <a class="nav-item" [routerLink]="item.route" routerLinkActive="active">
-      <span class="material-icons">{{ item.icon }}</span>
-      <span class="nav-label">{{ item.label }}</span>
-    </a>
+      <a class="nav-item" [routerLink]="item.route" routerLinkActive="active">
+        <span class="material-icons">{{ item.icon }}</span>
+        <span class="nav-label">{{ item.label }}</span>
+      </a>
     }
   </nav>
+
+  <div class="sidebar-footer">
+    <button class="logout-sidebar-btn" type="button" (click)="logout()">
+      <span class="material-icons">logout</span>
+      <span>Déconnexion</span>
+    </button>
+  </div>
 </aside>

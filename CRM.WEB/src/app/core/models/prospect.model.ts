@@ -4,11 +4,14 @@ export interface Prospect {
   prenom: string;
   email: string;
   telephone: string;
-  source: string;
+  source?: string;
   dateCreation: string;
   notes: string;
-  idDomaineActivitee: number;
+  idDomaineActivite: number;
+  clientCermId?: number;
+  codeCRM?: string;
   domaineActivite?: DomaineActivite;
+  clientCerm?: { id: number; nom: string };
 }
 
 export interface CreateProspectRequest {
@@ -16,10 +19,12 @@ export interface CreateProspectRequest {
   prenom: string;
   email: string;
   telephone: string;
-  source: string;
+  source?: string;
   dateCreation?: string;
   notes: string;
-  idDomaineActivitee: number;
+  idDomaineActivite: number;
+  clientCermId?: number;
+  codeCRM?: string;
 }
 
 export interface UpdateProspectRequest {
@@ -27,9 +32,11 @@ export interface UpdateProspectRequest {
   prenom: string;
   email: string;
   telephone: string;
-  source: string;
+  source?: string;
   notes: string;
-  idDomaineActivitee: number;
+  idDomaineActivite: number;
+  clientCermId?: number;
+  codeCRM?: string;
 }
 
 export interface DomaineActivite {

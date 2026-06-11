@@ -9,6 +9,7 @@
     [NumeroReference] NVARCHAR(100) NULL, 
     [ClientId] INT NULL, 
     [ProduitRef] INT NULL, 
+    [CommercialId] UNIQUEIDENTIFIER NULL,
      
     [CreatedAt] DATETIME NULL, 
     [UpdatedAt] DATETIME NULL,
@@ -26,6 +27,7 @@
     [Rapport] NVARCHAR(50) NULL, 
     [Responsable Faute] NVARCHAR(50) NULL, 
     CONSTRAINT [FK_Reclamation_ClientCerm] FOREIGN KEY ([ClientId]) REFERENCES [comm].[ClientCerm]([RefClient]),
-    CONSTRAINT [FK_Reclamation_ProduitCerm] FOREIGN KEY ([ProduitRef]) REFERENCES [comm].[ProduitCerm]([RefProduit])
+    CONSTRAINT [FK_Reclamation_ProduitCerm] FOREIGN KEY ([ProduitRef]) REFERENCES [comm].[ProduitCerm]([RefProduit]),
+    CONSTRAINT [FK_Reclamation_ToUser] FOREIGN KEY (CommercialId) REFERENCES [sec].[Users]([Id])
     
 )

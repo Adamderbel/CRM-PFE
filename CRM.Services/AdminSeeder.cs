@@ -1,63 +1,115 @@
-﻿using CRM.DAL;
 using CRM.Entities.Security;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CRM.Services
 {
     public class AdminSeeder : IAdminSeeder
     {
-        private readonly IUserService _userService;
-        private readonly IPasswordHasher<SecUser> _passwordHasher;
+        private readonly RoleManager<SecRole> _roleManager;
+        private readonly UserManager<SecUser> _userManager;
         private readonly IConfiguration _config;
-        public AdminSeeder(IUserService userService, IPasswordHasher<SecUser> passwordHasher, IConfiguration config)
+
+        public AdminSeeder(RoleManager<SecRole> roleManager, UserManager<SecUser> userManager, IConfiguration config)
         {
-            _userService = userService;
-            _passwordHasher = passwordHasher;
+            _roleManager = roleManager;
+            _userManager = userManager;
             _config = config;
         }
+
         public async Task SeedAsync()
         {
             try
             {
-
-
-                // verifier Admin existe deja 
-                var adminRole = await _userService.GetRoleByRoleName("ADMIN");
-                if (adminRole == null)
-                    return;
-
-                var adminExiste = await _userService.GetRolesByRoleIdAsync(adminRole.Id);
-
-                if (adminExiste is null)
-                    return;
-                // cree admin 
-
-                var email = _config["AdminSeed:Email"]!;
-                var password = _config["AdminSeed:Password"]!;
-
-                var user = new SecUser
-                {
-                    Id = Guid.NewGuid(),
-                    Email = email,
-                    NormalizedEmail = email.ToUpper(),
-                    UserName = email,
-                    NormalizedUserName = email.ToUpper(),
-                };
-                await _userService.CreateUserAsync(user, user.PasswordHash, adminRole.NormalizedName);
+                await SeedRolesAsync();
+                await SeedAdminAsync();
             }
             catch (Exception ex)
             {
-                // LOG seulement, jamais throw
                 Console.WriteLine("AdminSeeder error: " + ex.Message);
             }
+        }
 
+        private async Task SeedRolesAsync()
+        {
+            foreach (var roleName in new[] { "ADMIN", "MANAGER", "COMMERCIAL" })
+            {
+                if (await _roleManager.RoleExistsAsync(roleName))
+                    continue;
+
+                var result = await _roleManager.CreateAsync(new SecRole
+                {
+                    Name = roleName,
+                    NormalizedName = roleName
+                });
+
+                if (!result.Succeeded)
+                    Console.WriteLine($"Unable to create role {roleName}: {string.Join("; ", result.Errors.Select(e => e.Description))}");
+            }
+        }
+
+        private async Task SeedAdminAsync()
+        {
+            var email = Environment.GetEnvironmentVariable("ADMIN_EMAIL");
+            if (string.IsNullOrWhiteSpace(email))
+                email = _config["AdminSeed:Email"];
+
+            var password = Environment.GetEnvironmentVariable("ADMIN_PASSWORD");
+            if (string.IsNullOrWhiteSpace(password))
+                password = _config["AdminSeed:Password"];
+
+            var username = Environment.GetEnvironmentVariable("ADMIN_USERNAME");
+            if (string.IsNullOrWhiteSpace(username))
+                username = _config["AdminSeed:UserName"] ?? email;
+
+            if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password) || string.IsNullOrWhiteSpace(username))
+                return;
+
+            var existing = await _userManager.FindByEmailAsync(email);
+            if (existing != null)
+            {
+                var changed = false;
+                if (!existing.IsActive)
+                {
+                    existing.IsActive = true;
+                    changed = true;
+                }
+
+                if (!await _userManager.IsInRoleAsync(existing, "ADMIN"))
+                {
+                    var roleResult = await _userManager.AddToRoleAsync(existing, "ADMIN");
+                    changed = changed || roleResult.Succeeded;
+                }
+
+                if (changed)
+                    await _userManager.UpdateAsync(existing);
+
+                return;
+            }
+
+            if ((await _userManager.GetUsersInRoleAsync("ADMIN")).Any())
+                return;
+
+            var admin = new SecUser
+            {
+                Id = Guid.NewGuid(),
+                Email = email.Trim(),
+                NormalizedEmail = email.Trim().ToUpperInvariant(),
+                UserName = username.Trim(),
+                NormalizedUserName = username.Trim().ToUpperInvariant(),
+                Nom = "Admin",
+                Prenom = "System",
+                IsActive = true
+            };
+
+            var createResult = await _userManager.CreateAsync(admin, password);
+            if (!createResult.Succeeded)
+            {
+                Console.WriteLine($"Unable to create admin: {string.Join("; ", createResult.Errors.Select(e => e.Description))}");
+                return;
+            }
+
+            await _userManager.AddToRoleAsync(admin, "ADMIN");
         }
     }
 }

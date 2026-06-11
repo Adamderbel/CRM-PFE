@@ -1,7 +1,5 @@
-using CRM.Entities.Common;
 using CRM.Entities.Security;
 using CRM.Services;
-using CRM.Services.clientscerm;
 using CRM.WebAPI.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -19,124 +17,112 @@ namespace CRM.WebAPI.Controllers
     {
         private readonly UserManager<SecUser> _userManager;
         private readonly IConfiguration _config;
-
         private readonly IUserService _userService;
 
-        private readonly IClientCermService _clientCermService;
-
-        public AuthController(UserManager<SecUser> userManager, IConfiguration config, IUserService userService,IClientCermService clientCermService)
+        public AuthController(UserManager<SecUser> userManager, IConfiguration config, IUserService userService)
         {
             _userManager = userManager;
             _config = config;
             _userService = userService;
-            _clientCermService = clientCermService;
         }
 
-       // [Authorize(Roles = "ADMIN")]
+        [AllowAnonymous]
         [HttpPost("users")]
         public async Task<IActionResult> CreateUser([FromBody] CreateUserDto request)
         {
+            if (request == null)
+                return BadRequest("Le corps de la requete est invalide.");
+
+            if (string.IsNullOrWhiteSpace(request.Email)
+                || string.IsNullOrWhiteSpace(request.UserName)
+                || string.IsNullOrWhiteSpace(request.Password)
+                || string.IsNullOrWhiteSpace(request.Role))
+            {
+                return BadRequest("Les champs Email, UserName, Password et Role sont obligatoires.");
+            }
+
+            var normalizedRole = request.Role.Trim().ToUpperInvariant();
+            if (normalizedRole == "ADMIN")
+                return BadRequest("Le role ADMIN est reserve au systeme.");
+
+            var validRoles = new[] { "MANAGER", "COMMERCIAL" };
+            if (!validRoles.Contains(normalizedRole))
+                return BadRequest($"Role invalide. Les roles autorises sont : {string.Join(", ", validRoles)}");
+
+            if (await _userManager.FindByEmailAsync(request.Email.Trim()) != null)
+                return BadRequest("Un utilisateur avec cet email existe deja.");
+
+            if (await _userManager.FindByNameAsync(request.UserName.Trim()) != null)
+                return BadRequest("Un utilisateur avec ce nom d'utilisateur existe deja.");
+
             var user = new SecUser
             {
-                Email = request.Email,
-                NormalizedEmail = request.Email.Trim().ToUpper(),
+                Email = request.Email.Trim(),
+                NormalizedEmail = request.Email.Trim().ToUpperInvariant(),
                 UserName = request.UserName.Trim(),
-                NormalizedUserName = request.UserName.Trim().ToUpper(),
-                Nom = request.Nom , 
-                Prenom= request.Prenom
+                NormalizedUserName = request.UserName.Trim().ToUpperInvariant(),
+                Nom = request.Nom?.Trim() ?? string.Empty,
+                Prenom = request.Prenom?.Trim() ?? string.Empty,
+                IsActive = false
+            };
 
+            await _userService.CreateUserAsync(user, request.Password, normalizedRole);
 
-
-
-
-            }; 
-
-           var userSaved = await _userService.CreateUserAsync(user, request.Password, request.Role);
-            if (request.RefClient is int clientId)
-            {
-                var clientCerm = await _clientCermService.GetByIdAsync(clientId);
-
-                if (clientCerm == null)
-                {
-                    return BadRequest("Client introuvable");
-                }
-                else
-                {
-                    clientCerm.idUser = userSaved.Id;
-                   await _clientCermService.update(clientCerm);
-                }
-            }
-            return Ok();
+            return Ok(new { message = $"Utilisateur {request.UserName} cree avec le role {normalizedRole}." });
         }
 
-      
+        [AllowAnonymous]
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginDto loginDto)
         {
-            try
-            {
-                // On récupère l'utilisateur via l'email
-                var user = await _userManager.FindByEmailAsync(loginDto.Email);
-                if (user == null || !await _userManager.CheckPasswordAsync(user, loginDto.Password))
-                {
-                    return Unauthorized("Email ou mot de passe incorect");
-                }
+            if (loginDto == null || string.IsNullOrWhiteSpace(loginDto.Email) || string.IsNullOrWhiteSpace(loginDto.Password))
+                return BadRequest("Email et mot de passe sont requis.");
 
-                // Récupérer les rôles
-                var roles = await _userManager.GetRolesAsync(user);
+            var user = await _userManager.FindByEmailAsync(loginDto.Email.Trim());
+            if (user == null || !await _userManager.CheckPasswordAsync(user, loginDto.Password))
+                return Unauthorized("Email ou mot de passe incorrect.");
 
-                // Claims pour JWT 
+            if (!user.IsActive)
+                return Unauthorized("Le compte n'est pas encore active par un administrateur.");
 
-                var claims = new List<Claim>
+            var roles = await _userManager.GetRolesAsync(user);
+            var claims = new List<Claim>
             {
                 new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
-                new Claim(JwtRegisteredClaimNames.Email, user.Email),
-                new Claim(JwtRegisteredClaimNames.UniqueName, user.UserName),
-                new Claim("IsActive" , user.IsActive.ToString())
-
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new Claim(JwtRegisteredClaimNames.Email, user.Email ?? string.Empty),
+                new Claim(JwtRegisteredClaimNames.UniqueName, user.UserName ?? string.Empty),
+                new Claim("IsActive", user.IsActive.ToString())
             };
-                claims.AddRange(roles.Select(r => new Claim(ClaimTypes.Role, r)));
+            claims.AddRange(roles.Select(r => new Claim(ClaimTypes.Role, r.ToUpperInvariant())));
 
+            var jwtKey = _config["Jwt:Key"];
+            if (string.IsNullOrWhiteSpace(jwtKey))
+                throw new InvalidOperationException("JWT Key is not configured");
 
-                // Génération du token
-                var jwtKey = _config["Jwt:Key"];
-                if (string.IsNullOrEmpty(jwtKey))
-                    throw new InvalidOperationException("JWT Key is not configured");
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+            var token = new JwtSecurityToken(
+                issuer: _config["Jwt:Issuer"],
+                audience: _config["Jwt:Audience"],
+                claims: claims,
+                expires: DateTime.UtcNow.AddHours(24),
+                signingCredentials: creds);
 
-                var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
-                var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-                var token = new JwtSecurityToken(
-                 issuer: _config["Jwt:Issuer"],
-                 audience: _config["Jwt:Audience"],
-                 claims: claims,
-                 expires: DateTime.UtcNow.AddHours(24),
-                 signingCredentials: creds
-                );
-
-                return Ok(new
-                {
-                    
-                    token = new JwtSecurityTokenHandler().WriteToken(token),
-                    expiration = token.ValidTo , 
-                    user = new
-                    {
-                        id=user.Id , 
-                        email = user.Email , 
-                        userName = user.UserName , 
-                        nom = user.Nom , 
-                        prenom = user.Prenom,
-                        roles = roles 
-                    }
-
-                });
-            }
-            catch (Exception ex)
+            return Ok(new
             {
-                return StatusCode(500, ex.ToString());
-            }
+                token = new JwtSecurityTokenHandler().WriteToken(token),
+                expiration = token.ValidTo,
+                user = new
+                {
+                    id = user.Id,
+                    email = user.Email,
+                    userName = user.UserName,
+                    nom = user.Nom,
+                    prenom = user.Prenom,
+                    roles
+                }
+            });
         }
-
     }
-
 }

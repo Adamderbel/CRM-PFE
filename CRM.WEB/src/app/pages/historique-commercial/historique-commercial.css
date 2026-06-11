@@ -1,0 +1,127 @@
+/* ===========================
+    Historique Commercial Styles
+    =========================== */
+
+.page {
+  padding: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.page-head {
+  margin-bottom: 28px;
+}
+
+.page-head h1 {
+  margin: 0 0 6px;
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.5px;
+}
+
+.sub {
+  color: var(--text-secondary);
+  margin-top: 6px;
+  line-height: 1.6;
+  font-size: 14px;
+}
+
+.back {
+  color: var(--primary);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 16px;
+  transition: var(--transition);
+}
+
+.back:hover {
+  text-decoration: underline;
+}
+
+/* Alerts */
+.alert {
+  background: var(--error-bg);
+  color: var(--error);
+  padding: 14px 18px;
+  border-radius: var(--radius-md);
+  margin: 16px 0;
+  border: 1px solid #FECACA;
+  font-size: 14px;
+}
+
+.muted {
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+/* Table */
+.table-wrap {
+  overflow-x: auto;
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th, td {
+  text-align: left;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border-light);
+  font-size: 14px;
+}
+
+th {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+  background: var(--bg-body);
+  font-weight: 600;
+}
+
+tbody tr:hover {
+  background: var(--bg-body);
+}
+
+.clip {
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.link {
+  color: var(--primary);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.link:hover {
+  text-decoration: underline;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .page {
+    padding: 16px;
+  }
+
+  .page-head h1 {
+    font-size: 22px;
+  }
+
+  th, td {
+    padding: 12px 14px;
+    font-size: 13px;
+  }
+}

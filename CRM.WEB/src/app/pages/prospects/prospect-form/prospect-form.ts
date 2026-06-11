@@ -2,7 +2,11 @@ import { Component, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ProspectService } from '../../../core/services/prospect.service';
+import { NotificationService } from '../../../core/services/notification.service';
+import { ClientCermService } from '../../../core/services/client-cerm.service';
 import { CreateProspectRequest, DomaineActivite, UpdateProspectRequest } from '../../../core/models/prospect.model';
+import { ModeContact } from '../../../core/models/mode-contact.model';
+import { ClientCerm } from '../../../core/models/client-cerm.model';
 
 @Component({
   selector: 'app-prospect-form',
@@ -18,31 +22,60 @@ export class ProspectForm implements OnInit {
   isSaving = signal(false);
   errorMessage = signal('');
   successMessage = signal('');
-  domaines = signal<DomaineActivite[]>([]);
+   domaines = signal<DomaineActivite[]>([]);
+   modeContacts = signal<ModeContact[]>([]);
+   clientsCerm = signal<ClientCerm[]>([]);
 
   nom = signal('');
   prenom = signal('');
   email = signal('');
   telephone = signal('');
-  source = signal('');
+  source = signal<string>('');
   notes = signal('');
-  idDomaineActivitee = signal<number>(0);
+  idDomaineActivite = signal<number>(0);
+  clientCermId = signal<number | null>(null);
+  codeCRM = signal('');
 
   constructor(
     private prospectService: ProspectService,
+    private notificationService: NotificationService,
+    private clientCermService: ClientCermService,
     private route: ActivatedRoute,
     private router: Router
   ) {}
 
   ngOnInit(): void {
     this.loadDomaines();
+    this.loadModeContacts();
+    this.loadClientsCerm();
 
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
       this.isEditMode.set(true);
       this.prospectId.set(id);
       this.loadProspect(id);
+    } else {
+      this.loadNextCode();
+      const qClientCermId = this.route.snapshot.queryParamMap.get('clientCermId');
+      if (qClientCermId) {
+        const cId = parseInt(qClientCermId, 10);
+        this.clientCermId.set(cId);
+        this.clientCermService.getById(cId).subscribe({
+          next: (client) => {
+            if (client.nom) {
+              this.nom.set(client.nom);
+            }
+          }
+        });
+      }
     }
+  }
+
+  loadNextCode(): void {
+    this.prospectService.getNextCode().subscribe({
+      next: (res) => this.codeCRM.set(res.code),
+      error: (err) => console.error('Erreur lors du chargement du code CRM', err)
+    });
   }
 
   loadDomaines(): void {
@@ -51,20 +84,37 @@ export class ProspectForm implements OnInit {
     });
   }
 
+  loadModeContacts(): void {
+    this.prospectService.getModeContacts().subscribe({
+      next: (data) => this.modeContacts.set(data),
+    });
+  }
+
+  loadClientsCerm(): void {
+    this.clientCermService.getAll().subscribe({
+      next: (data) => this.clientsCerm.set(data),
+    });
+  }
+
   loadProspect(id: string): void {
+    console.log('[ProspectForm] Chargement des données du prospect:', id);
     this.isLoading.set(true);
     this.prospectService.getById(id).subscribe({
       next: (prospect) => {
+        console.log('[ProspectForm] Données chargées avec succès:', prospect);
         this.nom.set(prospect.nom || '');
         this.prenom.set(prospect.prenom || '');
         this.email.set(prospect.email || '');
         this.telephone.set(prospect.telephone || '');
         this.source.set(prospect.source || '');
         this.notes.set(prospect.notes || '');
-        this.idDomaineActivitee.set(prospect.idDomaineActivitee);
+        this.idDomaineActivite.set(prospect.idDomaineActivite);
+        this.clientCermId.set(prospect.clientCermId || null);
+        this.codeCRM.set(prospect.codeCRM || '');
         this.isLoading.set(false);
       },
-      error: () => {
+      error: (err) => {
+        console.error('[ProspectForm] Erreur lors du chargement du prospect:', err);
         this.isLoading.set(false);
         this.errorMessage.set('Impossible de charger le prospect.');
       },
@@ -74,8 +124,8 @@ export class ProspectForm implements OnInit {
   onSubmit(): void {
     this.errorMessage.set('');
 
-    // Validations
-    if (!this.nom() || !this.prenom() || !this.email() || !this.telephone() || !this.idDomaineActivitee()) {
+    if (!this.nom() || !this.prenom() || !this.email() || !this.telephone() || !this.idDomaineActivite()) {
+      console.warn('[ProspectForm] Validation échouée: champs obligatoires manquants');
       this.errorMessage.set('Veuillez remplir tous les champs obligatoires.');
       return;
     }
@@ -123,18 +173,25 @@ export class ProspectForm implements OnInit {
         prenom: this.prenom(),
         email: this.email(),
         telephone: this.telephone(),
-        source: this.source(),
+        source: this.source() || undefined,
         notes: this.notes(),
-        idDomaineActivitee: this.idDomaineActivitee(),
+        idDomaineActivite: this.idDomaineActivite(),
+        clientCermId: this.clientCermId() || undefined,
+        codeCRM: this.codeCRM() || undefined,
       };
 
+      console.log('[ProspectForm] Envoi de la mise à jour:', dto);
       this.prospectService.update(this.prospectId()!, dto).subscribe({
-        next: () => {
+        next: (res) => {
+          console.log('[ProspectForm] Mise à jour réussie:', res);
           this.isSaving.set(false);
+          this.notificationService.success('Prospect mis à jour avec succès.');
           this.router.navigate(['/prospects']);
         },
         error: (err) => {
+          console.error('[ProspectForm] Erreur lors de la mise à jour:', err);
           this.isSaving.set(false);
+          this.notificationService.error('Erreur lors de la mise à jour du prospect.');
           this.errorMessage.set(err?.error || 'Erreur lors de la mise à jour.');
         },
       });
@@ -144,18 +201,25 @@ export class ProspectForm implements OnInit {
         prenom: this.prenom(),
         email: this.email(),
         telephone: this.telephone(),
-        source: this.source(),
+        source: this.source() || undefined,
         notes: this.notes(),
-        idDomaineActivitee: this.idDomaineActivitee(),
+        idDomaineActivite: this.idDomaineActivite(),
+        clientCermId: this.clientCermId() || undefined,
+        codeCRM: this.codeCRM() || undefined,
       };
 
+      console.log('[ProspectForm] Envoi de la création:', request);
       this.prospectService.create(request).subscribe({
-        next: () => {
+        next: (res) => {
+          console.log('[ProspectForm] Création réussie:', res);
           this.isSaving.set(false);
+          this.notificationService.success('Prospect créé avec succès.');
           this.router.navigate(['/prospects']);
         },
         error: (err) => {
+          console.error('[ProspectForm] Erreur lors de la création:', err);
           this.isSaving.set(false);
+          this.notificationService.error('Erreur lors de la création du prospect.');
           this.errorMessage.set(err?.error || 'Erreur lors de la création.');
         },
       });

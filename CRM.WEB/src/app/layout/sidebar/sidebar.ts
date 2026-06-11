@@ -17,20 +17,35 @@ interface MenuItem {
   styleUrl: './sidebar.css',
 })
 export class Sidebar {
-  constructor(private authService: AuthService) { }
+  constructor(private authService: AuthService) {}
+
+  logout() {
+    this.authService.logout();
+  }
 
   private allMenuItems: MenuItem[] = [
-    { icon: 'dashboard', label: 'Dashboard', route: '/dashboard', roles: ['Commercial'] },
-    { icon: 'dashboard', label: 'Dashboard', route: '/dashboard-client', roles: ['Client_User'] },
-    { icon: 'receipt', label: 'Consulter mes commandes', route: '/commande-client', roles: ['Client_User'] },
-    { icon: 'report_problem', label: 'Mes Réclamations', route: '/mes-reclamations', roles: ['Client_User'] },
-    { icon: 'dashboard', label: 'Dashboard', route: '/dashboard-admin', roles: ['Admin'] },
-    { icon: 'people', label: 'Prospects', route: '/prospects', roles: ['Commercial'] },
-    { icon: 'group', label: 'Clients', route: '/clients', roles: ['Commercial'] },
-    { icon: 'badge', label: 'Commerciaux', route: '/employees', roles: ['Admin'] },
-    { icon: 'report_problem', label: 'Réclamations', route: '/reclamations', roles: ['Commercial'] },
-    { icon: 'bar_chart', label: 'Reports', route: '/reports', roles: ['Admin', 'Commercial'] },
-    { icon: 'settings', label: 'Settings', route: '/settings', roles: ['Admin'] },
+    {
+      icon: 'dashboard',
+      label: 'Tableau de bord',
+      route: '/dashboard',
+      roles: ['ADMIN', 'COMMERCIAL', 'MANAGER'],
+    },
+    { icon: 'people', label: 'Prospects', route: '/prospects', roles: ['ADMIN', 'COMMERCIAL', 'MANAGER'] },
+    { icon: 'business', label: 'Liste des Clients', route: '/clients', roles: ['ADMIN', 'COMMERCIAL', 'MANAGER'] },
+    { icon: 'report_problem', label: 'Réclamations', route: '/reclamations', roles: ['ADMIN', 'COMMERCIAL', 'MANAGER'] },
+    {
+      icon: 'history',
+      label: 'Historique commercial',
+      route: '/historique-commercial',
+      roles: ['MANAGER', 'ADMIN'],
+    },
+    {
+      icon: 'insert_chart_outlined',
+      label: 'Power BI',
+      route: '/power-bi',
+      roles: ['MANAGER', 'ADMIN'],
+    },
+    { icon: 'article', label: 'Utilisateurs & droits', route: '/utilisateur', roles: ['ADMIN'] },
   ];
 
   menuItems = computed(() => {
@@ -40,4 +55,3 @@ export class Sidebar {
     });
   });
 }
-

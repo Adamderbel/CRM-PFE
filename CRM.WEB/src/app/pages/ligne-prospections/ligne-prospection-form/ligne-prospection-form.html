@@ -1,103 +1,197 @@
-<div class="ligne-prospection-form-page">
-  <div class="page-header">
-    <a [routerLink]="prospectionId() ? ['/ligne-prospections', prospectionId()] : ['/prospections']" class="back-link">
-      <span class="material-icons">arrow_back</span>
-      Retour à la liste
+<div class="page-wrapper">
+  <!-- Back Link -->
+  <div class="mb-16">
+    <a routerLink="/ligne-prospections" class="btn btn-ghost" style="padding-left: 0;">
+      <span class="material-icons md">arrow_back</span>
+      Retour aux lignes de prospection
     </a>
-    <h1 class="page-title">{{ isEditMode() ? 'Modifier la ligne' : 'Nouvelle ligne de prospection' }}</h1>
-    <p class="page-subtitle">Renseignez les détails pour ce prospect</p>
   </div>
 
+  <!-- Page Header -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">{{ isEditMode() ? 'Modifier la Ligne' : 'Nouvelle Ligne de Prospection' }}</h1>
+      <p class="page-subtitle">
+        {{ isEditMode() ? 'Modifiez les informations de la ligne' : 'Remplissez les informations pour créer une nouvelle ligne' }}
+      </p>
+    </div>
+  </div>
+
+  <!-- Alerts -->
   @if (errorMessage()) {
-    <div class="alert alert-error">
+    <div class="alert alert-error mb-24">
       <span class="material-icons">error</span>
       {{ errorMessage() }}
     </div>
   }
 
-  @if (successMessage()) {
-    <div class="alert alert-success">
-      <span class="material-icons">check_circle</span>
-      {{ successMessage() }}
-    </div>
-  }
-
+  <!-- Loading State -->
   @if (isLoading()) {
     <div class="loading-container">
       <div class="spinner"></div>
-      <p>Chargement des données...</p>
+      <p>Chargement...</p>
     </div>
   }
 
+  <!-- Form -->
   @if (!isLoading()) {
-    <form class="form-card" (submit)="$event.preventDefault(); save()" #form="ngForm">
-
-      <div class="form-section">
-        <h2 class="form-section-title">
-          <span class="material-icons">info</span>
-          Informations de base
-        </h2>
-        <div class="form-grid">
-          <div class="form-group full-width">
-            <label for="designation">Désignation</label>
-            <input type="text" id="designation" name="designation" [ngModel]="designation()" (ngModelChange)="designation.set($event)" placeholder="Entrez une désignation..." />
-          </div>
-
-          <div class="form-group">
-            <label for="date">Date <span class="required">*</span></label>
-            <input type="datetime-local" id="date" name="date" [ngModel]="date()" (ngModelChange)="date.set($event)" required />
-          </div>
-
-          <div class="form-group">
-            <label for="familleProduitId">Famille Produit <span class="required">*</span></label>
-            <select id="familleProduitId" name="familleProduitId" [ngModel]="familleProduitId()" (ngModelChange)="familleProduitId.set($event)" required>
-              <option value="" disabled selected>Sélectionner une famille</option>
-              @for (f of familleProduits(); track f.id) {
-                <option [value]="f.id">{{ f.libelle || f.nom || f.id }}</option>
-              }
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label for="supportProduitId">Support Produit</label>
-            <select id="supportProduitId" name="supportProduitId" [ngModel]="supportProduitId()" (ngModelChange)="supportProduitId.set($event)">
-              <option value="">Sélectionner un support</option>
-              @for (s of supportProduits(); track s.id) {
-                <option [value]="s.id">{{ s.libelle || s.nom || s.id }}</option>
-              }
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label for="societeeId">Société</label>
-            <select id="societeeId" name="societeeId" [ngModel]="societeeId()" (ngModelChange)="societeeId.set($event)">
-              <option value="">Sélectionner une société</option>
-              @for (soc of societes(); track soc.id) {
-                <option [value]="soc.id">{{ soc.nom || soc.libelle || soc.id }}</option>
-              }
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label for="statutId">Statut</label>
-            <select id="statutId" name="statutId" [ngModel]="statutId()" (ngModelChange)="statutId.set($event)">
-              <option value="">Sélectionner un statut</option>
-              @for (st of statuts(); track st.id) {
-                <option [value]="st.id">{{ st.libelle || st.nom || st.id }}</option>
-              }
-            </select>
+    <form (ngSubmit)="save()">
+      <!-- Section 1: Informations générales -->
+      <div class="card mb-24">
+        <div class="card-header">
+          <h2 class="card-title">
+            <span class="material-icons md" style="color: var(--primary-500);">info</span>
+            Informations générales
+          </h2>
+        </div>
+        <div class="card-body">
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+            <div class="form-group">
+              <label class="form-label" for="designation">Désignation</label>
+              <input id="designation" name="designation" type="text" class="form-control" placeholder="Désignation"
+                     [ngModel]="designation()" (ngModelChange)="designation.set($event)" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="date">Date</label>
+              <input id="date" name="date" type="datetime-local" class="form-control"
+                     [ngModel]="date()" (ngModelChange)="date.set($event)" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="familleProduit">Famille de produit <span style="color: var(--error);">*</span></label>
+              <select id="familleProduit" name="familleProduit" class="form-control form-select" [ngModel]="familleProduitId()" (ngModelChange)="familleProduitId.set(+$event)" required>
+                <option [value]="0" disabled>Sélectionnez</option>
+                @for (fp of familleProduits(); track fp.id) {
+                  <option [value]="fp.id">{{ fp.libelle }}</option>
+                }
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="supportProduit">Support produit</label>
+              <select id="supportProduit" name="supportProduit" class="form-control form-select" [ngModel]="supportProduitId()" (ngModelChange)="supportProduitId.set(+$event)">
+                <option [value]="null">Aucun</option>
+                @for (sp of supportProduits(); track sp.id) {
+                  <option [value]="sp.id">{{ sp.libelle }}</option>
+                }
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="societe">Société</label>
+              <select id="societe" name="societe" class="form-control form-select" [ngModel]="societeId()" (ngModelChange)="societeId.set(+$event)">
+                <option [value]="null">Aucune</option>
+                @for (s of societes(); track s.id) {
+                  <option [value]="s.id">{{ s.nom }}</option>
+                }
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="statut">Statut</label>
+              <select id="statut" name="statut" class="form-control form-select" [ngModel]="statutId()" (ngModelChange)="statutId.set(+$event)">
+                <option [value]="null">Sélectionnez</option>
+                @for (st of statuts(); track st.id) {
+                  <option [value]="st.id">{{ st.libelle }}</option>
+                }
+              </select>
+            </div>
           </div>
         </div>
       </div>
 
-      <div class="form-actions">
-        <a [routerLink]="prospectionId() ? ['/ligne-prospections', prospectionId()] : ['/prospections']" class="btn-outline">Annuler</a>
-        <button type="submit" class="btn-primary" [disabled]="isSaving() || !form.valid">
+      <!-- Section 2: Offre et commande -->
+      <div class="card mb-24">
+        <div class="card-header">
+          <h2 class="card-title">
+            <span class="material-icons md" style="color: var(--primary-500);">description</span>
+            Offre et commande
+          </h2>
+        </div>
+        <div class="card-body">
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+            <div class="form-group">
+              <label class="form-label" for="dateDemandeOffre">Date demande offre</label>
+              <input id="dateDemandeOffre" name="dateDemandeOffre" type="date" class="form-control"
+                     [ngModel]="dateDemandeOffre()" (ngModelChange)="dateDemandeOffre.set($event)" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="numeroDevis">N° Devis</label>
+              <input id="numeroDevis" name="numeroDevis" type="text" class="form-control" placeholder="N° Devis"
+                     [ngModel]="numeroDevis()" (ngModelChange)="numeroDevis.set($event)" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="dateDevis">Date devis</label>
+              <input id="dateDevis" name="dateDevis" type="date" class="form-control"
+                     [ngModel]="dateDevis()" (ngModelChange)="dateDevis.set($event)" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="numeroCommande">N° Commande</label>
+              <input id="numeroCommande" name="numeroCommande" type="text" class="form-control" placeholder="N° Commande"
+                     [ngModel]="numeroCommande()" (ngModelChange)="numeroCommande.set($event)" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="dateCommande">Date commande</label>
+              <input id="dateCommande" name="dateCommande" type="date" class="form-control"
+                     [ngModel]="dateCommande()" (ngModelChange)="dateCommande.set($event)" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="dateEnvoieBat">Date envoi bat</label>
+              <input id="dateEnvoieBat" name="dateEnvoieBat" type="date" class="form-control"
+                     [ngModel]="dateEnvoieBat()" (ngModelChange)="dateEnvoieBat.set($event)" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="causeEchec">Cause d'échec</label>
+              <select id="causeEchec" name="causeEchec" class="form-control form-select" [ngModel]="causeEchecId()" (ngModelChange)="causeEchecId.set(+$event)">
+                <option [value]="null">Aucune</option>
+                @for (ce of causeEchecs(); track ce.id) {
+                  <option [value]="ce.id">{{ ce.libelle }}</option>
+                }
+              </select>
+            </div>
+          </div>
+          <div style="display: flex; gap: 24px; margin-top: 20px;">
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+              <input type="checkbox" [ngModel]="batEnvoyee()" (ngModelChange)="batEnvoyee.set($event)" name="batEnvoyee" style="width: 18px; height: 18px; accent-color: var(--primary-500);" />
+              <span>BAT envoyé</span>
+            </label>
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+              <input type="checkbox" [ngModel]="concretisee()" (ngModelChange)="concretisee.set($event)" name="concretisee" style="width: 18px; height: 18px; accent-color: var(--primary-500);" />
+              <span>Concrétisée</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 3: Produit et référence -->
+      <div class="card mb-24">
+        <div class="card-header">
+          <h2 class="card-title">
+            <span class="material-icons md" style="color: var(--primary-500);">inventory_2</span>
+            Produit et référence
+          </h2>
+        </div>
+        <div class="card-body">
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+            <div class="form-group">
+              <label class="form-label" for="artid">Référence Produit CERM (Artid)</label>
+              <input id="artid" name="artid" type="text" class="form-control" placeholder="Référence produit"
+                     [ngModel]="artid()" (ngModelChange)="artid.set($event)" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="codeCRM">Code CRM</label>
+              <input id="codeCRM" name="codeCRM" type="text" class="form-control" placeholder="Généré automatiquement"
+                     [ngModel]="codeCRM()" (ngModelChange)="codeCRM.set($event)" readonly />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div style="display: flex; justify-content: flex-end; gap: 12px;">
+        <button type="button" class="btn btn-secondary" (click)="router.navigate(['/ligne-prospections'])">Annuler</button>
+        <button type="submit" class="btn btn-primary" [disabled]="isSaving()">
           @if (isSaving()) {
-            <div class="spinner-sm"></div>
+            <span class="spinner" style="width: 20px; height: 20px; border-width: 2px;"></span>
             Enregistrement...
           } @else {
-            <span class="material-icons">save</span>
+            <span class="material-icons md">save</span>
             {{ isEditMode() ? 'Mettre à jour' : 'Créer la ligne' }}
           }
         </button>

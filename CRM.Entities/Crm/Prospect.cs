@@ -1,10 +1,7 @@
-﻿using CRM.Entities.Common;
+using CRM.Entities.Common;
+using CRM.Entities.Security;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CRM.Entities.Crm
 {
@@ -31,9 +28,14 @@ namespace CRM.Entities.Crm
 
         [ForeignKey("idDomaineActivitee")]
         public DomaineActivites? DomaineActivite { get; set; }
+
         public string? CodeCRM { get; set; }
 
+        public string? ClientCermId { get; set; }
 
+        public Guid? UserId { get; set; }
 
+        [ForeignKey("UserId")]
+        public SecUser? User { get; set; }
     }
 }

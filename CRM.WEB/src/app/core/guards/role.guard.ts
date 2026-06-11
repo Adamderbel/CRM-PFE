@@ -20,16 +20,16 @@ export const roleGuard: CanActivateFn = (route, state) => {
   // Prevent infinite loop
   const targetUrl = state.url;
 
-  if (authService.hasRole('Admin') && targetUrl !== '/dashboard-admin') {
-    router.navigate(['/dashboard-admin']);
-    return false;
-  } else if (authService.hasRole('Commercial') && targetUrl !== '/dashboard') {
+  if (authService.hasRole('ADMIN') && targetUrl !== '/dashboard') {
     router.navigate(['/dashboard']);
     return false;
-  } else if (authService.hasRole('Client_User') && targetUrl !== '/dashboard-client') {
-    router.navigate(['/dashboard-client']);
+  } else if (authService.hasRole('MANAGER') && targetUrl !== '/dashboard') {
+    router.navigate(['/dashboard']);
     return false;
-  } else if (targetUrl !== '/login' && !authService.hasRole('Commercial') && !authService.hasRole('Client_User') && !authService.hasRole('Admin')) {
+  } else if (authService.hasRole('COMMERCIAL') && targetUrl !== '/dashboard') {
+    router.navigate(['/dashboard']);
+    return false;
+  } else if (targetUrl !== '/login' && !authService.hasRole('COMMERCIAL') && !authService.hasRole('MANAGER') && !authService.hasRole('ADMIN')) {
     router.navigate(['/login']);
     return false;
   }

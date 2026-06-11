@@ -9,7 +9,7 @@ namespace CRM.Services.LigneProspections
 {
     public interface ILigneProspectionService
     {
-        Task<IEnumerable<LigneProspection>> GetAllAsync();
+        Task<IEnumerable<LigneProspection>> GetAllAsync(Guid? userId = null, string? role = null);
         Task<LigneProspection?> GetByIdAsync(Guid id);
         Task CreateAsync(LigneProspection ligneProspection);
         Task UpdateAsync(LigneProspection ligneProspection);

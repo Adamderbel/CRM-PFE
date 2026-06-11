@@ -1,22 +1,27 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
-import { ActionProspection, ActionProspectionCreateDto } from '../models/action-prospection.model';
+import { ActionsProspection, TypeActionProspection } from '../models/action-prospection.model';
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable({ providedIn: 'root' })
 export class ActionProspectionService {
-  private apiUrl = `${environment.apiUrl}/ActionsProspection`;
-
   constructor(private http: HttpClient) {}
 
-  getByLigneProspectionId(ligneId: string): Observable<ActionProspection[]> {
-    return this.http.get<ActionProspection[]>(`${this.apiUrl}/ligne/${ligneId}`);
+  getByProspectionId(prospectionId: string): Observable<ActionsProspection[]> {
+    return this.http.get<ActionsProspection[]>(
+      `${environment.apiUrl}/ActionsProspection/prospection/${prospectionId}`
+    );
   }
 
-  create(dto: ActionProspectionCreateDto): Observable<void> {
-    return this.http.post<void>(this.apiUrl, dto);
+  create(action: Omit<ActionsProspection, 'id' | 'typeAction'>): Observable<void> {
+    return this.http
+      .post(`${environment.apiUrl}/ActionsProspection`, action, { responseType: 'text' })
+      .pipe(map(() => undefined));
+  }
+
+  getTypesActions(): Observable<TypeActionProspection[]> {
+    return this.http.get<TypeActionProspection[]>(`${environment.apiUrl}/TypeActionProspection`);
   }
 }

@@ -1,24 +1,31 @@
-<div class="prospect-form-page">
-  <div class="page-header">
-    <a routerLink="/prospects" class="back-link">
-      <span class="material-icons">arrow_back</span>
+<div class="page-wrapper">
+  <!-- Back Link -->
+  <div class="mb-16">
+    <a routerLink="/prospects" class="btn btn-ghost" style="padding-left: 0;">
+      <span class="material-icons md">arrow_back</span>
       Retour aux prospects
     </a>
-    <h1 class="page-title">{{ isEditMode() ? 'Modifier le Prospect' : 'Nouveau Prospect' }}</h1>
-    <p class="page-subtitle">
-      {{ isEditMode() ? 'Modifiez les informations du prospect' : 'Remplissez les informations pour créer un nouveau prospect' }}
-    </p>
   </div>
 
-  <!-- Error message -->
+  <!-- Page Header -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">{{ isEditMode() ? 'Modifier le Prospect' : 'Nouveau Prospect' }}</h1>
+      <p class="page-subtitle">
+        {{ isEditMode() ? 'Modifiez les informations du prospect' : 'Remplissez les informations pour créer un nouveau prospect' }}
+      </p>
+    </div>
+  </div>
+
+  <!-- Alerts -->
   @if (errorMessage()) {
-    <div class="alert alert-error">
+    <div class="alert alert-error mb-24">
       <span class="material-icons">error</span>
       {{ errorMessage() }}
     </div>
   }
 
-  <!-- Loading -->
+  <!-- Loading State -->
   @if (isLoading()) {
     <div class="loading-container">
       <div class="spinner"></div>
@@ -26,133 +33,142 @@
     </div>
   }
 
+  <!-- Form -->
   @if (!isLoading()) {
-    <form class="form-card" (ngSubmit)="onSubmit()">
-      <div class="form-section">
-        <h2 class="form-section-title">
-          <span class="material-icons">person</span>
-          Informations personnelles
-        </h2>
-        <div class="form-grid">
-          <div class="form-group">
-            <label for="nom">Societé <span class="required">*</span></label>
-            <input
-              id="nom"
-              type="text"
-              placeholder="Entrez le nom de la societé "
-              [ngModel]="nom()"
-              (ngModelChange)="nom.set($event)"
-              name="nom"
-              maxlength="100"
-              required
-            />
-          </div>
-          <div class="form-group">
-            <label for="prenom">Nom et Prenom du contacte  <span class="required">*</span></label>
-            <input
-              id="prenom"
-              type="text"
-              placeholder="Entrez le nom et prenom du contact"
-              [ngModel]="prenom()"
-              (ngModelChange)="prenom.set($event)"
-              name="prenom"
-              maxlength="100"
-              required
-            />
+    <form (ngSubmit)="onSubmit()">
+      <!-- Section 1: Informations personnelles -->
+      <div class="card mb-24">
+        <div class="card-header">
+          <h2 class="card-title">
+            <span class="material-icons md" style="color: var(--primary-500);">person</span>
+            Informations personnelles
+          </h2>
+        </div>
+        <div class="card-body">
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 24px;">
+            <div class="form-group">
+              <label class="form-label" for="nom">Nom <span style="color: var(--error);">*</span></label>
+              <div class="form-control-wrapper">
+                <span class="material-icons">badge</span>
+                <input id="nom" type="text" class="form-control" placeholder="Entrez le nom"
+                       [ngModel]="nom()" (ngModelChange)="nom.set($event)" name="nom" maxlength="100" required />
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="prenom">Prénom <span style="color: var(--error);">*</span></label>
+              <div class="form-control-wrapper">
+                <span class="material-icons">person</span>
+                <input id="prenom" type="text" class="form-control" placeholder="Entrez le prénom"
+                       [ngModel]="prenom()" (ngModelChange)="prenom.set($event)" name="prenom" maxlength="100" required />
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      <div class="form-section">
-        <h2 class="form-section-title">
-          <span class="material-icons">contact_mail</span>
-          Contact
-        </h2>
-        <div class="form-grid">
-          <div class="form-group">
-            <label for="email">Email <span class="required">*</span></label>
-            <input
-              id="email"
-              type="email"
-              placeholder="exemple@email.com"
-              [ngModel]="email()"
-              (ngModelChange)="email.set($event)"
-              name="email"
-              maxlength="150"
-              required
-            />
-          </div>
-          <div class="form-group">
-            <label for="telephone">Téléphone <span class="required">*</span></label>
-            <input
-              id="telephone"
-              type="tel"
-              placeholder="+212 6XX XXX XXX"
-              [ngModel]="telephone()"
-              (ngModelChange)="telephone.set($event)"
-              name="telephone"
-              maxlength="20"
-              required
-            />
+      <!-- Section 2: Contact -->
+      <div class="card mb-24">
+        <div class="card-header">
+          <h2 class="card-title">
+            <span class="material-icons md" style="color: var(--primary-500);">contact_mail</span>
+            Contact
+          </h2>
+        </div>
+        <div class="card-body">
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 24px;">
+            <div class="form-group">
+              <label class="form-label" for="email">Email <span style="color: var(--error);">*</span></label>
+              <div class="form-control-wrapper">
+                <span class="material-icons">email</span>
+                <input id="email" type="email" class="form-control" placeholder="exemple@email.com"
+                       [ngModel]="email()" (ngModelChange)="email.set($event)" name="email" maxlength="150" required />
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="telephone">Téléphone <span style="color: var(--error);">*</span></label>
+              <div class="form-control-wrapper">
+                <span class="material-icons">phone</span>
+                <input id="telephone" type="tel" class="form-control" placeholder="+212 6XX XXX XXX"
+                       [ngModel]="telephone()" (ngModelChange)="telephone.set($event)" name="telephone" maxlength="20" required />
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      <div class="form-section">
-        <h2 class="form-section-title">
-          <span class="material-icons">business</span>
-          Détails
-        </h2>
-        <div class="form-grid">
-          <div class="form-group">
-            <label for="source">Source</label>
-            <input
-              id="source"
-              type="text"
-              placeholder="Ex: Site web, LinkedIn, Salon..."
-              [ngModel]="source()"
-              (ngModelChange)="source.set($event)"
-              name="source"
-            />
-          </div>
-          <div class="form-group">
-            <label for="domaine">Domaine d'activité <span class="required">*</span></label>
-            <select
-              id="domaine"
-              [ngModel]="idDomaineActivitee()"
-              (ngModelChange)="idDomaineActivitee.set(+$event)"
-              name="idDomaineActivitee"
-              required
-            >
-              <option [value]="0" disabled>Sélectionnez un domaine</option>
-              @for (domaine of domaines(); track domaine.id) {
-                <option [value]="domaine.id">{{ domaine.activitee }}</option>
-              }
-            </select>
-          </div>
+      <!-- Section 3: Détails -->
+      <div class="card mb-24">
+        <div class="card-header">
+          <h2 class="card-title">
+            <span class="material-icons md" style="color: var(--primary-500);">business</span>
+            Détails
+          </h2>
         </div>
-        <div class="form-group full-width">
-          <label for="notes">Notes</label>
-          <textarea
-            id="notes"
-            rows="4"
-            maxlength="500"
-            placeholder="Ajoutez des notes sur ce prospect..."
-            [ngModel]="notes()"
-            (ngModelChange)="notes.set($event)"
-            name="notes"
-          ></textarea>
+        <div class="card-body">
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 24px;">
+            <div class="form-group">
+              <label class="form-label" for="source">Source</label>
+              <div class="form-control-wrapper">
+                <span class="material-icons">source</span>
+                <input id="source" type="text" class="form-control" placeholder="Ex: Téléphone, Salon..."
+                       [ngModel]="source()" (ngModelChange)="source.set($event)" name="source" />
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="domaine">Domaine d'activité <span style="color: var(--error);">*</span></label>
+              <div class="form-control-wrapper">
+                <span class="material-icons">category</span>
+                <select id="domaine" class="form-control form-select"
+                        [ngModel]="idDomaineActivite()" (ngModelChange)="idDomaineActivite.set(+$event)" name="idDomaineActivite" required>
+                  <option [value]="0" disabled>Sélectionnez un domaine</option>
+                  @for (domaine of domaines(); track domaine.id) {
+                    <option [value]="domaine.id">{{ domaine.activitee }}</option>
+                  }
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="clientCerm">Client CERM</label>
+              <div class="form-control-wrapper">
+                <span class="material-icons">handshake</span>
+                <select id="clientCerm" class="form-control form-select"
+                        [ngModel]="clientCermId()" (ngModelChange)="clientCermId.set(+$event)" name="clientCermId">
+                  <option [value]="null" disabled>Sélectionnez un client</option>
+                  @for (client of clientsCerm(); track client.id) {
+                    <option [value]="client.id">{{ client.nom }}</option>
+                  }
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="codeCRM">Code CRM</label>
+              <div class="form-control-wrapper">
+                <span class="material-icons">qr_code</span>
+                <input id="codeCRM" type="text" class="form-control" [placeholder]="isEditMode() ? '' : 'Chargement du code...'"
+                       [ngModel]="codeCRM()" (ngModelChange)="codeCRM.set($event)" name="codeCRM" readonly />
+              </div>
+            </div>
+          </div>
+          <div class="form-group" style="margin-top: 24px;">
+            <label class="form-label" for="notes">Notes complémentaires</label>
+            <div class="form-control-wrapper" style="align-items: flex-start;">
+              <span class="material-icons" style="top: 14px;">description</span>
+              <textarea id="notes" rows="4" maxlength="500" class="form-control" placeholder="Ajoutez des notes détaillées sur ce prospect..."
+                        [ngModel]="notes()" (ngModelChange)="notes.set($event)" name="notes"></textarea>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div class="form-actions">
-        <a routerLink="/prospects" class="btn-outline">Annuler</a>
-        <button type="submit" class="btn-primary" [disabled]="isSaving()">
+      <!-- Actions -->
+      <div style="display: flex; justify-content: flex-end; gap: 12px;">
+        <a routerLink="/prospects" class="btn btn-secondary">Annuler</a>
+        <button type="submit" class="btn btn-primary" [disabled]="isSaving()">
           @if (isSaving()) {
-            <div class="spinner-sm"></div>
+            <span class="spinner" style="width: 20px; height: 20px; border-width: 2px;"></span>
             Enregistrement...
           } @else {
-            <span class="material-icons">save</span>
+            <span class="material-icons md">save</span>
             {{ isEditMode() ? 'Mettre à jour' : 'Créer le prospect' }}
           }
         </button>

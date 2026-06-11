@@ -6,13 +6,17 @@ using CRM.Services.notification;
 using CRM.Services.produitecerms;
 using CRM.Services.reclamations;
 using CRM.WebAPI.DTOs;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 
 namespace CRM.WebAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize(Roles = "COMMERCIAL,MANAGER,ADMIN")]
     public class ReclamationController : ControllerBase
     {
         private readonly IReclamationService _reclamationService;
@@ -38,7 +42,8 @@ namespace CRM.WebAPI.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {  
-                var reclamations = await _reclamationService.GetAllReclamations();
+                var principal = await ResolveCurrentSecUserAsync(User);
+                var reclamations = await _reclamationService.GetAllReclamations(principal?.Id, GetCurrentRole());
                 foreach (var item in reclamations)
                 {
                     item.Client = await _clientCermService.GetByIdAsync(item.ClientId);
@@ -84,7 +89,8 @@ namespace CRM.WebAPI.Controllers
         {
             try
             {
-            var all = await _reclamationService.GetAllReclamations();
+            var principal = await ResolveCurrentSecUserAsync(User);
+            var all = await _reclamationService.GetAllReclamations(principal?.Id, GetCurrentRole());
             var filtered = all.Where(r => r.ClientId == clientId).ToList();
 
             foreach (var item in filtered)
@@ -134,7 +140,10 @@ namespace CRM.WebAPI.Controllers
         {
             try
             {
-                
+                var principal = await ResolveCurrentSecUserAsync(User);
+                if (principal == null)
+                    return Unauthorized();
+
                 var client = await _clientCermService.GetByIdAsync(reclamation.ClientId);
                 if (client == null)
                 {
@@ -159,6 +168,7 @@ namespace CRM.WebAPI.Controllers
                     NumeroReference = reclamation.NumeroReference,
                     ClientId = reclamation.ClientId,
                     ProduitRef = reclamation.ProduitId,
+                    CommercialId = principal.Id,
                     CreatedAt = DateTime.UtcNow,
                     UpdatedAt = DateTime.UtcNow
                 };
@@ -215,6 +225,11 @@ namespace CRM.WebAPI.Controllers
                 {
                     return NotFound(new { error = "Reclamation not found." });
                 }
+                var principal = await ResolveCurrentSecUserAsync(User);
+                if (IsCommercial() && existingReclamation.CommercialId != principal?.Id)
+                {
+                    return NotFound(new { error = "Reclamation not found." });
+                }
 
                 existingReclamation.AnalyseReclamation = reclamation.AnalyseReclamation;
                 existingReclamation.Justifiee = reclamation.Justifiee;
@@ -248,6 +263,28 @@ namespace CRM.WebAPI.Controllers
                 var innerMessage = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
                 return StatusCode(500, new { error = ex.Message, details = innerMessage, stack = ex.StackTrace });
             }
+        }
+
+        private string? GetCurrentRole()
+            => User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role || c.Type.EndsWith("/role", StringComparison.OrdinalIgnoreCase))?.Value;
+
+        private bool IsCommercial()
+            => string.Equals(GetCurrentRole(), "COMMERCIAL", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(GetCurrentRole(), "Commercial", StringComparison.OrdinalIgnoreCase);
+
+        private async Task<SecUser?> ResolveCurrentSecUserAsync(ClaimsPrincipal claimsPrincipal)
+        {
+            var user = await _userManager.GetUserAsync(claimsPrincipal);
+            if (user != null)
+                return user;
+
+            var idStr = claimsPrincipal.FindFirstValue(ClaimTypes.NameIdentifier)
+                ?? claimsPrincipal.FindFirstValue(JwtRegisteredClaimNames.Sub)
+                ?? claimsPrincipal.FindFirstValue("sub");
+
+            return Guid.TryParse(idStr, out var id)
+                ? await _userManager.FindByIdAsync(id.ToString())
+                : null;
         }
     }
 }

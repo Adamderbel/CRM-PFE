@@ -27,8 +27,13 @@ namespace CRM.Services.prospections
             _prospectionRepositoryDapper = prospectionRepositoryDapper;
         }
     
-        public async Task<IEnumerable<Prospection>> GetAllAsync()
+        public async Task<IEnumerable<Prospection>> GetAllAsync(Guid? userId = null, string? role = null)
         {
+            if (IsCommercial(role) && userId.HasValue)
+            {
+                return await _prospectionRepository.FindAsync(p => p.UserId == userId.Value);
+            }
+
             return await _prospectionRepository.GetAllAsync();
 
         }
@@ -46,6 +51,11 @@ namespace CRM.Services.prospections
         }
         public async Task CreateAsync(Prospection prospection)
         {
+            if (prospection.Id == Guid.Empty)
+            {
+                prospection.Id = Guid.NewGuid();
+            }
+
             await _prospectionRepository.InsertAsync(prospection);
             await _context.SaveChangesAsync();
         }
@@ -59,6 +69,10 @@ namespace CRM.Services.prospections
             await _prospectionRepository.UpdateAsync(prospection);
             await _context.SaveChangesAsync();
         }
+
+        private static bool IsCommercial(string? role)
+            => string.Equals(role, "COMMERCIAL", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(role, "Commercial", StringComparison.OrdinalIgnoreCase);
     } 
 }
 

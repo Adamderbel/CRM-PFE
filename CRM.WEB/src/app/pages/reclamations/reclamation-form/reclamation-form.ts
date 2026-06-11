@@ -1,18 +1,21 @@
 import { Component, OnInit, signal, effect } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { ReclamationService } from '../../../core/services/reclamation.service';
+import { NotificationService } from '../../../core/services/notification.service';
 import { ClientCermService } from '../../../core/services/client-cerm.service';
 import { ProduitCermService } from '../../../core/services/produit-cerm.service';
+import { ModeContactService } from '../../../core/services/mode-contact.service';
 import { ReclamationCreateDto } from '../../../core/models/reclamation.model';
 import { ClientCerm } from '../../../core/models/client-cerm.model';
 import { ProduitCerm } from '../../../core/models/produit-cerm.model';
+import { ModeContact } from '../../../core/models/mode-contact.model';
 import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-reclamation-form',
   standalone: true,
-  imports: [FormsModule, RouterLink, CommonModule],
+  imports: [FormsModule, CommonModule],
   templateUrl: './reclamation-form.html',
   styleUrl: './reclamation-form.css'
 })
@@ -25,171 +28,147 @@ export class ReclamationForm implements OnInit {
   description = signal('');
   statut = signal('Nouveau');
   priorite = signal('Normale');
-  source = signal('Email');
+  source = signal<string>('');
   numeroReference = signal('');
   clientId = signal<number | null>(null);
   produitId = signal<number | null>(null);
-  responsableId = signal<number | null>(null);
+  responsableId = signal<string | null>(null);
 
-  // Search signals (Autocomplete)
+  // Search
   clientSearchQuery = signal('');
   productSearchQuery = signal('');
 
   selectedClient = signal<ClientCerm | null>(null);
   selectedProduct = signal<ProduitCerm | null>(null);
 
-  foundClients = signal<ClientCerm[]>([]);
-  foundProducts = signal<ProduitCerm[]>([]);
+  allClients = signal<ClientCerm[]>([]);
+  allProducts = signal<ProduitCerm[]>([]);
+  modeContacts = signal<ModeContact[]>([]);
 
-  isSearchingClient = signal(false);
-  isSearchingProduct = signal(false);
+  isEditMode = signal(false);
+  reclamationId = signal<string | null>(null);
 
   constructor(
     private reclamationService: ReclamationService,
+    private notificationService: NotificationService,
     private clientService: ClientCermService,
     private produitService: ProduitCermService,
-    private route: ActivatedRoute,
-    private router: Router
-  ) {
-    // Suggest clients as user types (Only by Name)
-    effect(() => {
-      const query = this.clientSearchQuery();
-      if (query.length >= 2 && (!this.selectedClient() || query !== this.selectedClient()?.nom)) {
-        this.searchClients(query);
-      } else if (query.length < 2) {
-        this.foundClients.set([]);
-      }
-    }, { allowSignalWrites: true });
-
-    // Suggest products as user types (Only by Designation)
-    effect(() => {
-      const query = this.productSearchQuery();
-      if (query.length >= 2 && (!this.selectedProduct() || query !== this.selectedProduct()?.designation)) {
-        this.searchProducts(query);
-      } else if (query.length < 2) {
-        this.foundProducts.set([]);
-      }
-    }, { allowSignalWrites: true });
-  }
+    private modeContactService: ModeContactService,
+    private router: Router,
+    private route: ActivatedRoute
+  ) {}
 
   ngOnInit(): void {
-    const params = this.route.snapshot.queryParamMap;
-    const numeroReference = params.get('numeroReference');
-    const clientId = params.get('clientId');
-    const produitId = params.get('produitId');
+    this.loadModeContacts();
+    this.loadAllClients();
+    this.loadAllProducts();
 
-    if (numeroReference) {
-      this.numeroReference.set(numeroReference);
+    this.reclamationId.set(this.route.snapshot.paramMap.get('id'));
+    if (this.reclamationId()) {
+      this.isEditMode.set(true);
+      this.loadReclamation(this.reclamationId()!);
     }
-
-    const parsedClientId = clientId ? Number(clientId) : NaN;
-    if (!Number.isNaN(parsedClientId)) {
-      this.clientId.set(parsedClientId);
-      this.clientService.getById(parsedClientId).subscribe({
-        next: (client) => this.selectClient(client),
-        error: () => { /* formulaire reste utilisable via recherche manuelle */ }
-      });
-    }
-
-    const parsedProduitId = produitId ? Number(produitId) : NaN;
-    if (!Number.isNaN(parsedProduitId)) {
-      this.produitId.set(parsedProduitId);
-      this.produitService.getById(parsedProduitId).subscribe({
-        next: (product) => this.selectProduct(product),
-        error: () => { /* formulaire reste utilisable via recherche manuelle */ }
-      });
+    
+    // Check for clientId in query params (for new reclamation from client list)
+    const qClientId = this.route.snapshot.queryParamMap.get('clientId');
+    if (qClientId && !this.isEditMode()) {
+      const id = parseInt(qClientId, 10);
+      this.clientId.set(id);
     }
   }
 
-  searchClients(query: string): void {
-    this.isSearchingClient.set(true);
-    // Search only by name (nom)
-    this.clientService.recherche({ nom: query, limit: 10 }).subscribe({
-      next: (clients) => {
-        this.foundClients.set(clients);
-        this.isSearchingClient.set(false);
-      },
-      error: () => this.isSearchingClient.set(false)
+  loadAllClients(): void {
+    this.clientService.getAll().subscribe({
+      next: (data) => this.allClients.set(data),
+      error: (err) => console.error('Erreur chargement clients', err)
     });
   }
 
-  searchProducts(query: string): void {
-    this.isSearchingProduct.set(true);
-    // Search only by designation
-    this.produitService.getAll({ designation: query, limit: 10 }).subscribe({
-      next: (products) => {
-        this.foundProducts.set(products);
-        this.isSearchingProduct.set(false);
-      },
-      error: () => this.isSearchingProduct.set(false)
+  loadAllProducts(): void {
+    this.produitService.getAll().subscribe({
+      next: (data) => this.allProducts.set(data),
+      error: (err) => console.error('Erreur chargement produits', err)
     });
   }
 
-  selectClient(client: ClientCerm): void {
-    this.selectedClient.set(client);
-    this.clientId.set(client.refClient);
-    this.clientSearchQuery.set(client.nom || ''); // Show NAME in input
-    this.foundClients.set([]);
-  }
-
-  selectProduct(product: ProduitCerm): void {
-    this.selectedProduct.set(product);
-    this.produitId.set(product.refProduit);
-    this.productSearchQuery.set(product.designation || ''); // Show DESIGNATION in input
-    this.foundProducts.set([]);
-  }
-
-  clearClient(): void {
-    this.selectedClient.set(null);
-    this.clientId.set(null);
-    this.clientSearchQuery.set('');
-    this.foundClients.set([]);
-  }
-
-  clearProduct(): void {
-    this.selectedProduct.set(null);
-    this.produitId.set(null);
-    this.productSearchQuery.set('');
-    this.foundProducts.set([]);
-  }
-
-  save(): void {
-    this.errorMessage.set('');
-
-    if (!this.titre() || !this.clientId() || !this.produitId()) {
-      this.errorMessage.set('Veuillez remplir les champs obligatoires (*).');
-      return;
-    }
-
-    if (this.titre().length > 200) {
-      this.errorMessage.set('Le titre ne peut pas dépasser 200 caractères.');
-      return;
-    }
-
-    this.isSaving.set(true);
-
-    const payload: ReclamationCreateDto = {
-      titre: this.titre(),
-      description: this.description(),
-      statut: this.statut(),
-      priorite: this.priorite(),
-      source: this.source(),
-      numeroReference: this.numeroReference(),
-      clientId: this.clientId()!,
-      produitId: this.produitId()!,
-      responsableId: this.responsableId() || undefined
-    };
-
-    this.reclamationService.create(payload).subscribe({
-      next: () => {
-        this.isSaving.set(false);
-        this.successMessage.set('Réclamation créée avec succès.');
-        setTimeout(() => this.router.navigate(['/reclamations']), 1500);
+  loadReclamation(id: string): void {
+    this.reclamationService.getById(id).subscribe({
+      next: (res) => {
+        this.titre.set(res.titre || '');
+        this.description.set(res.description || '');
+        this.statut.set(res.statut || 'Nouveau');
+        this.priorite.set(res.priorite || 'Normale');
+        this.source.set(res.source || '');
+        this.numeroReference.set(res.numeroReference || '');
+        this.clientId.set(res.clientId);
+        this.produitId.set(res.produitId);
+        this.responsableId.set(res.responsableId || null);
       },
       error: (err) => {
-        this.isSaving.set(false);
-        this.errorMessage.set(err?.error?.error || 'Erreur lors de la création de la réclamation.');
+        this.notificationService.error('Erreur lors du chargement de la réclamation.');
+        this.router.navigate(['/reclamations']);
       }
     });
+  }
+
+  loadModeContacts(): void {
+    this.modeContactService.getAll().subscribe({
+      next: (data) => this.modeContacts.set(data),
+    });
+  }
+
+   save(): void {
+     this.errorMessage.set('');
+
+     if (!this.titre() || !this.clientId() || !this.produitId()) {
+       console.warn('[ReclamationForm] Validation échouée: champs obligatoires manquants');
+       this.errorMessage.set('Veuillez remplir les champs obligatoires (*).');
+       return;
+     }
+
+     if (this.titre().length > 200) {
+       this.errorMessage.set('Le titre ne peut pas dépasser 200 caractères.');
+       return;
+     }
+
+     this.isSaving.set(true);
+
+     const payload: any = {
+       titre: this.titre(),
+       description: this.description(),
+       statut: this.statut(),
+       priorite: this.priorite(),
+       source: this.source(),
+       numeroReference: this.numeroReference(),
+       clientId: Number(this.clientId()),
+       produitId: Number(this.produitId()),
+       responsableId: this.responsableId() || undefined
+     };
+
+    if (this.isEditMode()) {
+      this.reclamationService.update(this.reclamationId()!, payload).subscribe({
+        next: () => {
+          this.isSaving.set(false);
+          this.notificationService.success('Réclamation mise à jour avec succès.');
+          this.router.navigate(['/reclamations']);
+        },
+        error: (err) => {
+          this.isSaving.set(false);
+          this.errorMessage.set(err?.error?.error || 'Erreur lors de la mise à jour.');
+        }
+      });
+    } else {
+      this.reclamationService.create(payload).subscribe({
+        next: () => {
+          this.isSaving.set(false);
+          this.notificationService.success('Réclamation créée avec succès.');
+          this.router.navigate(['/reclamations']);
+        },
+        error: (err) => {
+          this.isSaving.set(false);
+          this.errorMessage.set(err?.error?.error || 'Erreur lors de la création.');
+        }
+      });
+    }
   }
 }

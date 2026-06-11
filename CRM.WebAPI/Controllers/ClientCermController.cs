@@ -15,6 +15,13 @@ namespace CRM.WebAPI.Controllers
             _clientCermService = clientCermService;
         }
 
+        [HttpGet("list")]
+        public async Task<IActionResult> List([FromQuery] int limit = 1000)
+        {
+            var clients = await _clientCermService.GetAllAsync();
+            return Ok(clients.Take(limit).ToList());
+        }
+
         [HttpGet("recherche")]
         public async Task<IActionResult> GetAll(
      [FromQuery] string? refClient,
@@ -24,11 +31,6 @@ namespace CRM.WebAPI.Controllers
             try
             {
                 // 🚫 Prevent loading all data when no search criteria
-                if (string.IsNullOrWhiteSpace(refClient) && string.IsNullOrWhiteSpace(nom))
-                {
-                    return Ok(new List<ClientCerm>());
-                }
-
                 var clients = await _clientCermService.GetAllAsync();
 
                 // 🔍 Filter by reference

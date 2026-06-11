@@ -40,9 +40,9 @@ namespace CRM.Services.LigneProspections
             await _context.SaveChangesAsync();
         }
 
-        public async Task<IEnumerable<LigneProspection>> GetAllAsync()
+        public async Task<IEnumerable<LigneProspection>> GetAllAsync(Guid? userId = null, string? role = null)
         {
-            return await _context.Set<LigneProspection>()
+            var query = _context.Set<LigneProspection>()
                 .AsNoTracking()
                 .Include(l => l.Statut)
                 .Include(l => l.FamilleProduit)
@@ -50,7 +50,14 @@ namespace CRM.Services.LigneProspections
                 .Include(l => l.Societee)
                 .Include(l => l.Prospection)
                     .ThenInclude(p => p!.Prospect)
-                .ToListAsync();
+                .AsQueryable();
+
+            if (IsCommercial(role) && userId.HasValue)
+            {
+                query = query.Where(l => l.Prospection != null && l.Prospection.UserId == userId.Value);
+            }
+
+            return await query.ToListAsync();
         }
 
         public async Task<LigneProspection?> GetByIdAsync(Guid id)
@@ -105,5 +112,9 @@ namespace CRM.Services.LigneProspections
             if (ligne.Concretisee == false && ligne.CauseEchecId == null)
                 throw new Exception("Une ligne perdue doit avoir une cause d'échec");
         }
+
+        private static bool IsCommercial(string? role)
+            => string.Equals(role, "COMMERCIAL", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(role, "Commercial", StringComparison.OrdinalIgnoreCase);
     }
 }

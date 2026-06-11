@@ -1,6 +1,8 @@
 export interface ClientCerm {
-  refClient: number;
+  id: number;
+  refClient?: number;
   nom: string | null;
   lastModifiedDate?: string | null;
   lastSyncDate?: string | null;
+  codeCRM?: string | null;
 }

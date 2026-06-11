@@ -1,7 +1,7 @@
 import { Routes } from '@angular/router';
 import { Layout } from './layout/layout/layout';
 import { authGuard } from './core/guards/auth.guard';
-import { roleGuard } from './core/guards/role.guard';
+import { rolesGuard } from './core/guards/roles.guard';
 
 export const routes: Routes = [
   {
@@ -17,152 +17,88 @@ export const routes: Routes = [
     component: Layout,
     canActivate: [authGuard],
     children: [
-      {
-        path: 'clients',
-        loadComponent: () => import('./pages/clients/clients-list/clients-list').then((m) => m.ClientsList),
-        canActivate: [roleGuard],
-        data: { roles: ['Commercial'] }
-      },
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
       {
         path: 'dashboard',
         loadComponent: () => import('./pages/dashboard/dashboard').then((m) => m.Dashboard),
-        canActivate: [roleGuard],
-        data: { roles: ['Commercial'] }
       },
       {
-        path: 'dashboard-client',
-        loadComponent: () => import('./pages/dashboard-client/dashboard-client').then((m) => m.DashboardClient),
-        canActivate: [roleGuard],
-        data: { roles: ['Client_User'] }
+        path: 'historique-commercial',
+        canActivate: [rolesGuard(['MANAGER', 'ADMIN'])],
+        loadComponent: () =>
+          import('./pages/historique-commercial/historique-commercial').then((m) => m.HistoriqueCommercial),
       },
       {
-        path: 'commande-client',
-        loadComponent: () => import('./pages/commandes-client/commandes-client').then((m) => m.CommandesClient),
-        pathMatch: 'full',
-        canActivate: [roleGuard],
-        data: { roles: ['Client_User'] }
-      },
-      {
-        path: 'commande-client/lignes/:refCommande',
-        loadComponent: () => import('./pages/ligne-commandes/ligne-commandes').then((m) => m.LigneCommandes),
-        canActivate: [roleGuard],
-        data: { roles: ['Client_User'] }
-      },
-      {
-        path: 'reclamation-client',
-        loadComponent: () => import('./pages/reclamation-client/reclamation-client').then((m) => m.ReclamationClient),
-        canActivate: [roleGuard],
-        data: { roles: ['Client_User'] }
-      },
-      {
-        path: 'dashboard-admin',
-        loadComponent: () => import('./pages/dashboard-admin/dashboard-admin').then((m) => m.DashboardAdmin),
-        canActivate: [roleGuard],
-        data: { roles: ['Admin'] }
+        path: 'power-bi',
+        canActivate: [rolesGuard(['MANAGER', 'ADMIN'])],
+        loadComponent: () => import('./pages/power-bi/power-bi').then((m) => m.PowerBi),
       },
       {
         path: 'products',
         loadComponent: () => import('./pages/produit-cerm/produit-cerm-list/produit-cerm-list').then((m) => m.ProduitCermList),
-        canActivate: [roleGuard],
-        data: { roles: ['Commercial'] }
       },
       {
         path: 'prospects',
         loadComponent: () => import('./pages/prospects/prospect-list/prospect-list').then((m) => m.ProspectList),
-        canActivate: [roleGuard],
-        data: { roles: ['Commercial'] }
+      },
+      {
+        path: 'clients',
+        loadComponent: () => import('./pages/clients/client-list/client-list').then((m) => m.ClientList),
       },
       {
         path: 'prospects/create',
         loadComponent: () => import('./pages/prospects/prospect-form/prospect-form').then((m) => m.ProspectForm),
-        canActivate: [roleGuard],
-        data: { roles: ['Commercial'] }
       },
       {
         path: 'prospects/edit/:id',
         loadComponent: () => import('./pages/prospects/prospect-form/prospect-form').then((m) => m.ProspectForm),
-        canActivate: [roleGuard],
-        data: { roles: ['Commercial'] }
       },
       {
         path: 'prospects/:id',
         loadComponent: () => import('./pages/prospects/prospect-detail/prospect-detail').then((m) => m.ProspectDetail),
-        canActivate: [roleGuard],
-        data: { roles: ['Commercial'] }
-      },
-      {
-        path: 'prospections',
-        loadComponent: () => import('./pages/prospections/prospection-list/prospection-list').then((m) => m.ProspectionList),
-        canActivate: [roleGuard],
-        data: { roles: ['Commercial'] }
       },
       {
         path: 'prospections/create',
         loadComponent: () => import('./pages/prospections/prospection-form/prospection-form').then((m) => m.ProspectionForm),
-        canActivate: [roleGuard],
-        data: { roles: ['Commercial'] }
       },
       {
         path: 'prospections/detail/:id',
         loadComponent: () => import('./pages/prospections/prospection-detail/prospection-detail').then((m) => m.ProspectionDetail),
-        canActivate: [roleGuard],
-        data: { roles: ['Commercial'] }
       },
       {
         path: 'prospections/edit/:id',
         loadComponent: () => import('./pages/prospections/prospection-form/prospection-form').then((m) => m.ProspectionForm),
-        canActivate: [roleGuard],
-        data: { roles: ['Commercial'] }
       },
+      { path: 'prospections', pathMatch: 'full', redirectTo: 'prospects' },
       {
         path: 'ligne-prospections/create',
         loadComponent: () => import('./pages/ligne-prospections/ligne-prospection-form/ligne-prospection-form').then((m) => m.LigneProspectionForm),
-        canActivate: [roleGuard],
-        data: { roles: ['Commercial'] }
       },
       {
         path: 'ligne-prospections/edit/:id',
         loadComponent: () => import('./pages/ligne-prospections/ligne-prospection-form/ligne-prospection-form').then((m) => m.LigneProspectionForm),
-        canActivate: [roleGuard],
-        data: { roles: ['Commercial'] }
       },
       {
         path: 'ligne-prospections/:prospectionId',
         loadComponent: () => import('./pages/ligne-prospections/ligne-prospection-list/ligne-prospection-list').then((m) => m.LigneProspectionList),
-        canActivate: [roleGuard],
-        data: { roles: ['Commercial'] }
       },
       {
         path: 'reclamations',
         loadComponent: () => import('./pages/reclamations/reclamation-list/reclamation-list').then((m) => m.ReclamationList),
-        canActivate: [roleGuard],
-        data: { roles: ['Commercial'] }
-      },
-      {
-        path: 'mes-reclamations',
-        loadComponent: () => import('./pages/mes-reclamations/mes-reclamations').then((m) => m.MesReclamations),
-        canActivate: [roleGuard],
-        data: { roles: ['Client_User'] }
       },
       {
         path: 'reclamations/create',
         loadComponent: () => import('./pages/reclamations/reclamation-form/reclamation-form').then((m) => m.ReclamationForm),
-        canActivate: [roleGuard],
-        data: { roles: ['Commercial'] }
       },
       {
-        path: 'settings',
-        loadComponent: () => import('./pages/settings-admin/settings-admin').then((m) => m.SettingsAdmin),
-        canActivate: [roleGuard],
-        data: { roles: ['Admin'] }
+        path: 'reclamations/edit/:id',
+        loadComponent: () => import('./pages/reclamations/reclamation-form/reclamation-form').then((m) => m.ReclamationForm),
       },
       {
-        path: 'employees',
-        loadComponent: () => import('./pages/commercials/commercials').then((m) => m.Commercials),
-        canActivate: [roleGuard],
-        data: { roles: ['Admin'] }
-      }
+        path: 'utilisateur',
+        canActivate: [rolesGuard(['ADMIN'])],
+        loadComponent: () => import('./pages/users/users').then((m) => m.Users),
+      },
     ],
   },
 ];
