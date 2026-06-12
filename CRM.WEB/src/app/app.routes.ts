@@ -46,6 +46,10 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/clients/client-list/client-list').then((m) => m.ClientList),
       },
       {
+        path: 'clients/:id',
+        loadComponent: () => import('./pages/clients/client-detail/client-detail').then((m) => m.ClientDetail),
+      },
+      {
         path: 'prospects/create',
         loadComponent: () => import('./pages/prospects/prospect-form/prospect-form').then((m) => m.ProspectForm),
       },

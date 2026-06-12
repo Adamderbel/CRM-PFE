@@ -135,6 +135,54 @@ namespace CRM.WebAPI.Controllers
             }
         }
 
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetById(Guid id)
+        {
+            try
+            {
+                var reclamation = await _reclamationService.GetReclamationById(id);
+                if (reclamation == null)
+                    return NotFound(new { error = "Reclamation not found." });
+
+                reclamation.Client = await _clientCermService.GetByIdAsync(reclamation.ClientId);
+                reclamation.Produit = await _produitCermService.GetByIdAsync(reclamation.ProduitRef);
+
+                var dto = new ReclamationDtoCreate
+                {
+                    Id = reclamation.Id,
+                    Titre = reclamation.Titre,
+                    Description = reclamation.Description,
+                    Statut = reclamation.Statut,
+                    Priorite = reclamation.Priorite,
+                    Source = reclamation.Source,
+                    NumeroReference = reclamation.NumeroReference,
+                    ClientId = reclamation.ClientId,
+                    NomClient = reclamation.Client?.Nom,
+                    ProduitId = reclamation.ProduitRef,
+                    DesignationProduit = reclamation.Produit?.Designation,
+                    AnalyseReclamation = reclamation.AnalyseReclamation,
+                    Justifiee = reclamation.Justifiee,
+                    CommentaireJustification = reclamation.CommentaireJustification,
+                    DateExecution = reclamation.DateExecution,
+                    DateControleExecution = reclamation.DateControleExecution,
+                    CommentaireControleExecution = reclamation.CommentaireControleExecution,
+                    DateClotureReclamation = reclamation.DateClotureReclamation,
+                    Rapport = reclamation.Rapport,
+                    ResponsableFaute = reclamation.ResponsableFaute,
+                    Degats = reclamation.Degats,
+                    CreatedAt = reclamation.CreatedAt,
+                    UpdatedAt = reclamation.UpdatedAt
+                };
+
+                return Ok(dto);
+            }
+            catch (Exception ex)
+            {
+                var inner = ex.InnerException?.Message ?? "";
+                return StatusCode(500, new { error = ex.Message, details = inner });
+            }
+        }
+
         [HttpPost]
         public async Task<IActionResult> CreateReclamation([FromBody] ReclamationDtoCreate reclamation)
         {

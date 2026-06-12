@@ -1,6 +1,6 @@
 import { Injectable, signal } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, tap, catchError, throwError } from 'rxjs';
+import { Observable, tap, catchError, throwError, map } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { ProduitCerm } from '../models/produit-cerm.model';
 
@@ -26,6 +26,7 @@ export class ProduitCermService {
     if (filters.limit) params = params.set('limit', filters.limit.toString());
 
     return this.http.get<ProduitCerm[]>(`${environment.apiUrl}/ProduitCerm`, { params }).pipe(
+      map((products) => products.map((product) => this.normalizeProduct(product))),
       tap((data) => {
         this.produitList.set(data);
         this.loading.set(false);
@@ -42,6 +43,7 @@ export class ProduitCermService {
     this.loading.set(true);
     this.error.set(null);
     return this.http.get<ProduitCerm>(`${environment.apiUrl}/ProduitCerm/${id}`).pipe(
+      map((product) => this.normalizeProduct(product)),
       tap(() => this.loading.set(false)),
       catchError((err) => {
         this.loading.set(false);
@@ -53,5 +55,15 @@ export class ProduitCermService {
 
   clearError(): void {
     this.error.set(null);
+  }
+
+  private normalizeProduct(product: ProduitCerm): ProduitCerm {
+    const raw = product as ProduitCerm & { RefProduit?: number };
+    const refProduit = raw.refProduit ?? raw.RefProduit ?? raw.id;
+    return {
+      ...product,
+      id: refProduit,
+      refProduit,
+    };
   }
 }

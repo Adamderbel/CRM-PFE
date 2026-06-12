@@ -1,0 +1,151 @@
+.client-detail-page {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.detail-header-card {
+  border: none;
+  background: linear-gradient(135deg, var(--primary-50) 0%, #fff 100%);
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.avatar-circle {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  background: var(--primary-600);
+}
+
+.header-info {
+  flex: 1;
+  min-width: 220px;
+}
+
+.client-name {
+  margin: 0 0 6px;
+  color: var(--primary-700);
+  font-size: 24px;
+  font-weight: 800;
+}
+
+.header-badges,
+.history-row-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.info-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.info-label {
+  display: block;
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.info-value {
+  margin: 4px 0 0;
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.section-header {
+  padding: 12px 20px;
+}
+
+.p-0 {
+  padding: 0 !important;
+}
+
+.no-border {
+  border: none;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.history-actions-column {
+  width: 170px;
+  min-width: 170px;
+}
+
+.history-row-actions {
+  justify-content: flex-end;
+}
+
+.history-details-btn {
+  height: 34px;
+}
+
+.history-delete-btn {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--error);
+  cursor: pointer;
+}
+
+.history-delete-btn:hover {
+  background: var(--error-bg);
+  border-color: #fecaca;
+}
+
+.history-delete-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.text-truncate-2 {
+  display: -webkit-box;
+  max-width: 400px;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 40px 20px;
+  color: var(--text-muted);
+}
+
+.empty-state .material-icons {
+  font-size: 48px;
+}
+
+@media (max-width: 640px) {
+  .header-content {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

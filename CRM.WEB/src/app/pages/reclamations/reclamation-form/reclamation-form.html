@@ -91,28 +91,80 @@
           <!-- Sélection Client -->
           <div class="form-group">
             <label class="form-label" for="clientId">Client (Nom) <span style="color: var(--error);">*</span></label>
-            <div class="form-control-wrapper">
-              <span class="material-icons">business</span>
-              <select id="clientId" class="form-control form-select" [ngModel]="clientId()" (ngModelChange)="clientId.set($event)" name="clientId" required>
-                <option [ngValue]="null" disabled>Sélectionnez un client...</option>
-                @for (client of allClients(); track client.id) {
-                  <option [ngValue]="client.id">{{ client.nom }}</option>
+            <div class="search-container combobox">
+              <div class="form-control-wrapper">
+                <span class="material-icons">business</span>
+                <input id="clientId"
+                       type="text"
+                       class="form-control combobox-input"
+                       autocomplete="off"
+                       [ngModel]="clientSearchQuery()"
+                       (ngModelChange)="onClientSearch($event)"
+                       (focus)="clientDropdownOpen.set(true)"
+                       (blur)="closeClientDropdown()"
+                       name="clientSearch"
+                       placeholder="Rechercher et sélectionner un client..."
+                       required />
+                @if (selectedClient()) {
+                  <button type="button" class="combobox-action" title="Effacer" (mousedown)="$event.preventDefault()" (click)="clearClient()">
+                    <span class="material-icons">close</span>
+                  </button>
+                } @else {
+                  <span class="material-icons combobox-chevron">expand_more</span>
                 }
-              </select>
+              </div>
+              @if (clientDropdownOpen()) {
+                <div class="search-results combobox-results">
+                  @for (client of filteredClients().slice(0, 50); track client.id) {
+                    <button type="button" class="search-item" (mousedown)="$event.preventDefault()" (click)="selectClient(client)">
+                      <span class="search-item-title">{{ client.nom || 'Client sans nom' }}</span>
+                      <span class="search-item-subtitle">Référence {{ client.id }} @if (client.codeCRM) { · CRM {{ client.codeCRM }} }</span>
+                    </button>
+                  } @empty {
+                    <div class="combobox-empty">Aucun client correspondant.</div>
+                  }
+                </div>
+              }
             </div>
           </div>
 
           <!-- Sélection Produit -->
           <div class="form-group">
             <label class="form-label" for="produitId">Produit (Désignation) <span style="color: var(--error);">*</span></label>
-            <div class="form-control-wrapper">
-              <span class="material-icons">inventory_2</span>
-              <select id="produitId" class="form-control form-select" [ngModel]="produitId()" (ngModelChange)="produitId.set($event)" name="produitId" required>
-                <option [ngValue]="null" disabled>Sélectionnez un produit...</option>
-                @for (product of allProducts(); track product.id) {
-                  <option [ngValue]="product.id">{{ product.designation }}</option>
+            <div class="search-container combobox">
+              <div class="form-control-wrapper">
+                <span class="material-icons">inventory_2</span>
+                <input id="produitId"
+                       type="text"
+                       class="form-control combobox-input"
+                       autocomplete="off"
+                       [ngModel]="productSearchQuery()"
+                       (ngModelChange)="onProductSearch($event)"
+                       (focus)="productDropdownOpen.set(true)"
+                       (blur)="closeProductDropdown()"
+                       name="productSearch"
+                       placeholder="Rechercher et sélectionner un produit..."
+                       required />
+                @if (selectedProduct()) {
+                  <button type="button" class="combobox-action" title="Effacer" (mousedown)="$event.preventDefault()" (click)="clearProduct()">
+                    <span class="material-icons">close</span>
+                  </button>
+                } @else {
+                  <span class="material-icons combobox-chevron">expand_more</span>
                 }
-              </select>
+              </div>
+              @if (productDropdownOpen()) {
+                <div class="search-results combobox-results">
+                  @for (product of filteredProducts().slice(0, 50); track product.id) {
+                    <button type="button" class="search-item" (mousedown)="$event.preventDefault()" (click)="selectProduct(product)">
+                      <span class="search-item-title">{{ product.designation || 'Produit sans désignation' }}</span>
+                      <span class="search-item-subtitle">Référence {{ product.id }}</span>
+                    </button>
+                  } @empty {
+                    <div class="combobox-empty">Aucun produit correspondant.</div>
+                  }
+                </div>
+              }
             </div>
           </div>
 
@@ -124,13 +176,6 @@
             </div>
           </div>
 
-          <div class="form-group">
-            <label class="form-label" for="ref">Référence Interne</label>
-            <div class="form-control-wrapper">
-              <span class="material-icons">tag</span>
-              <input type="text" id="ref" class="form-control" [ngModel]="numeroReference()" (ngModelChange)="numeroReference.set($event)" name="ref" placeholder="Généré automatiquement" readonly>
-            </div>
-          </div>
         </div>
       </div>
     </div>

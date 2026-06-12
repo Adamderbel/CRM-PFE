@@ -53,6 +53,9 @@
                 <td>{{ client.codeCRM || '-' }}</td>
                 <td>{{ client.lastSyncDate | date:'dd/MM/yyyy HH:mm' }}</td>
                 <td class="actions">
+                  <button class="btn-icon" title="Voir les détails et les prospections" (click)="viewClient(client.id)">
+                    <span class="material-icons">visibility</span>
+                  </button>
                   <button class="btn-icon primary" title="Ajouter une prospection" (click)="addProspection(client.id)">
                     <span class="material-icons">add_business</span>
                   </button>

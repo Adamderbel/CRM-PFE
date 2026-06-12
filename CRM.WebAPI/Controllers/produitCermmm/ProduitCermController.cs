@@ -18,12 +18,6 @@ namespace CRM.WebAPI.Controllers.produitCermmm
         {
             try
             {
-                // If neither search criteria is provided, return an empty list to avoid loading data on init
-                if (string.IsNullOrWhiteSpace(refArt) && string.IsNullOrWhiteSpace(designation))
-                {
-                    return Ok(new List<ProduitCerm>());
-                }
-
                 var produits = await _produitCermService.GetAllAsync();
                 
                 if (!string.IsNullOrWhiteSpace(refArt))
@@ -36,7 +30,10 @@ namespace CRM.WebAPI.Controllers.produitCermmm
                     produits = produits.Where(p => p.Designation != null && p.Designation.Contains(designation, StringComparison.OrdinalIgnoreCase));
                 }
 
-                var limitedProduits = produits.Take(limit).ToList();
+                var limitedProduits = produits
+                    .OrderBy(p => p.Designation)
+                    .Take(Math.Clamp(limit, 1, 1000))
+                    .ToList();
                 
                 return Ok(limitedProduits);
             }

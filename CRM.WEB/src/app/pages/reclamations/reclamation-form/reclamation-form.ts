@@ -1,5 +1,6 @@
-import { Component, OnInit, signal, effect } from '@angular/core';
+import { Component, OnInit, signal, computed } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { RouterModule } from '@angular/router';
 import { Router, ActivatedRoute } from '@angular/router';
 import { ReclamationService } from '../../../core/services/reclamation.service';
 import { NotificationService } from '../../../core/services/notification.service';
@@ -15,7 +16,7 @@ import { CommonModule } from '@angular/common';
 @Component({
   selector: 'app-reclamation-form',
   standalone: true,
-  imports: [FormsModule, CommonModule],
+  imports: [FormsModule, CommonModule, RouterModule],
   templateUrl: './reclamation-form.html',
   styleUrl: './reclamation-form.css'
 })
@@ -37,6 +38,8 @@ export class ReclamationForm implements OnInit {
   // Search
   clientSearchQuery = signal('');
   productSearchQuery = signal('');
+  clientDropdownOpen = signal(false);
+  productDropdownOpen = signal(false);
 
   selectedClient = signal<ClientCerm | null>(null);
   selectedProduct = signal<ProduitCerm | null>(null);
@@ -44,6 +47,28 @@ export class ReclamationForm implements OnInit {
   allClients = signal<ClientCerm[]>([]);
   allProducts = signal<ProduitCerm[]>([]);
   modeContacts = signal<ModeContact[]>([]);
+
+  filteredClients = computed(() => {
+    const query = this.normalizeSearch(this.clientSearchQuery());
+    if (!query) return this.allClients();
+
+    return this.allClients().filter((client) =>
+      this.normalizeSearch(client.nom).includes(query)
+      || String(client.id).includes(query)
+      || this.normalizeSearch(client.codeCRM).includes(query)
+    );
+  });
+
+  filteredProducts = computed(() => {
+    const query = this.normalizeSearch(this.productSearchQuery());
+    if (!query) return this.allProducts();
+
+    return this.allProducts().filter((product) =>
+      this.normalizeSearch(product.designation).includes(query)
+      || String(product.id).includes(query)
+      || this.normalizeSearch(product.codeCRM).includes(query)
+    );
+  });
 
   isEditMode = signal(false);
   reclamationId = signal<string | null>(null);
@@ -74,20 +99,30 @@ export class ReclamationForm implements OnInit {
     if (qClientId && !this.isEditMode()) {
       const id = parseInt(qClientId, 10);
       this.clientId.set(id);
+      this.syncSelectedClient();
     }
   }
 
   loadAllClients(): void {
     this.clientService.getAll().subscribe({
-      next: (data) => this.allClients.set(data),
+      next: (data) => {
+        this.allClients.set(data);
+        this.syncSelectedClient();
+      },
       error: (err) => console.error('Erreur chargement clients', err)
     });
   }
 
   loadAllProducts(): void {
-    this.produitService.getAll().subscribe({
-      next: (data) => this.allProducts.set(data),
-      error: (err) => console.error('Erreur chargement produits', err)
+    this.produitService.getAll({ limit: 1000 }).subscribe({
+      next: (data) => {
+        this.allProducts.set(data);
+        this.syncSelectedProduct();
+      },
+      error: (err) => {
+        console.error('Erreur chargement produits', err);
+        this.errorMessage.set('Impossible de charger la liste des produits.');
+      }
     });
   }
 
@@ -102,6 +137,8 @@ export class ReclamationForm implements OnInit {
         this.numeroReference.set(res.numeroReference || '');
         this.clientId.set(res.clientId);
         this.produitId.set(res.produitId);
+        this.syncSelectedClient();
+        this.syncSelectedProduct();
         this.responsableId.set(res.responsableId || null);
       },
       error: (err) => {
@@ -115,6 +152,82 @@ export class ReclamationForm implements OnInit {
     this.modeContactService.getAll().subscribe({
       next: (data) => this.modeContacts.set(data),
     });
+  }
+
+  private normalizeSearch(value: string | null | undefined): string {
+    return (value || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .trim();
+  }
+
+  selectClient(client: ClientCerm): void {
+    this.selectedClient.set(client);
+    this.clientId.set(client.id);
+    this.clientSearchQuery.set(client.nom || `Client ${client.id}`);
+    this.clientDropdownOpen.set(false);
+  }
+
+  clearClient(): void {
+    this.selectedClient.set(null);
+    this.clientId.set(null);
+    this.clientSearchQuery.set('');
+    this.clientDropdownOpen.set(true);
+  }
+
+  onClientSearch(value: string): void {
+    this.clientSearchQuery.set(value);
+    if (this.selectedClient() && value !== this.selectedClient()?.nom) {
+      this.selectedClient.set(null);
+      this.clientId.set(null);
+    }
+    this.clientDropdownOpen.set(true);
+  }
+
+  selectProduct(product: ProduitCerm): void {
+    this.selectedProduct.set(product);
+    this.produitId.set(product.id);
+    this.productSearchQuery.set(product.designation || `Produit ${product.id}`);
+    this.productDropdownOpen.set(false);
+  }
+
+  clearProduct(): void {
+    this.selectedProduct.set(null);
+    this.produitId.set(null);
+    this.productSearchQuery.set('');
+    this.productDropdownOpen.set(true);
+  }
+
+  onProductSearch(value: string): void {
+    this.productSearchQuery.set(value);
+    if (this.selectedProduct() && value !== this.selectedProduct()?.designation) {
+      this.selectedProduct.set(null);
+      this.produitId.set(null);
+    }
+    this.productDropdownOpen.set(true);
+  }
+
+  closeClientDropdown(): void {
+    setTimeout(() => this.clientDropdownOpen.set(false), 150);
+  }
+
+  closeProductDropdown(): void {
+    setTimeout(() => this.productDropdownOpen.set(false), 150);
+  }
+
+  private syncSelectedClient(): void {
+    const id = this.clientId();
+    if (!id || this.selectedClient()) return;
+    const client = this.allClients().find((item) => item.id === id);
+    if (client) this.selectClient(client);
+  }
+
+  private syncSelectedProduct(): void {
+    const id = this.produitId();
+    if (!id || this.selectedProduct()) return;
+    const product = this.allProducts().find((item) => item.id === id);
+    if (product) this.selectProduct(product);
   }
 
    save(): void {

@@ -1,0 +1,143 @@
+<div class="page-wrapper client-detail-page">
+  <div class="mb-16">
+    <button type="button" class="btn btn-ghost" style="padding-left: 0;" (click)="backToClients()">
+      <span class="material-icons md">arrow_back</span>
+      Retour aux clients
+    </button>
+  </div>
+
+  @if (errorMessage()) {
+    <div class="alert alert-error mb-24">
+      <span class="material-icons">error</span>
+      {{ errorMessage() }}
+    </div>
+  }
+
+  @if (isLoading()) {
+    <div class="loading-container">
+      <div class="spinner"></div>
+      <p>Chargement du client...</p>
+    </div>
+  }
+
+  @if (!isLoading() && client()) {
+    <div class="card detail-header-card mb-24">
+      <div class="card-body">
+        <div class="header-content">
+          <div class="avatar-circle">
+            <span class="material-icons">business</span>
+          </div>
+          <div class="header-info">
+            <h1 class="client-name">{{ client()!.nom || 'Client sans nom' }}</h1>
+            <div class="header-badges">
+              <span class="badge badge-info">Client CERM</span>
+              <span class="badge badge-outline">Référence : {{ client()!.id }}</span>
+              @if (client()!.codeCRM) {
+                <span class="badge badge-outline">CRM : {{ client()!.codeCRM }}</span>
+              }
+            </div>
+          </div>
+          <a [routerLink]="['/prospections/create']"
+             [queryParams]="{ clientCermId: client()!.id }"
+             class="btn btn-primary">
+            <span class="material-icons">add</span>
+            Nouvelle action
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="info-grid mb-24">
+      <div class="card info-card">
+        <div class="card-header">
+          <h2 class="card-title">
+            <span class="material-icons">sync</span>
+            Synchronisation CERM
+          </h2>
+        </div>
+        <div class="card-body">
+          <div class="info-list">
+            <div class="info-item">
+              <span class="info-label">Dernière synchronisation</span>
+              <p class="info-value">{{ client()!.lastSyncDate | date : 'dd/MM/yyyy HH:mm' }}</p>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Dernière modification</span>
+              <p class="info-value">{{ client()!.lastModifiedDate | date : 'dd/MM/yyyy HH:mm' }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header section-header">
+        <h2 class="card-title">
+          <span class="material-icons">description</span>
+          Historique des prospections
+        </h2>
+        <a [routerLink]="['/prospections/create']"
+           [queryParams]="{ clientCermId: client()!.id }"
+           class="btn btn-primary btn-sm">
+          <span class="material-icons">add</span>
+          Nouvelle action
+        </a>
+      </div>
+
+      <div class="card-body p-0">
+        @if (prospections().length === 0) {
+          <div class="empty-state">
+            <span class="material-icons">folder_open</span>
+            <p>Aucune prospection enregistrée pour ce client.</p>
+          </div>
+        } @else {
+          <div class="table-container no-border">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Date de l'action</th>
+                  <th>État / Statut</th>
+                  <th>Commentaires</th>
+                  <th class="text-right history-actions-column">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (prospection of prospections(); track prospection.id) {
+                  <tr>
+                    <td class="fw-semibold">{{ prospection.dateDebut | date : 'dd/MM/yyyy HH:mm' }}</td>
+                    <td>
+                      <span class="badge"
+                        [class.badge-success]="prospection.statut?.libelle === 'Gagnée' || prospection.statut?.libelle === 'Gagné'"
+                        [class.badge-warning]="prospection.statut?.libelle === 'En cours'"
+                        [class.badge-error]="prospection.statut?.libelle === 'Perdue' || prospection.statut?.libelle === 'Perdu'"
+                        [class.badge-info]="prospection.statut?.libelle === 'Nouveau' || prospection.statut?.libelle === 'A suivre'">
+                        {{ prospection.statut?.libelle || '—' }}
+                      </span>
+                    </td>
+                    <td><div class="text-truncate-2">{{ prospection.notes || '—' }}</div></td>
+                    <td class="text-right history-actions-column">
+                      <div class="history-row-actions">
+                        <a [routerLink]="['/prospections/detail', prospection.id]"
+                           class="btn btn-sm btn-outline history-details-btn">
+                          <span class="material-icons">visibility</span>
+                          Détails
+                        </a>
+                        <button type="button"
+                                class="history-delete-btn"
+                                title="Supprimer"
+                                [disabled]="deletingProspectionId() === prospection.id"
+                                (click)="deleteProspection(prospection)">
+                          <span class="material-icons md">delete</span>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </div>
+    </div>
+  }
+</div>

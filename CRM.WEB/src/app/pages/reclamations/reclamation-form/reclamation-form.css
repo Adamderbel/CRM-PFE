@@ -221,6 +221,87 @@
   cursor: pointer;
 }
 
+.combobox {
+  width: 100%;
+}
+
+.combobox-input {
+  padding-right: 42px !important;
+}
+
+/* Fix: increase right padding so chevron / clear button don't overlap text */
+.search-container .form-control.combobox-input {
+  padding-right: 56px !important;
+}
+
+/* Ensure action buttons and chevrons appear above the input text */
+.combobox-action {
+  z-index: 30;
+}
+
+.combobox-chevron {
+  z-index: 20;
+}
+
+/* Allow dropdown results to escape the card container on this page */
+.page-wrapper > .card,
+.page-wrapper .card {
+  overflow: visible;
+}
+
+.combobox-action {
+  position: absolute;
+  right: 10px;
+  display: inline-flex;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.combobox-action:hover {
+  background: var(--gray-100);
+  color: var(--text-primary);
+}
+
+.combobox-action .material-icons,
+.combobox-chevron {
+  font-size: 18px;
+}
+
+.combobox-chevron {
+  position: absolute !important;
+  right: 12px;
+  left: auto !important;
+  pointer-events: none;
+}
+
+.combobox-results {
+  max-height: 280px;
+}
+
+.combobox-results .search-item {
+  display: block;
+  width: 100%;
+  border: 0;
+  border-bottom: 1px solid var(--border-light);
+  background: var(--bg-card);
+  text-align: left;
+}
+
+.combobox-empty {
+  padding: 16px;
+  color: var(--text-muted);
+  font-size: 12px;
+  text-align: center;
+}
+
 /* Actions */
 .form-actions {
   display: flex;

@@ -83,6 +83,10 @@ export class ClientList implements OnInit {
     this.router.navigate(['/prospections/create'], { queryParams: { clientCermId: clientId } });
   }
 
+  viewClient(clientId: number): void {
+    this.router.navigate(['/clients', clientId]);
+  }
+
   addReclamation(clientId: number): void {
     this.router.navigate(['/reclamations/create'], { queryParams: { clientId: clientId } });
   }
