@@ -31,15 +31,13 @@ export class LigneProspectionForm implements OnInit {
   numeroCommande = signal('');
   dateCommande = signal<string>('');
   batEnvoyee = signal<boolean>(false);
-  dateEnvoieBat = signal<string>('');
+  dateEnvoiBat = signal<string>('');
   concretisee = signal<boolean>(false);
   causeEchecId = signal<number | null>(null);
-  artid = signal('');
-  societeId = signal<number | ''>('');
-  statutId = signal<number | ''>('');
+  societeId = signal<number | null>(null);
+  statutId = signal<number | null>(null);
   familleProduitId = signal<number | ''>('');
-  supportProduitId = signal<number | ''>('');
-  codeCRM = signal('');
+  supportProduitId = signal<number | null>(null);
 
   // Lists for selects
   familleProduits = signal<any[]>([]);
@@ -100,20 +98,18 @@ export class LigneProspectionForm implements OnInit {
           this.designation.set(ligne.designation || '');
           this.prospectionId.set(ligne.prospectionId);
           this.familleProduitId.set(ligne.familleProduitId);
-          this.supportProduitId.set(ligne.supportProduitId || '');
-          this.societeId.set(ligne.societeId || '');
-          this.statutId.set(ligne.statutId || '');
-          this.dateDemandeOffre.set(ligne.dateDemandeOffre ? new Date(ligne.dateDemandeOffre).toISOString().slice(0, 16) : '');
+          this.supportProduitId.set(ligne.supportProduitId ?? null);
+          this.societeId.set(ligne.societeId ?? ligne.societeeId ?? null);
+          this.statutId.set(ligne.statutId ?? null);
+          this.dateDemandeOffre.set(ligne.dateDemandeOffre ? new Date(ligne.dateDemandeOffre).toISOString().slice(0, 10) : '');
           this.numeroDevis.set(ligne.numeroDevis || '');
-          this.dateDevis.set(ligne.dateDevis ? new Date(ligne.dateDevis).toISOString().slice(0, 16) : '');
+          this.dateDevis.set(ligne.dateDevis ? new Date(ligne.dateDevis).toISOString().slice(0, 10) : '');
           this.numeroCommande.set(ligne.numeroCommande || '');
-          this.dateCommande.set(ligne.dateCommande ? new Date(ligne.dateCommande).toISOString().slice(0, 16) : '');
+          this.dateCommande.set(ligne.dateCommande ? new Date(ligne.dateCommande).toISOString().slice(0, 10) : '');
           this.batEnvoyee.set(ligne.batEnvoyee || false);
-          this.dateEnvoieBat.set(ligne.dateEnvoieBat ? new Date(ligne.dateEnvoieBat).toISOString().slice(0, 16) : '');
+          this.dateEnvoiBat.set(ligne.dateEnvoiBat ? new Date(ligne.dateEnvoiBat).toISOString().slice(0, 10) : '');
           this.concretisee.set(ligne.concretisee || false);
           this.causeEchecId.set(ligne.causeEchecId || null);
-          this.artid.set(ligne.artid || '');
-          this.codeCRM.set(ligne.codeCRM || '');
           if (ligne.date) {
             const d = new Date(ligne.date);
             this.date.set(new Date(d.getTime() - (d.getTimezoneOffset() * 60000)).toISOString().slice(0, 16));
@@ -141,7 +137,7 @@ export class LigneProspectionForm implements OnInit {
       return;
     }
 
-    const baseDto = {
+    const createDto: LigneProspectionCreateDto = {
       designation: this.designation(),
       prospectionId: this.prospectionId()!,
       familleProduitId: Number(this.familleProduitId()),
@@ -149,21 +145,21 @@ export class LigneProspectionForm implements OnInit {
       societeId: this.societeId() ? Number(this.societeId()) : undefined,
       statutId: this.statutId() ? Number(this.statutId()) : undefined,
       date: this.date(),
-      dateDemandeOffre: this.dateDemandeOffre() || undefined,
-      numeroDevis: this.numeroDevis() || undefined,
-      dateDevis: this.dateDevis() || undefined,
-      numeroCommande: this.numeroCommande() || undefined,
-      dateCommande: this.dateCommande() || undefined,
-      batEnvoyee: this.batEnvoyee(),
-      dateEnvoieBat: this.dateEnvoieBat() || undefined,
-      concretisee: this.concretisee(),
-      causeEchecId: this.causeEchecId() || undefined,
-      artid: this.artid() || undefined,
-      codeCRM: this.codeCRM() || undefined,
     };
 
     if (this.isEditMode() && this.ligneId()) {
-      const dto: LigneProspectionUpdateDto = { ...baseDto };
+      const dto: LigneProspectionUpdateDto = {
+        ...createDto,
+        dateDemandeOffre: this.dateDemandeOffre() || undefined,
+        numeroDevis: this.numeroDevis() || undefined,
+        dateDevis: this.dateDevis() || undefined,
+        numeroCommande: this.numeroCommande() || undefined,
+        dateCommande: this.dateCommande() || undefined,
+        batEnvoyee: this.batEnvoyee(),
+        dateEnvoiBat: this.dateEnvoiBat() || undefined,
+        concretisee: this.concretisee(),
+        causeEchecId: this.causeEchecId() || undefined,
+      };
       this.ligneService.update(this.ligneId()!, dto).subscribe({
         next: () => {
           this.successMessage.set('Ligne mise à jour avec succès.');
@@ -176,8 +172,7 @@ export class LigneProspectionForm implements OnInit {
         }
       });
     } else {
-      const dto: LigneProspectionCreateDto = { ...baseDto };
-      this.ligneService.create(dto).subscribe({
+      this.ligneService.create(createDto).subscribe({
         next: () => {
           this.successMessage.set('Ligne créée avec succès.');
           this.isSaving.set(false);

@@ -2,7 +2,6 @@
 using CRM.DAL.GenericRepository;
 using CRM.DAL.RepositoriesDapper;
 using CRM.Entities.Crm;
-using CRM.Services.comm;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -17,19 +16,18 @@ namespace CRM.Services.LigneProspections
         private readonly IGenericRepository<LigneProspection> _ligneProspectionRepository;
         private readonly DataContext _context;
         private readonly ILigneProspectionRespositoryDapper _ligneProspectionRepositoryDapper;
-        private readonly CodeGeneratorService _codeGeneratorService;
-        public LigneProspectionService(IGenericRepository<LigneProspection> ligneProspectionRepository, DataContext context, ILigneProspectionRespositoryDapper LigneProspectionRespositoryDapper,CodeGeneratorService codeGeneratorService)
+        public LigneProspectionService(IGenericRepository<LigneProspection> ligneProspectionRepository, DataContext context, ILigneProspectionRespositoryDapper LigneProspectionRespositoryDapper)
         {
             _ligneProspectionRepository = ligneProspectionRepository;
             _context = context;
             _ligneProspectionRepositoryDapper = LigneProspectionRespositoryDapper;
-            _codeGeneratorService = codeGeneratorService;
         }
 
         public async Task CreateAsync(LigneProspection ligneProspection)
         {
            // ValidateBusinessRules(ligneProspection);
-            ligneProspection.CodeCRM = _codeGeneratorService.GenerateCode("PROD");
+            ligneProspection.CodeCRM = await GenerateNextProductCodeAsync();
+            ligneProspection.RefArt = null;
             await _ligneProspectionRepository.InsertAsync(ligneProspection);
             await _context.SaveChangesAsync();
         }
@@ -116,5 +114,22 @@ namespace CRM.Services.LigneProspections
         private static bool IsCommercial(string? role)
             => string.Equals(role, "COMMERCIAL", StringComparison.OrdinalIgnoreCase)
             || string.Equals(role, "Commercial", StringComparison.OrdinalIgnoreCase);
+
+        private async Task<string> GenerateNextProductCodeAsync()
+        {
+            const string prefix = "PRD-";
+            var existingCodes = await _context.Set<LigneProspection>()
+                .AsNoTracking()
+                .Where(l => l.CodeCRM != null && l.CodeCRM.StartsWith(prefix))
+                .Select(l => l.CodeCRM!)
+                .ToListAsync();
+
+            var maxNumber = existingCodes
+                .Select(code => int.TryParse(code[prefix.Length..], out var number) ? number : 0)
+                .DefaultIfEmpty(0)
+                .Max();
+
+            return $"{prefix}{maxNumber + 1:D6}";
+        }
     }
 }

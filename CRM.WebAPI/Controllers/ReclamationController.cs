@@ -205,6 +205,9 @@ namespace CRM.WebAPI.Controllers
                 }
 
                 
+                // Auto-generate reference number
+                var numeroReference = await _reclamationService.GetNextReferenceAsync();
+
                 var newReclamation = new Reclamation
                 { 
                     Id = Guid.NewGuid(),
@@ -213,7 +216,7 @@ namespace CRM.WebAPI.Controllers
                     Statut = reclamation.Statut,
                     Priorite = reclamation.Priorite,
                     Source = reclamation.Source,
-                    NumeroReference = reclamation.NumeroReference,
+                    NumeroReference = numeroReference,
                     ClientId = reclamation.ClientId,
                     ProduitRef = reclamation.ProduitId,
                     CommercialId = principal.Id,
@@ -260,6 +263,32 @@ namespace CRM.WebAPI.Controllers
             {
                 var innerMessage = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
                 return StatusCode(500, new { error = ex.Message, details = innerMessage });
+            }
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteReclamation(Guid id)
+        {
+            try
+            {
+                var reclamation = await _reclamationService.GetReclamationById(id);
+                if (reclamation == null)
+                    return NotFound(new { error = "Reclamation not found." });
+
+                var principal = await ResolveCurrentSecUserAsync(User);
+                if (principal == null)
+                    return Unauthorized();
+
+                if (IsCommercial() && reclamation.CommercialId != principal.Id)
+                    return NotFound(new { error = "Reclamation not found." });
+
+                await _reclamationService.DeleteReclamation(id);
+                return Ok(new { message = "Reclamation deleted successfully." });
+            }
+            catch (Exception ex)
+            {
+                var innerMessage = ex.InnerException?.Message ?? ex.Message;
+                return StatusCode(500, new { error = "Unable to delete reclamation.", details = innerMessage });
             }
         }
 

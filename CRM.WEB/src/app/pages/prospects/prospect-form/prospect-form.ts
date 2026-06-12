@@ -39,21 +39,21 @@ export class ProspectForm implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.loadDomaines();
-    this.loadModeContacts();
-
-    const id = this.route.snapshot.paramMap.get('id');
-    if (id) {
-      this.isEditMode.set(true);
-      this.prospectId.set(id);
-      this.loadProspect(id);
-    }
-  }
-
-  loadDomaines(): void {
+    // Load domaines first, then load prospect if in edit mode
     this.prospectService.getDomainesActivite().subscribe({
-      next: (data) => this.domaines.set(data),
+      next: (data) => {
+        this.domaines.set(data);
+        // Only load prospect after domaines are available
+        const id = this.route.snapshot.paramMap.get('id');
+        if (id) {
+          this.isEditMode.set(true);
+          this.prospectId.set(id);
+          this.loadProspect(id);
+        }
+      },
     });
+    
+    this.loadModeContacts();
   }
 
   loadModeContacts(): void {
@@ -148,6 +148,7 @@ export class ProspectForm implements OnInit {
           console.log('[ProspectForm] Mise à jour réussie:', res);
           this.isSaving.set(false);
           this.notificationService.success('Prospect mis à jour avec succès.');
+          // Reload domaines in case new ones were added, then navigate back
           this.router.navigate(['/prospects']);
         },
         error: (err) => {

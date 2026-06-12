@@ -207,7 +207,8 @@ export class ReclamationList implements OnInit {
       },
       error: (err: HttpErrorResponse) => {
         console.error('Erreur suppression réclamation', err);
-        this.notificationService.error('Erreur lors de la suppression.');
+        const message = err.error?.details || err.error?.error || 'Erreur lors de la suppression.';
+        this.notificationService.error(message);
       }
     });
   }

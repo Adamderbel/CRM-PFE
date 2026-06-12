@@ -39,12 +39,6 @@ export class Sidebar {
       route: '/historique-commercial',
       roles: ['MANAGER', 'ADMIN'],
     },
-    {
-      icon: 'insert_chart_outlined',
-      label: 'Power BI',
-      route: '/power-bi',
-      roles: ['MANAGER', 'ADMIN'],
-    },
     { icon: 'article', label: 'Utilisateurs & droits', route: '/utilisateur', roles: ['ADMIN'] },
   ];
 

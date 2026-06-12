@@ -10,6 +10,13 @@
 }
 
 /* ---------- Left Panel ---------- */
+.login-logo {
+  width: 90px;
+  height: 90px;
+  object-fit: contain;
+  display: block;
+}
+
 .left-panel {
   flex: 0 0 460px;
   background: linear-gradient(160deg, #0F172A 0%, #1E293B 50%, #00072D 100%);

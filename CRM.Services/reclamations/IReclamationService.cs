@@ -14,5 +14,6 @@ namespace CRM.Services.reclamations
          Task AddReclamation(Reclamation reclamation);
          Task UpdateReclamation(Guid id, Reclamation reclamation);
          Task DeleteReclamation(Guid id);
+         Task<string> GetNextReferenceAsync();
     }
 }

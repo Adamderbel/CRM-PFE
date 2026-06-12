@@ -12,7 +12,7 @@
 
         public Guid ProspectionId { get; set; }
 
-        public int? SocieteeId { get; set; }
+        public int? SocieteId { get; set; }
 
         public int? StatutId { get; set; }
 

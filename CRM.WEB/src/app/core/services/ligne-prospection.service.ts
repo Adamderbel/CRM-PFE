@@ -3,7 +3,7 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
-import { LigneProspection, LigneProspectionCreateDto, LigneProspectionUpdateDto } from '../models/ligne-prospection.model';
+import { DevisRequestDto, LigneProspection, LigneProspectionCreateDto, LigneProspectionUpdateDto } from '../models/ligne-prospection.model';
 
 @Injectable({
   providedIn: 'root'
@@ -88,6 +88,12 @@ export class LigneProspectionService {
         this.isLoading.set(false);
         this.getAll().subscribe(); // Refresh the list
       }),
+      catchError((error) => this.handleError(error))
+    );
+  }
+
+  demanderDevis(id: string, dto: DevisRequestDto): Observable<string> {
+    return this.http.post(`${this.apiUrl}/${id}/devis`, dto, { responseType: 'text' }).pipe(
       catchError((error) => this.handleError(error))
     );
   }

@@ -86,9 +86,18 @@ namespace CRM.WebAPI.Controllers
             ligne.FamilleProduitId = dto.FamilleProduitId;
             ligne.SupportProduitId = dto.SupportProduitId;
             ligne.ProspectionId = dto.ProspectionId;
-            ligne.SocieteeId = dto.SocieteeId;
+            ligne.SocieteeId = dto.SocieteId;
             ligne.StatutId = dto.StatutId;
             ligne.Date = dto.Date;
+            ligne.DateDemandeOffre = dto.DateDemandeOffre;
+            ligne.NumeroDevis = dto.NumeroDevis;
+            ligne.DateDevis = dto.DateDevis;
+            ligne.NumeroCommande = dto.NumeroCommande;
+            ligne.DateCommande = dto.DateCommande;
+            ligne.BatEnvoyee = dto.BatEnvoyee;
+            ligne.DateEnvoiBat = dto.DateEnvoiBat;
+            ligne.Concretisee = dto.Concretisee;
+            ligne.CauseEchecId = dto.CauseEchecId;
 
             await _ligneProspectionService.UpdateAsync(ligne);
             return Ok("Ligne Prospection updated successfully.");
@@ -104,21 +113,30 @@ namespace CRM.WebAPI.Controllers
             if (prospection == null || !await CanAccessProspectionAsync(dto.ProspectionId))
                 return BadRequest("Invalid ProspectionId: Prospection not found.");
 
-            var statut = await _statutProspectionService.GetByIdAsync(dto.StatutId);
-            if (statut == null)
-                return BadRequest("Invalid StatutId.");
+            if (dto.StatutId.HasValue)
+            {
+                var statut = await _statutProspectionService.GetByIdAsync(dto.StatutId.Value);
+                if (statut == null)
+                    return BadRequest("Invalid StatutId.");
+            }
 
-            var supportProduit = await _supportProduitService.GetByIdAsync(dto.SupportProduitId);
-            if (supportProduit == null)
-                return BadRequest("Invalid SupportProduitId.");
+            if (dto.SupportProduitId.HasValue)
+            {
+                var supportProduit = await _supportProduitService.GetByIdAsync(dto.SupportProduitId.Value);
+                if (supportProduit == null)
+                    return BadRequest("Invalid SupportProduitId.");
+            }
 
             var familleProduit = await _familleProduitService.GetByIdAsync(dto.FamilleProduitId);
             if (familleProduit == null)
                 return BadRequest("Invalid FamilleProduitId.");
 
-            var societee = await _societeeService.GetByIdAsync(dto.SocieteeId);
-            if (societee == null)
-                return BadRequest("Invalid SocieteeId.");
+            if (dto.SocieteId.HasValue)
+            {
+                var societee = await _societeeService.GetByIdAsync(dto.SocieteId.Value);
+                if (societee == null)
+                    return BadRequest("Invalid SocieteId.");
+            }
 
             var ligneProspection = new LigneProspection
             {
@@ -126,7 +144,7 @@ namespace CRM.WebAPI.Controllers
                 FamilleProduitId = dto.FamilleProduitId,
                 SupportProduitId = dto.SupportProduitId,
                 ProspectionId = dto.ProspectionId,
-                SocieteeId = dto.SocieteeId,
+                SocieteeId = dto.SocieteId,
                 StatutId = dto.StatutId,
                 Date = dto.Date
             };

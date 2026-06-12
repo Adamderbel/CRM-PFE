@@ -136,11 +136,14 @@ namespace CRM.WebAPI.Controllers
             if (IsCommercial() && existingProspect.UserId.HasValue && existingProspect.UserId != principal?.Id)
                 return NotFound("Prospect not found.");
 
-            existingProspect.idDomaineActivitee = dto.IdDomaineActivite ?? dto.idDomaineActivitee;
+            existingProspect.idDomaineActivitee = dto.idDomaineActivitee;
 
             await _prospectService.UpdateAsync(existingProspect);
 
-            return NoContent(); // 204 (better than Ok)
+            // Return updated prospect with DomaineActivite populated
+            existingProspect.DomaineActivite = await _domaineActiviteService.GetByIdAsync(existingProspect.idDomaineActivitee);
+
+            return Ok(existingProspect); // Return updated prospect with all populated data
         }
 
         // DELETE: api/prospect/5

@@ -47,6 +47,8 @@ export function normalizeProspectRow(p: Record<string, unknown> | null | undefin
   }
   const id = p['id'] ?? p['Id'];
   const domaine = p['domaineActivite'] ?? p['DomaineActivite'];
+  // Handle backend property naming: idDomaineActivitee (two e's) is the entity property name
+  const domaineId = p['idDomaineActivitee'] ?? p['IdDomaineActivitee'] ?? p['idDomaineActivite'] ?? p['IdDomaineActivite'];
 
   return {
     id: asString(id),
@@ -57,7 +59,7 @@ export function normalizeProspectRow(p: Record<string, unknown> | null | undefin
     source: p['source'] != null || p['Source'] != null ? asString(p['source'] ?? p['Source']) : undefined,
     dateCreation: asString(p['dateCreation'] ?? p['DateCreation']),
     notes: asString(p['notes'] ?? p['Notes']),
-    idDomaineActivite: asNumber(p['idDomaineActivite'] ?? p['IdDomaineActivite'], 0),
+    idDomaineActivite: asNumber(domaineId, 0),
     clientCermId,
     codeCRM: p['codeCRM'] != null || p['CodeCRM'] != null ? asString(p['codeCRM'] ?? p['CodeCRM']) : undefined,
     domaineActivite: domaine ? normalizeDomaineRow(domaine as Record<string, unknown>) : undefined

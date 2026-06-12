@@ -62,6 +62,47 @@ namespace CRM.Services.reclamations
             await _context.SaveChangesAsync();
         }
 
+        public async Task<string> GetNextReferenceAsync()
+        {
+            // Get the highest number from existing reclamations
+            var allReclamations = await _reclamationRepository.GetAllAsync();
+            int nextNumber = 1;
+
+            if (allReclamations.Any())
+            {
+                var existingReferences = allReclamations
+                    .Where(r => !string.IsNullOrEmpty(r.NumeroReference))
+                    .Select(r => r.NumeroReference)
+                    .ToList();
+
+                if (existingReferences.Any())
+                {
+                    // Extract numbers from references like "REC-2026-0001"
+                    var numbers = existingReferences
+                        .Where(ref_ => ref_.Contains("-"))
+                        .Select(ref_ =>
+                        {
+                            var parts = ref_.Split('-');
+                            if (parts.Length >= 3 && int.TryParse(parts[2], out int num))
+                            {
+                                return num;
+                            }
+                            return 0;
+                        })
+                        .Where(n => n > 0)
+                        .MaxBy(n => n);
+
+                    if (numbers > 0)
+                    {
+                        nextNumber = numbers + 1;
+                    }
+                }
+            }
+
+            var year = DateTime.UtcNow.Year;
+            return $"REC-{year}-{nextNumber:D4}";
+        }
+
         private static bool IsCommercial(string? role)
             => string.Equals(role, "COMMERCIAL", StringComparison.OrdinalIgnoreCase)
             || string.Equals(role, "Commercial", StringComparison.OrdinalIgnoreCase);

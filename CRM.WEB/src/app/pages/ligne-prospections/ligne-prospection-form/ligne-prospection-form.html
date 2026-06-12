@@ -67,28 +67,28 @@
             </div>
             <div class="form-group">
               <label class="form-label" for="supportProduit">Support produit</label>
-              <select id="supportProduit" name="supportProduit" class="form-control form-select" [ngModel]="supportProduitId()" (ngModelChange)="supportProduitId.set(+$event)">
-                <option [value]="null">Aucun</option>
+              <select id="supportProduit" name="supportProduit" class="form-control form-select" [ngModel]="supportProduitId()" (ngModelChange)="supportProduitId.set($event)">
+                <option [ngValue]="null">Aucun</option>
                 @for (sp of supportProduits(); track sp.id) {
-                  <option [value]="sp.id">{{ sp.libelle }}</option>
+                  <option [ngValue]="sp.id">{{ sp.libelle }}</option>
                 }
               </select>
             </div>
             <div class="form-group">
               <label class="form-label" for="societe">Société</label>
-              <select id="societe" name="societe" class="form-control form-select" [ngModel]="societeId()" (ngModelChange)="societeId.set(+$event)">
-                <option [value]="null">Aucune</option>
+              <select id="societe" name="societe" class="form-control form-select" [ngModel]="societeId()" (ngModelChange)="societeId.set($event)">
+                <option [ngValue]="null">Aucune</option>
                 @for (s of societes(); track s.id) {
-                  <option [value]="s.id">{{ s.nom }}</option>
+                  <option [ngValue]="s.id">{{ s.nom }}</option>
                 }
               </select>
             </div>
             <div class="form-group">
               <label class="form-label" for="statut">Statut</label>
-              <select id="statut" name="statut" class="form-control form-select" [ngModel]="statutId()" (ngModelChange)="statutId.set(+$event)">
-                <option [value]="null">Sélectionnez</option>
+              <select id="statut" name="statut" class="form-control form-select" [ngModel]="statutId()" (ngModelChange)="statutId.set($event)">
+                <option [ngValue]="null">Sélectionnez</option>
                 @for (st of statuts(); track st.id) {
-                  <option [value]="st.id">{{ st.libelle }}</option>
+                  <option [ngValue]="st.id">{{ st.libelle }}</option>
                 }
               </select>
             </div>
@@ -97,6 +97,7 @@
       </div>
 
       <!-- Section 2: Offre et commande -->
+      @if (isEditMode()) {
       <div class="card mb-24">
         <div class="card-header">
           <h2 class="card-title">
@@ -132,16 +133,16 @@
                      [ngModel]="dateCommande()" (ngModelChange)="dateCommande.set($event)" />
             </div>
             <div class="form-group">
-              <label class="form-label" for="dateEnvoieBat">Date envoi bat</label>
-              <input id="dateEnvoieBat" name="dateEnvoieBat" type="date" class="form-control"
-                     [ngModel]="dateEnvoieBat()" (ngModelChange)="dateEnvoieBat.set($event)" />
+              <label class="form-label" for="dateEnvoiBat">Date envoi bat</label>
+              <input id="dateEnvoiBat" name="dateEnvoiBat" type="date" class="form-control"
+                     [ngModel]="dateEnvoiBat()" (ngModelChange)="dateEnvoiBat.set($event)" />
             </div>
             <div class="form-group">
               <label class="form-label" for="causeEchec">Cause d'échec</label>
-              <select id="causeEchec" name="causeEchec" class="form-control form-select" [ngModel]="causeEchecId()" (ngModelChange)="causeEchecId.set(+$event)">
-                <option [value]="null">Aucune</option>
+              <select id="causeEchec" name="causeEchec" class="form-control form-select" [ngModel]="causeEchecId()" (ngModelChange)="causeEchecId.set($event)">
+                <option [ngValue]="null">Aucune</option>
                 @for (ce of causeEchecs(); track ce.id) {
-                  <option [value]="ce.id">{{ ce.libelle }}</option>
+                  <option [ngValue]="ce.id">{{ ce.libelle }}</option>
                 }
               </select>
             </div>
@@ -158,30 +159,7 @@
           </div>
         </div>
       </div>
-
-      <!-- Section 3: Produit et référence -->
-      <div class="card mb-24">
-        <div class="card-header">
-          <h2 class="card-title">
-            <span class="material-icons md" style="color: var(--primary-500);">inventory_2</span>
-            Produit et référence
-          </h2>
-        </div>
-        <div class="card-body">
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
-            <div class="form-group">
-              <label class="form-label" for="artid">Référence Produit CERM (Artid)</label>
-              <input id="artid" name="artid" type="text" class="form-control" placeholder="Référence produit"
-                     [ngModel]="artid()" (ngModelChange)="artid.set($event)" />
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="codeCRM">Code CRM</label>
-              <input id="codeCRM" name="codeCRM" type="text" class="form-control" placeholder="Généré automatiquement"
-                     [ngModel]="codeCRM()" (ngModelChange)="codeCRM.set($event)" readonly />
-            </div>
-          </div>
-        </div>
-      </div>
+      }
 
       <!-- Actions -->
       <div style="display: flex; justify-content: flex-end; gap: 12px;">

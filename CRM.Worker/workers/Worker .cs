@@ -49,7 +49,7 @@ namespace CRM.Worker.workers
                     Console.WriteLine("❌ WORKER ERROR: " + ex.Message);
                 }
 
-                await Task.Delay(20000, stoppingToken);
+                await Task.Delay(120000, stoppingToken);
             }
         }
     }
