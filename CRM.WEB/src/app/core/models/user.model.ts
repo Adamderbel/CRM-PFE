@@ -16,3 +16,12 @@ export interface UpdateUserRoleRequest {
 export interface UserStatusRequest {
   action: string;
 }
+
+export interface CreateUserRequest {
+  email: string;
+  userName: string;
+  nom: string;
+  prenom: string;
+  password: string;
+  role: string;
+}

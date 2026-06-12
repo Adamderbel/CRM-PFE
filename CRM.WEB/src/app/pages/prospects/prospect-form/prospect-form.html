@@ -127,27 +127,6 @@
                 </select>
               </div>
             </div>
-            <div class="form-group">
-              <label class="form-label" for="clientCerm">Client CERM</label>
-              <div class="form-control-wrapper">
-                <span class="material-icons">handshake</span>
-                <select id="clientCerm" class="form-control form-select"
-                        [ngModel]="clientCermId()" (ngModelChange)="clientCermId.set(+$event)" name="clientCermId">
-                  <option [value]="null" disabled>Sélectionnez un client</option>
-                  @for (client of clientsCerm(); track client.id) {
-                    <option [value]="client.id">{{ client.nom }}</option>
-                  }
-                </select>
-              </div>
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="codeCRM">Code CRM</label>
-              <div class="form-control-wrapper">
-                <span class="material-icons">qr_code</span>
-                <input id="codeCRM" type="text" class="form-control" [placeholder]="isEditMode() ? '' : 'Chargement du code...'"
-                       [ngModel]="codeCRM()" (ngModelChange)="codeCRM.set($event)" name="codeCRM" readonly />
-              </div>
-            </div>
           </div>
           <div class="form-group" style="margin-top: 24px;">
             <label class="form-label" for="notes">Notes complémentaires</label>

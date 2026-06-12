@@ -27,7 +27,7 @@ namespace CRM.WebAPI.Controllers
         }
 
         [AllowAnonymous]
-        [HttpPost("users")]
+        [HttpPost("register")]
         public async Task<IActionResult> CreateUser([FromBody] CreateUserDto request)
         {
             if (request == null)

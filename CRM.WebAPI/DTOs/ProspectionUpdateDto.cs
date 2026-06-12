@@ -17,9 +17,8 @@ namespace CRM.WebAPI.DTOs
         // Foreign Keys
         [Required(ErrorMessage = "Le statut est obligatoire.")]
         public int StatutId { get; set; }
-        [Required(ErrorMessage = "L'utilisateur (commercial) est obligatoire.")]
         public Guid? UserId { get; set; }
-        [Required(ErrorMessage = "Le prospect est obligatoire.")]
         public Guid? ProspectId { get; set; }
+        public int? ClientId { get; set; }
     }
 }

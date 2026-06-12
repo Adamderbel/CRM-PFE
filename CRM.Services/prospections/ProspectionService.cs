@@ -2,6 +2,7 @@
 using CRM.DAL.GenericRepository;
 using CRM.DAL.RepositoriesDapper;
 using CRM.Entities.Crm;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -44,6 +45,12 @@ namespace CRM.Services.prospections
             return prospections.Where(p => p.ProspectId == prospectId).ToList();
         }
 
+        public async Task<IEnumerable<Prospection>> GetByClientIdAsync(int clientId)
+        {
+            var prospections = await _prospectionRepository.GetAllAsync();
+            return prospections.Where(p => p.ClientId == clientId).ToList();
+        }
+
         public async Task<Prospection?> GetByIdAsync(Guid id)
         {
             return await _prospectionRepository.GetByIdAsync(id);
@@ -61,8 +68,21 @@ namespace CRM.Services.prospections
         }
         public async Task DeleteAsync(Guid id)
         {
+            await using var transaction = await _context.Database.BeginTransactionAsync();
+
+            var actions = await _context.ActionsProspections
+                .Where(action => action.ProspectionId == id)
+                .ToListAsync();
+            _context.ActionsProspections.RemoveRange(actions);
+
+            var lignes = await _context.LigneProspections
+                .Where(ligne => ligne.ProspectionId == id)
+                .ToListAsync();
+            _context.LigneProspections.RemoveRange(lignes);
+
             await _prospectionRepository.DeleteAsync(id);
             await _context.SaveChangesAsync();
+            await transaction.CommitAsync();
         }
         public async Task UpdateAsync(Prospection prospection)
         {

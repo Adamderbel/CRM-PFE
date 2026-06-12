@@ -3,10 +3,8 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ProspectService } from '../../../core/services/prospect.service';
 import { NotificationService } from '../../../core/services/notification.service';
-import { ClientCermService } from '../../../core/services/client-cerm.service';
 import { CreateProspectRequest, DomaineActivite, UpdateProspectRequest } from '../../../core/models/prospect.model';
 import { ModeContact } from '../../../core/models/mode-contact.model';
-import { ClientCerm } from '../../../core/models/client-cerm.model';
 
 @Component({
   selector: 'app-prospect-form',
@@ -24,7 +22,6 @@ export class ProspectForm implements OnInit {
   successMessage = signal('');
    domaines = signal<DomaineActivite[]>([]);
    modeContacts = signal<ModeContact[]>([]);
-   clientsCerm = signal<ClientCerm[]>([]);
 
   nom = signal('');
   prenom = signal('');
@@ -33,13 +30,10 @@ export class ProspectForm implements OnInit {
   source = signal<string>('');
   notes = signal('');
   idDomaineActivite = signal<number>(0);
-  clientCermId = signal<number | null>(null);
-  codeCRM = signal('');
 
   constructor(
     private prospectService: ProspectService,
     private notificationService: NotificationService,
-    private clientCermService: ClientCermService,
     private route: ActivatedRoute,
     private router: Router
   ) {}
@@ -47,35 +41,13 @@ export class ProspectForm implements OnInit {
   ngOnInit(): void {
     this.loadDomaines();
     this.loadModeContacts();
-    this.loadClientsCerm();
 
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
       this.isEditMode.set(true);
       this.prospectId.set(id);
       this.loadProspect(id);
-    } else {
-      this.loadNextCode();
-      const qClientCermId = this.route.snapshot.queryParamMap.get('clientCermId');
-      if (qClientCermId) {
-        const cId = parseInt(qClientCermId, 10);
-        this.clientCermId.set(cId);
-        this.clientCermService.getById(cId).subscribe({
-          next: (client) => {
-            if (client.nom) {
-              this.nom.set(client.nom);
-            }
-          }
-        });
-      }
     }
-  }
-
-  loadNextCode(): void {
-    this.prospectService.getNextCode().subscribe({
-      next: (res) => this.codeCRM.set(res.code),
-      error: (err) => console.error('Erreur lors du chargement du code CRM', err)
-    });
   }
 
   loadDomaines(): void {
@@ -87,12 +59,6 @@ export class ProspectForm implements OnInit {
   loadModeContacts(): void {
     this.prospectService.getModeContacts().subscribe({
       next: (data) => this.modeContacts.set(data),
-    });
-  }
-
-  loadClientsCerm(): void {
-    this.clientCermService.getAll().subscribe({
-      next: (data) => this.clientsCerm.set(data),
     });
   }
 
@@ -109,8 +75,6 @@ export class ProspectForm implements OnInit {
         this.source.set(prospect.source || '');
         this.notes.set(prospect.notes || '');
         this.idDomaineActivite.set(prospect.idDomaineActivite);
-        this.clientCermId.set(prospect.clientCermId || null);
-        this.codeCRM.set(prospect.codeCRM || '');
         this.isLoading.set(false);
       },
       error: (err) => {
@@ -176,8 +140,6 @@ export class ProspectForm implements OnInit {
         source: this.source() || undefined,
         notes: this.notes(),
         idDomaineActivite: this.idDomaineActivite(),
-        clientCermId: this.clientCermId() || undefined,
-        codeCRM: this.codeCRM() || undefined,
       };
 
       console.log('[ProspectForm] Envoi de la mise à jour:', dto);
@@ -204,8 +166,6 @@ export class ProspectForm implements OnInit {
         source: this.source() || undefined,
         notes: this.notes(),
         idDomaineActivite: this.idDomaineActivite(),
-        clientCermId: this.clientCermId() || undefined,
-        codeCRM: this.codeCRM() || undefined,
       };
 
       console.log('[ProspectForm] Envoi de la création:', request);

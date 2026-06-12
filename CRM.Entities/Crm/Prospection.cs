@@ -22,10 +22,12 @@ namespace CRM.Entities.Crm
         public int? StatutId { get; set; }
         public Guid? UserId { get; set; }
         public Guid? ProspectId { get; set; }
+        public int? ClientId { get; set; }
 
         // Navigation Properties
         public StatutProspection? Statut { get; set; }
         public SecUser? User { get; set; }
         public Prospect? Prospect { get; set; }
+        public CRM.Entities.Common.ClientCerm? Client { get; set; }
     }
 }

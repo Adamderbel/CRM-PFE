@@ -5,6 +5,7 @@ import { environment } from '../../../environments/environment';
 
 export interface DashboardMetrics {
   totalProspects: number;
+  totalClients: number;
   totalProspections: number;
   totalLignesProspection: number;
   totalActionsCommerciales: number;

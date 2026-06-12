@@ -157,7 +157,7 @@
                   <th>Date de l'action</th>
                   <th>État / Statut</th>
                   <th>Commentaires</th>
-                  <th class="text-right">Actions</th>
+                  <th class="text-right history-actions-column">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -173,12 +173,21 @@
                         {{ pr.statut?.libelle ?? '—' }}
                       </span>
                     </td>
-                    <td class="text-truncate-2">{{ pr.notes || '—' }}</td>
-                    <td class="text-right">
-                      <a [routerLink]="['/prospections/detail', pr.id]" class="btn btn-sm btn-outline">
-                        <span class="material-icons">visibility</span>
-                        Détails
-                      </a>
+                    <td>
+                      <div class="text-truncate-2">{{ pr.notes || '—' }}</div>
+                    </td>
+                    <td class="text-right history-actions-column">
+                      <div class="history-row-actions">
+                        <a [routerLink]="['/prospections/detail', pr.id]" class="btn btn-sm btn-outline history-details-btn">
+                          <span class="material-icons">visibility</span>
+                          Détails
+                        </a>
+                        <button type="button" class="history-delete-btn" title="Supprimer"
+                                [disabled]="deletingProspectionId() === pr.id"
+                                (click)="deleteProspection(pr)">
+                          <span class="material-icons md">delete</span>
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 }

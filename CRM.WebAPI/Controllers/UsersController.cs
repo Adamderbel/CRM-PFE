@@ -40,11 +40,72 @@ namespace CRM.WebAPI.Controllers
                     Nom = user.Nom ?? string.Empty,
                     Prenom = user.Prenom ?? string.Empty,
                     IsActive = user.IsActive,
-                    Roles = roles
+                    Roles = roles.Select(NormalizeRoleName).Where(role => !string.IsNullOrWhiteSpace(role)).ToList()
                 });
             }
 
             return Ok(result);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CreateUser([FromBody] CreateUserDto request)
+        {
+            if (request == null)
+                return BadRequest("Le corps de la requete est invalide.");
+
+            if (string.IsNullOrWhiteSpace(request.Email)
+                || string.IsNullOrWhiteSpace(request.UserName)
+                || string.IsNullOrWhiteSpace(request.Password)
+                || string.IsNullOrWhiteSpace(request.Role))
+            {
+                return BadRequest("Les champs Email, UserName, Password et Role sont obligatoires.");
+            }
+
+            var normalizedRole = request.Role.Trim().ToUpperInvariant();
+            var validRoles = new[] { "ADMIN", "MANAGER", "COMMERCIAL" };
+            if (!validRoles.Contains(normalizedRole))
+                return BadRequest($"Role invalide. Les roles autorises sont : {string.Join(", ", validRoles)}");
+
+            var role = await _roleManager.FindByNameAsync(normalizedRole);
+            if (role == null || string.IsNullOrWhiteSpace(role.Name))
+                return BadRequest("Le role demande n'existe pas.");
+
+            var email = request.Email.Trim();
+            var userName = request.UserName.Trim();
+
+            if (await _userManager.FindByEmailAsync(email) != null)
+                return BadRequest("Un utilisateur avec cet email existe deja.");
+
+            if (await _userManager.FindByNameAsync(userName) != null)
+                return BadRequest("Un utilisateur avec ce nom d'utilisateur existe deja.");
+
+            var user = new SecUser
+            {
+                Email = email,
+                UserName = userName,
+                Nom = request.Nom?.Trim() ?? string.Empty,
+                Prenom = request.Prenom?.Trim() ?? string.Empty,
+                IsActive = true
+            };
+
+            var createResult = await _userManager.CreateAsync(user, request.Password);
+            if (!createResult.Succeeded)
+                return BadRequest(new { error = string.Join("; ", createResult.Errors.Select(e => e.Description)) });
+
+            var roleResult = await _userManager.AddToRoleAsync(user, role.Name);
+            if (!roleResult.Succeeded)
+                return StatusCode(500, new { error = string.Join("; ", roleResult.Errors.Select(e => e.Description)) });
+
+            return Ok(new
+            {
+                id = user.Id,
+                email = user.Email,
+                userName = user.UserName,
+                nom = user.Nom,
+                prenom = user.Prenom,
+                isActive = user.IsActive,
+                roles = new[] { NormalizeRoleName(role.Name) }
+            });
         }
 
         [HttpPatch("{id}/status")]
@@ -87,7 +148,8 @@ namespace CRM.WebAPI.Controllers
             if (!validRoles.Contains(normalizedRole))
                 return BadRequest($"Role invalide. Les roles autorises sont : {string.Join(", ", validRoles)}");
 
-            if (!await _roleManager.RoleExistsAsync(normalizedRole))
+            var role = await _roleManager.FindByNameAsync(normalizedRole);
+            if (role == null || string.IsNullOrWhiteSpace(role.Name))
                 return BadRequest("Le role demande n'existe pas.");
 
             var user = await _userManager.FindByIdAsync(id.ToString());
@@ -102,11 +164,23 @@ namespace CRM.WebAPI.Controllers
             if (!removeResult.Succeeded)
                 return StatusCode(500, new { error = string.Join("; ", removeResult.Errors.Select(e => e.Description)) });
 
-            var addResult = await _userManager.AddToRoleAsync(user, normalizedRole);
+            var addResult = await _userManager.AddToRoleAsync(user, role.Name);
             if (!addResult.Succeeded)
                 return StatusCode(500, new { error = string.Join("; ", addResult.Errors.Select(e => e.Description)) });
 
             return Ok();
+        }
+
+        private static string NormalizeRoleName(string? role)
+        {
+            var normalizedRole = role?.Trim().ToUpperInvariant();
+            return normalizedRole switch
+            {
+                "ADMIN" => "ADMIN",
+                "MANAGER" => "MANAGER",
+                "COMMERCIAL" => "COMMERCIAL",
+                _ => string.Empty
+            };
         }
     }
 }

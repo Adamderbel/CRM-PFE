@@ -1,9 +1,9 @@
 <div class="page-wrapper">
   <!-- Back Link -->
   <div class="mb-16">
-    <a routerLink="/prospections" class="btn btn-ghost" style="padding-left: 0;">
+    <a [routerLink]="prospection()?.clientId ? '/clients' : '/prospections'" class="btn btn-ghost" style="padding-left: 0;">
       <span class="material-icons md">arrow_back</span>
-      Retour aux prospections
+      {{ prospection()?.clientId ? 'Retour aux clients' : 'Retour aux prospections' }}
     </a>
   </div>
 
@@ -50,7 +50,14 @@
       <div class="card-header" style="background: linear-gradient(135deg, var(--primary-50) 0%, var(--primary-100) 100%);">
         <div>
           <h2 style="font-size: 20px; font-weight: 600; color: var(--text-primary);">
-            Prospection — {{ prospection()?.prospect?.nom }} {{ prospection()?.prospect?.prenom }}
+            Prospection —
+            @if (prospection()?.client) {
+              <span class="badge badge-success" style="margin-right: 8px;">Client</span>
+              {{ prospection()?.client?.nom }}
+            } @else {
+              <span class="badge badge-info" style="margin-right: 8px;">Prospect</span>
+              {{ prospection()?.prospect?.nom }} {{ prospection()?.prospect?.prenom }}
+            }
           </h2>
         </div>
         <span class="badge" [class.badge-success]="prospection()?.statut?.libelle === 'Gagnée'" [class.badge-warning]="prospection()?.statut?.libelle === 'En cours'" [class.badge-error]="prospection()?.statut?.libelle === 'Perdue'">{{ prospection()?.statut?.libelle || 'Inconnu' }}</span>
@@ -120,8 +127,14 @@
           <span class="material-icons md" style="color: var(--primary-500);">phone_in_talk</span>
           Actions commerciales
         </h3>
+        @if (!showActionForm()) {
+          <button type="button" class="btn btn-primary" (click)="ouvrirFormulaireAction()">
+            <span class="material-icons md">add</span>
+            Ajouter
+          </button>
+        }
       </div>
-      <div class="card-body">
+      <div class="card-body" style="display: flex; flex-direction: column;">
         @if (actionFeedback()) {
           <div class="alert alert-success mb-24">
             {{ actionFeedback() }}
@@ -129,7 +142,8 @@
         }
 
         <!-- Action Form -->
-        <div style="background: var(--gray-50); padding: 20px; border-radius: var(--radius-lg); margin-bottom: 24px;">
+        @if (showActionForm()) {
+        <div style="background: var(--gray-50); padding: 20px; border-radius: var(--radius-lg); margin-top: 24px; order: 2;">
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; margin-bottom: 16px;">
             <div class="form-group">
               <label class="form-label">Type d'action</label>
@@ -151,6 +165,10 @@
               <textarea class="form-control" [(ngModel)]="resultat" name="resultat" rows="2"></textarea>
             </div>
           </div>
+          <div style="display: flex; justify-content: flex-end; gap: 12px;">
+          <button type="button" class="btn btn-secondary" [disabled]="savingAction()" (click)="fermerFormulaireAction()">
+            Annuler
+          </button>
           <button type="button" class="btn btn-primary" [disabled]="savingAction()" (click)="enregistrerAction()">
             @if (savingAction()) {
               <span class="spinner" style="width: 16px; height: 16px; border-width: 2px; margin-right: 8px;"></span>
@@ -160,7 +178,10 @@
               Enregistrer l'action
             }
           </button>
+          </div>
         </div>
+
+        }
 
         <!-- Actions Table -->
         @if (actions().length > 0) {
@@ -171,6 +192,7 @@
                 <th>Type</th>
                 <th>Commentaire</th>
                 <th>Résultat</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -182,6 +204,13 @@
                   </td>
                   <td>{{ a.commentaire || '—' }}</td>
                   <td>{{ a.resultat || '—' }}</td>
+                  <td>
+                    <button type="button" class="table-action-btn delete" title="Supprimer"
+                            [disabled]="deletingActionId() === a.id"
+                            (click)="supprimerAction(a)">
+                      <span class="material-icons md">delete</span>
+                    </button>
+                  </td>
                 </tr>
               }
             </tbody>

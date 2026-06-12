@@ -1,5 +1,6 @@
 using CRM.Entities.Security;
 using CRM.Services;
+using CRM.Services.clientscerm;
 using CRM.Services.LigneProspections;
 using CRM.Services.produitecerms;
 using CRM.Services.prospections;
@@ -22,6 +23,7 @@ namespace CRM.WebAPI.Controllers
         private readonly ILigneProspectionService _ligneProspectionService;
         private readonly IstatutProspectionService _statutProspectionService;
         private readonly IProspectService _prospectService;
+        private readonly IClientCermService _clientCermService;
         private readonly IReclamationService _reclamationService;
         private readonly IproduitCermService _produitCermService;
         private readonly UserManager<SecUser> _userManager;
@@ -31,6 +33,7 @@ namespace CRM.WebAPI.Controllers
             ILigneProspectionService ligneProspectionService,
             IstatutProspectionService statutProspectionService,
             IProspectService prospectService,
+            IClientCermService clientCermService,
             IReclamationService reclamationService,
             IproduitCermService produitCermService,
             UserManager<SecUser> userManager)
@@ -39,6 +42,7 @@ namespace CRM.WebAPI.Controllers
             _ligneProspectionService = ligneProspectionService;
             _statutProspectionService = statutProspectionService;
             _prospectService = prospectService;
+            _clientCermService = clientCermService;
             _reclamationService = reclamationService;
             _produitCermService = produitCermService;
             _userManager = userManager;
@@ -143,6 +147,7 @@ namespace CRM.WebAPI.Controllers
                 var principal = await ResolveCurrentSecUserAsync(User);
                 var role = GetCurrentRole();
                 var prospects = (await _prospectService.GetAllAsync(principal?.Id, role)).ToList();
+                var clients = (await _clientCermService.GetAllAsync()).ToList();
                 var prospections = (await _prospectionServices.GetAllAsync(principal?.Id, role)).ToList();
                 var lignes = (await _ligneProspectionService.GetAllAsync(principal?.Id, role)).ToList();
                 var reclamations = (await _reclamationService.GetAllReclamations(principal?.Id, role)).ToList();
@@ -157,6 +162,7 @@ namespace CRM.WebAPI.Controllers
                 return Ok(new
                 {
                     totalProspects = prospects.Count,
+                    totalClients = clients.Count,
                     totalProspections = prospections.Count,
                     totalLignesProspection = lignes.Count,
                     totalActionsCommerciales = 0,
@@ -192,6 +198,11 @@ namespace CRM.WebAPI.Controllers
                     {
                         var prospect = await _prospectService.GetByIdAsync(p.ProspectId.Value);
                         prospectName = $"{prospect?.Prenom} {prospect?.Nom}".Trim();
+                    }
+                    else if (p.ClientId.HasValue)
+                    {
+                        var client = await _clientCermService.GetByIdAsync(p.ClientId.Value);
+                        prospectName = client?.Nom;
                     }
 
                     result.Add(new

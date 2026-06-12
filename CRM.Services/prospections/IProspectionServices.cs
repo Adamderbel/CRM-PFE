@@ -11,6 +11,7 @@ namespace CRM.Services.prospections
     {
         Task<IEnumerable<Prospection>> GetAllAsync(Guid? userId = null, string? role = null);
         Task<IEnumerable<Prospection>> GetByProspectIdAsync(Guid prospectId);
+        Task<IEnumerable<Prospection>> GetByClientIdAsync(int clientId);
         Task<Prospection?> GetByIdAsync(Guid id);
         Task CreateAsync(Prospection prospection);
         Task DeleteAsync(Guid id);

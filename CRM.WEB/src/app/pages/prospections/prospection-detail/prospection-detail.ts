@@ -1,5 +1,5 @@
 import { Component, OnInit, signal } from '@angular/core';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProspectionService } from '../../../core/services/prospection.service';
@@ -28,9 +28,13 @@ export class ProspectionDetail implements OnInit {
   resultat = '';
   savingAction = signal(false);
   actionFeedback = signal('');
+  showActionForm = signal(false);
+  deletingProspection = signal(false);
+  deletingActionId = signal<string | null>(null);
 
   constructor(
     private route: ActivatedRoute,
+    private router: Router,
     private prospectionService: ProspectionService,
     private actionProspectionService: ActionProspectionService
   ) {}
@@ -99,9 +103,13 @@ export class ProspectionDetail implements OnInit {
       })
       .subscribe({
         next: () => {
+          this.typeActionId = null;
           this.commentaire = '';
           this.resultat = '';
           this.savingAction.set(false);
+          this.showActionForm.set(false);
+          this.actionFeedback.set('Action ajoutee avec succes.');
+          setTimeout(() => this.actionFeedback.set(''), 5000);
           this.loadActions(p.id);
         },
         error: () => {
@@ -109,5 +117,60 @@ export class ProspectionDetail implements OnInit {
           this.savingAction.set(false);
         },
       });
+  }
+
+  ouvrirFormulaireAction(): void {
+    this.actionFeedback.set('');
+    this.showActionForm.set(true);
+  }
+
+  fermerFormulaireAction(): void {
+    if (this.savingAction()) {
+      return;
+    }
+
+    this.typeActionId = null;
+    this.commentaire = '';
+    this.resultat = '';
+    this.actionFeedback.set('');
+    this.showActionForm.set(false);
+  }
+
+  supprimerProspection(): void {
+    const prospection = this.prospection();
+    if (!prospection || !confirm('Supprimer cette prospection et toutes ses actions et lignes ?')) {
+      return;
+    }
+
+    this.deletingProspection.set(true);
+    this.errorMessage.set('');
+    this.prospectionService.delete(prospection.id).subscribe({
+      next: () => this.router.navigate(prospection.clientId ? ['/clients'] : ['/prospections']),
+      error: () => {
+        this.deletingProspection.set(false);
+        this.errorMessage.set('Impossible de supprimer cette prospection.');
+      },
+    });
+  }
+
+  supprimerAction(action: ActionsProspection): void {
+    if (!action.id || !confirm('Supprimer cette action commerciale ?')) {
+      return;
+    }
+
+    this.deletingActionId.set(action.id);
+    this.actionFeedback.set('');
+    this.actionProspectionService.delete(action.id).subscribe({
+      next: () => {
+        this.actions.update((actions) => actions.filter((item) => item.id !== action.id));
+        this.deletingActionId.set(null);
+        this.actionFeedback.set('Action supprimee avec succes.');
+        setTimeout(() => this.actionFeedback.set(''), 5000);
+      },
+      error: () => {
+        this.deletingActionId.set(null);
+        this.errorMessage.set('Impossible de supprimer cette action.');
+      },
+    });
   }
 }

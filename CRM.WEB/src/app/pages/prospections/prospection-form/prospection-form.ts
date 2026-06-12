@@ -57,7 +57,6 @@ export class ProspectionForm implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    this.loadProspects();
     this.loadStatuts();
     this.loadTypesActions();
     // Préférer le `sub` du JWT au profil stocké (évite Guid obsolètes après reset BDD / seeder)
@@ -89,6 +88,7 @@ export class ProspectionForm implements OnInit {
         }
       }
     }
+    this.loadProspects();
   }
 
   loadClientName(id: number): void {
@@ -97,51 +97,6 @@ export class ProspectionForm implements OnInit {
         this.clientName.set(client.nom || 'Client ' + id);
       },
       error: () => this.clientName.set('Client ' + id)
-    });
-  }
-
-  handleClientCermRedirect(clientCermId: number): void {
-    this.isLoading.set(true);
-    this.prospectService.getByClientCermId(clientCermId).subscribe({
-      next: (prospect) => {
-        if (prospect && prospect.id) {
-          this.prospectId.set(prospect.id);
-          this.isProspectFixed.set(true);
-          this.isLoading.set(false);
-        } else {
-          // Créer automatiquement le prospect pour ce client
-          this.clientCermService.getById(clientCermId).subscribe({
-            next: (client) => {
-              const newProspect: any = {
-                nom: client.nom || 'Client CERM',
-                prenom: '',
-                email: 'client@cerm.local', // Default or from client if available
-                telephone: '',
-                idDomaineActivite: 1, // Default domain
-                clientCermId: clientCermId,
-                notes: 'Créé automatiquement depuis la liste des clients.'
-              };
-              this.prospectService.create(newProspect).subscribe({
-                next: () => {
-                  // Re-fetch to get the ID
-                  this.prospectService.getByClientCermId(clientCermId).subscribe({
-                    next: (p) => {
-                      if (p) {
-                        this.prospectId.set(p.id);
-                        this.isProspectFixed.set(true);
-                      }
-                      this.isLoading.set(false);
-                    }
-                  });
-                },
-                error: () => this.isLoading.set(false)
-              });
-            },
-            error: () => this.isLoading.set(false)
-          });
-        }
-      },
-      error: () => this.isLoading.set(false)
     });
   }
 
@@ -157,9 +112,11 @@ export class ProspectionForm implements OnInit {
         this.listsLoading.set(false);
       },
       error: () => {
-        this.prospectsLoadError.set(
-          'Impossible de charger la liste des prospects. Vérifiez la connexion ou vos droits d’accès.'
-        );
+        if (!this.isClientFixed()) {
+          this.prospectsLoadError.set(
+            'Impossible de charger la liste des prospects. Vérifiez la connexion ou vos droits d’accès.'
+          );
+        }
         this.prospects.set([]);
         this.listsLoading.set(false);
       },
@@ -169,17 +126,14 @@ export class ProspectionForm implements OnInit {
   loadStatuts(): void {
     this.prospectionService.getStatuts().subscribe({
       next: (data) => {
-        this.statuts.set(data);
-        if (!this.isEditMode()) {
-          const defaultStatut = data.find((s) => {
-            const label = (s.libelle || '').toLowerCase().replace(/\s+/g, '');
-            return label === 'encours' || label === 'en-cours' || label.includes('cours');
-          });
-          if (defaultStatut) {
-            this.statutId.set(String(defaultStatut.id));
-          } else if (data.length > 0) {
-            this.statutId.set(String(data[0].id));
-          }
+        const availableStatuts = data.filter((statut) => {
+          const label = (statut.libelle || '').trim().toLowerCase().replace(/\s+/g, '');
+          return label !== 'qualification';
+        });
+
+        this.statuts.set(availableStatuts);
+        if (!this.isEditMode() && availableStatuts.length > 0) {
+          this.statutId.set(String(availableStatuts[0].id));
         }
       },
       error: () => {
@@ -223,7 +177,12 @@ export class ProspectionForm implements OnInit {
         this.prospectId.set(prospection.prospectId ? String(prospection.prospectId) : '');
         this.clientId.set(prospection.clientId ?? null);
         if (prospection.clientId) {
+          this.isClientFixed.set(true);
+          this.isProspectFixed.set(false);
           this.loadClientName(prospection.clientId);
+        } else if (prospection.prospectId) {
+          this.isProspectFixed.set(true);
+          this.isClientFixed.set(false);
         }
         this.userId.set(prospection.userId ? String(prospection.userId) : '');
 

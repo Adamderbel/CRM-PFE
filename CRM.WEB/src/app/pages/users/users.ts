@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { UserService } from '../../core/services/user.service';
 import { NotificationService } from '../../core/services/notification.service';
-import { UserDto } from '../../core/models/user.model';
+import { CreateUserRequest, UserDto } from '../../core/models/user.model';
 
 @Component({
   selector: 'app-users',
@@ -19,10 +19,13 @@ export class Users {
   successMessage = signal('');
   searchQuery = signal('');
   roleFilter = signal('');
+  showCreateModal = signal(false);
+  isCreating = signal(false);
   pageSize = signal(10);
   currentPage = signal(1);
   pageOptions = [10, 20, 50];
   roleOptions = ['ADMIN', 'MANAGER', 'COMMERCIAL'];
+  newUser: CreateUserRequest = this.getEmptyUserForm();
 
   filteredUsers = computed(() => {
     let list = this.users();
@@ -66,10 +69,14 @@ export class Users {
       next: (users) => {
         console.log('[Users] Liste chargée:', users);
         this.users.set(
-          users.map((user) => ({
-            ...user,
-            selectedRole: user.roles[0] ?? 'MANAGER',
-          }))
+          users.map((user) => {
+            const roles = (user.roles || []).map((role) => this.normalizeRole(role)).filter(Boolean);
+            return {
+              ...user,
+              roles,
+              selectedRole: roles[0] ?? 'MANAGER',
+            };
+          })
         );
         this.isLoading.set(false);
         this.currentPage.set(1);
@@ -117,6 +124,47 @@ export class Users {
         this.errorMessage.set(this.getErrorMessage(error, 'Impossible de rejeter cet utilisateur.'));
         this.notificationService.error('Impossible de rejeter cet utilisateur.');
         this.isLoading.set(false);
+      },
+    });
+  }
+
+  openCreateModal(): void {
+    this.errorMessage.set('');
+    this.successMessage.set('');
+    this.newUser = this.getEmptyUserForm();
+    this.showCreateModal.set(true);
+  }
+
+  closeCreateModal(): void {
+    if (this.isCreating()) {
+      return;
+    }
+
+    this.showCreateModal.set(false);
+  }
+
+  createUser(): void {
+    if (!this.newUser.email || !this.newUser.userName || !this.newUser.password || !this.newUser.role) {
+      this.errorMessage.set('Veuillez remplir email, nom utilisateur, mot de passe et role.');
+      return;
+    }
+
+    this.isCreating.set(true);
+    this.errorMessage.set('');
+    this.successMessage.set('');
+
+    this.userService.createUser(this.newUser).subscribe({
+      next: () => {
+        this.successMessage.set(`Utilisateur ${this.newUser.userName} cree avec le role ${this.newUser.role}.`);
+        this.notificationService.success(`Utilisateur ${this.newUser.userName} cree.`);
+        this.isCreating.set(false);
+        this.showCreateModal.set(false);
+        this.loadUsers();
+      },
+      error: (error) => {
+        this.errorMessage.set(this.getErrorMessage(error, 'Impossible de creer cet utilisateur.'));
+        this.notificationService.error('Impossible de creer cet utilisateur.');
+        this.isCreating.set(false);
       },
     });
   }
@@ -186,5 +234,21 @@ export class Users {
     }
 
     return error.message ?? fallback;
+  }
+
+  private getEmptyUserForm(): CreateUserRequest {
+    return {
+      email: '',
+      userName: '',
+      nom: '',
+      prenom: '',
+      password: '',
+      role: 'COMMERCIAL',
+    };
+  }
+
+  private normalizeRole(role: string | null | undefined): string {
+    const normalized = (role || '').trim().toUpperCase();
+    return this.roleOptions.includes(normalized) ? normalized : '';
   }
 }

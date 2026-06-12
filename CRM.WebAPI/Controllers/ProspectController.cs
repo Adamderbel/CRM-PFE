@@ -101,8 +101,6 @@ namespace CRM.WebAPI.Controllers
                     DateCreation = prospectDto.DateCreation ?? DateTime.Now,
                     Notes = prospectDto.Notes,
                     idDomaineActivitee = domaineId,
-                    ClientCermId = prospectDto.ClientCermId,
-                    CodeCRM = prospectDto.CodeCRM,
                     UserId = principal.Id
                 };
 
@@ -139,8 +137,6 @@ namespace CRM.WebAPI.Controllers
                 return NotFound("Prospect not found.");
 
             existingProspect.idDomaineActivitee = dto.IdDomaineActivite ?? dto.idDomaineActivitee;
-            existingProspect.ClientCermId = dto.ClientCermId;
-            existingProspect.CodeCRM = dto.CodeCRM;
 
             await _prospectService.UpdateAsync(existingProspect);
 

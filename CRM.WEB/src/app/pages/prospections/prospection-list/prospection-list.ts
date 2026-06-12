@@ -18,6 +18,7 @@ export class ProspectionList implements OnInit {
   prospectionToDelete = signal<Prospection | null>(null);
   successMessage = signal('');
   prospectId = signal<string | null>(null);
+  clientId = signal<number | null>(null);
   pageSize = signal(10);
   currentPage = signal(1);
   pageOptions = [10, 20, 50];
@@ -56,11 +57,19 @@ export class ProspectionList implements OnInit {
   ngOnInit(): void {
     this.route.queryParams.subscribe(params => {
       const pId = params['prospectId'];
+      const rawClientId = params['clientId'] ?? params['clientCermId'];
       if (pId) {
         this.prospectId.set(pId);
+        this.clientId.set(null);
         this.loadProspectionsByProspect(pId);
+      } else if (rawClientId) {
+        const clientId = Number(rawClientId);
+        this.prospectId.set(null);
+        this.clientId.set(clientId);
+        this.loadProspectionsByClient(clientId);
       } else {
         this.prospectId.set(null);
+        this.clientId.set(null);
         this.loadProspections();
       }
     });
@@ -82,6 +91,19 @@ export class ProspectionList implements OnInit {
       next: (res) => console.log('[ProspectionList] Prospections du prospect chargées:', res),
       error: (err) => console.error('[ProspectionList] Erreur de chargement prospect:', err)
     });
+  }
+
+  loadProspectionsByClient(clientId: number): void {
+    this.currentPage.set(1);
+    this.prospectionService.getByClientId(clientId).subscribe({
+      error: (err) => console.error('[ProspectionList] Erreur de chargement client:', err)
+    });
+  }
+
+  createQueryParams(): Record<string, string | number> | null {
+    if (this.prospectId()) return { prospectId: this.prospectId()! };
+    if (this.clientId()) return { clientCermId: this.clientId()! };
+    return null;
   }
 
   editProspection(id: string): void {

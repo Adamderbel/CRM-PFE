@@ -1,13 +1,15 @@
 <div class="page-wrapper">
-  <!-- Page Header -->
   <div class="page-header">
     <div>
       <h1 class="page-title">Gestion des utilisateurs</h1>
-      <p class="page-subtitle">Liste des comptes, validation et attribution des rôles (Commercial, Manager, Administrateur)</p>
+      <p class="page-subtitle">Liste des comptes, validation et attribution des roles (Commercial, Manager, Administrateur)</p>
     </div>
+    <button class="btn btn-primary" type="button" (click)="openCreateModal()">
+      <span class="material-icons">person_add</span>
+      Ajouter
+    </button>
   </div>
 
-  <!-- Alerts -->
   @if (errorMessage()) {
     <div class="alert alert-error mb-24">
       <span class="material-icons">error_outline</span>
@@ -22,14 +24,13 @@
   }
 
   <div class="table-container">
-    <!-- Filters -->
     <div class="filters-bar">
       <div class="search-box">
         <span class="material-icons">search</span>
-        <input type="text" placeholder="Rechercher par utilisateur, email, nom ou prénom" [ngModel]="searchQuery()" (ngModelChange)="onSearchChange($event)" />
+        <input type="text" placeholder="Rechercher par utilisateur, email, nom ou prenom" [ngModel]="searchQuery()" (ngModelChange)="onSearchChange($event)" />
       </div>
       <select class="form-control form-select" style="width: auto;" [ngModel]="roleFilter()" (ngModelChange)="onRoleChange($event)">
-        <option value="">Tous les rôles</option>
+        <option value="">Tous les roles</option>
         @for (role of roleOptions; track role) {
           <option [value]="role">{{ role }}</option>
         }
@@ -37,15 +38,14 @@
       <span class="text-muted fw-medium">{{ filteredUsers().length }} utilisateur(s)</span>
     </div>
 
-    <!-- Table -->
     <table class="table">
       <thead>
         <tr>
           <th>Utilisateur</th>
           <th>Email</th>
           <th>Nom</th>
-          <th>Prénom</th>
-          <th>Rôle</th>
+          <th>Prenom</th>
+          <th>Role</th>
           <th>Statut</th>
           <th style="text-align: right;">Actions</th>
         </tr>
@@ -77,7 +77,7 @@
                 <button class="table-action-btn" style="color: var(--error);" title="Rejeter" (click)="reject(user)">
                   <span class="material-icons md">cancel</span>
                 </button>
-                <button class="table-action-btn edit" title="Mettre à jour le rôle" (click)="updateRole(user)">
+                <button class="table-action-btn edit" title="Mettre a jour le role" (click)="updateRole(user)">
                   <span class="material-icons md">edit</span>
                 </button>
               </div>
@@ -87,7 +87,6 @@
       </tbody>
     </table>
 
-    <!-- Pagination -->
     <div class="pagination">
       <div class="d-flex align-items-center gap-16">
         <select class="form-control form-select-sm" style="width: auto; height: 38px; border-radius: var(--radius-md);" [ngModel]="pageSize()" (ngModelChange)="onPageSizeChange($event)">
@@ -100,7 +99,7 @@
       <div class="d-flex gap-8">
         <button class="pagination-btn" (click)="previousPage()" [disabled]="currentPage() === 1">
           <span class="material-icons sm">chevron_left</span>
-          Précédent
+          Precedent
         </button>
         <button class="pagination-btn active">{{ currentPage() }}</button>
         <button class="pagination-btn" (click)="nextPage()" [disabled]="currentPage() >= totalPages()">
@@ -110,4 +109,68 @@
       </div>
     </div>
   </div>
+
+  @if (showCreateModal()) {
+    <div class="modal-backdrop" (click)="closeCreateModal()">
+      <div class="modal-panel" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <div>
+            <h2>Ajouter un utilisateur</h2>
+            <p>Creer un compte actif et lui attribuer un role.</p>
+          </div>
+          <button class="table-action-btn" type="button" title="Fermer" (click)="closeCreateModal()">
+            <span class="material-icons md">close</span>
+          </button>
+        </div>
+
+        <form class="user-form" (ngSubmit)="createUser()">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Email <span class="required">*</span></label>
+              <input class="form-control" type="email" name="email" [(ngModel)]="newUser.email" required />
+            </div>
+
+            <div class="form-group">
+              <label>Nom utilisateur <span class="required">*</span></label>
+              <input class="form-control" type="text" name="userName" [(ngModel)]="newUser.userName" required />
+            </div>
+
+            <div class="form-group">
+              <label>Nom</label>
+              <input class="form-control" type="text" name="nom" [(ngModel)]="newUser.nom" />
+            </div>
+
+            <div class="form-group">
+              <label>Prenom</label>
+              <input class="form-control" type="text" name="prenom" [(ngModel)]="newUser.prenom" />
+            </div>
+
+            <div class="form-group">
+              <label>Mot de passe <span class="required">*</span></label>
+              <input class="form-control" type="password" name="password" [(ngModel)]="newUser.password" required />
+            </div>
+
+            <div class="form-group">
+              <label>Role <span class="required">*</span></label>
+              <select class="form-control form-select" name="role" [(ngModel)]="newUser.role" required>
+                @for (role of roleOptions; track role) {
+                  <option [value]="role">{{ role }}</option>
+                }
+              </select>
+            </div>
+          </div>
+
+          <div class="modal-actions">
+            <button class="btn btn-secondary" type="button" (click)="closeCreateModal()" [disabled]="isCreating()">
+              Annuler
+            </button>
+            <button class="btn btn-primary" type="submit" [disabled]="isCreating()">
+              <span class="material-icons">save</span>
+              {{ isCreating() ? 'Creation...' : 'Creer utilisateur' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
 </div>

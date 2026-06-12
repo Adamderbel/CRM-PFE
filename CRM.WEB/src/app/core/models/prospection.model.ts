@@ -8,7 +8,7 @@ export interface Prospection {
   prospectId?: string;
   clientId?: number;
   statut?: { id: number; libelle: string };
-  user?: { id: string; nom: string; prenom: string };
+  user?: { id: string; nom: string; prenom: string; userName?: string; email?: string };
   prospect?: { id: string; nom: string; prenom: string };
   client?: { id: number; nom: string };
 }

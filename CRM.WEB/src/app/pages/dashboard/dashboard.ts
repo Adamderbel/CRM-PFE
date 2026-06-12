@@ -44,16 +44,24 @@ export class Dashboard implements OnInit {
     this.dashboardService.getMetrics().subscribe({
       next: (data) => {
         const metrics: Metric[] = [
-          { 
-            label: 'Prospects', 
-            value: data.totalProspects.toLocaleString('fr-FR'), 
-            icon: 'people', 
+          {
+            label: 'Prospects',
+            value: data.totalProspects.toLocaleString('fr-FR'),
+            icon: 'people',
             change: `+${data.nouveauxProspectsMois} ce mois`,
             trend: 'up',
             color: 'primary'
           },
-          { 
-            label: 'Conversion', 
+          {
+            label: 'Clients CERM',
+            value: data.totalClients.toLocaleString('fr-FR'),
+            icon: 'business',
+            change: 'Clients synchronisés',
+            trend: 'neutral',
+            color: 'clients'
+          },
+          {
+            label: 'Conversion',
             value: `${data.tauxConversion}%`, 
             icon: 'trending_up', 
             change: data.tauxConversion >= 50 ? 'Objectif atteint' : 'À améliorer',

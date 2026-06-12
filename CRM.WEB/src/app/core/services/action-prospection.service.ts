@@ -21,6 +21,12 @@ export class ActionProspectionService {
       .pipe(map(() => undefined));
   }
 
+  delete(id: string): Observable<void> {
+    return this.http
+      .delete(`${environment.apiUrl}/ActionsProspection/${id}`, { responseType: 'text' })
+      .pipe(map(() => undefined));
+  }
+
   getTypesActions(): Observable<TypeActionProspection[]> {
     return this.http.get<TypeActionProspection[]>(`${environment.apiUrl}/TypeActionProspection`);
   }

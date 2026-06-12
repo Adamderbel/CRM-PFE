@@ -19,6 +19,7 @@ export class ProspectDetail implements OnInit {
   isLoading = signal(true);
   errorMessage = signal('');
   showDeleteConfirm = signal(false);
+  deletingProspectionId = signal<string | null>(null);
 
   constructor(
     private prospectService: ProspectService,
@@ -75,6 +76,25 @@ export class ProspectDetail implements OnInit {
       next: () => {
         this.showDeleteConfirm.set(false);
         this.router.navigate(['/prospects']);
+      },
+    });
+  }
+
+  deleteProspection(prospection: Prospection): void {
+    if (!confirm('Supprimer cette prospection et toutes ses actions et lignes ?')) {
+      return;
+    }
+
+    this.deletingProspectionId.set(prospection.id);
+    this.errorMessage.set('');
+    this.prospectionService.delete(prospection.id).subscribe({
+      next: () => {
+        this.prospections.update((items) => items.filter((item) => item.id !== prospection.id));
+        this.deletingProspectionId.set(null);
+      },
+      error: () => {
+        this.deletingProspectionId.set(null);
+        this.errorMessage.set('Impossible de supprimer cette prospection.');
       },
     });
   }

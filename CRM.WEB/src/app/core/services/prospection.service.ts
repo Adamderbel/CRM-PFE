@@ -85,10 +85,26 @@ export class ProspectionService {
     );
   }
 
+  getByClientId(clientId: number): Observable<Prospection[]> {
+    this.loading.set(true);
+    this.error.set(null);
+    return this.http.get<Prospection[]>(`${environment.apiUrl}/Prospection/client/${clientId}`).pipe(
+      tap((data) => {
+        this.prospectionList.set(data);
+        this.loading.set(false);
+      }),
+      catchError((err) => {
+        this.loading.set(false);
+        this.error.set('Erreur lors du chargement des prospections du client.');
+        return throwError(() => err);
+      })
+    );
+  }
+
   create(prospection: ProspectionCreateDto): Observable<any> {
     this.loading.set(true);
     this.error.set(null);
-    return this.http.post<{ message?: string }>(`${environment.apiUrl}/Prospection`, prospection).pipe(
+    return this.http.post(`${environment.apiUrl}/Prospection`, prospection, { responseType: 'text' }).pipe(
       tap(() => {
         this.loading.set(false);
         this.getAll().subscribe();

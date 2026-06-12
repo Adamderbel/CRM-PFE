@@ -1,6 +1,8 @@
 using CRM.Entities.Crm;
 using CRM.Entities.Security;
 using CRM.Services;
+using CRM.Services.ActionProspection;
+using CRM.Services.clientscerm;
 using CRM.Services.prospections;
 using CRM.Services.StatutPrespection;
 using CRM.WebAPI.DTOs;
@@ -21,18 +23,29 @@ namespace CRM.WebAPI.Controllers
         private readonly IProspectionServices _prospectionServices;
         private readonly IstatutProspectionService _statutProspectionService;
         private readonly IProspectService _prospectService;
+        private readonly IClientCermService _clientCermService;
         private readonly IUserService _userService;
         private readonly UserManager<SecUser> _userManager;
+        private readonly IActionProspectionService _actionProspectionService;
 
 
 
-        public ProspectionController(IUserService userService, UserManager<SecUser> userManager, IProspectionServices prospectionServices, IstatutProspectionService statutProspectionService, IProspectService prospectService)
+        public ProspectionController(
+            IUserService userService,
+            UserManager<SecUser> userManager,
+            IProspectionServices prospectionServices,
+            IstatutProspectionService statutProspectionService,
+            IProspectService prospectService,
+            IClientCermService clientCermService,
+            IActionProspectionService actionProspectionService)
         {
             _prospectionServices = prospectionServices;
             _statutProspectionService = statutProspectionService;
             _prospectService = prospectService;
+            _clientCermService = clientCermService;
             _userService = userService;
             _userManager = userManager;
+            _actionProspectionService = actionProspectionService;
 
         }
 
@@ -47,10 +60,19 @@ namespace CRM.WebAPI.Controllers
                 if (principal == null)
                     return Unauthorized();
 
+                if (prospectionDto.ProspectId.HasValue == prospectionDto.ClientId.HasValue)
+                    return BadRequest("La prospection doit être associée soit à un prospect, soit à un client.");
+
                 if (prospectionDto.ProspectId.HasValue)
                 {
                     var prospect = await _prospectService.GetByIdAsync(prospectionDto.ProspectId.Value);
                     if (prospect == null) return BadRequest("Invalid ProspectId: Prospect not found.");
+                }
+
+                if (prospectionDto.ClientId.HasValue)
+                {
+                    var client = await _clientCermService.GetByIdAsync(prospectionDto.ClientId.Value);
+                    if (client == null) return BadRequest("Invalid ClientId: Client not found.");
                 }
 
                 var statut = await _statutProspectionService.GetByIdAsync(prospectionDto.StatutId);
@@ -71,10 +93,24 @@ namespace CRM.WebAPI.Controllers
                     Notes = prospectionDto.Notes,
                     StatutId = prospectionDto.StatutId,
                     UserId = effectiveUserId,
-                    ProspectId = prospectionDto.ProspectId
+                    ProspectId = prospectionDto.ProspectId,
+                    ClientId = prospectionDto.ClientId
                 };
                 await _prospectionServices.CreateAsync(pros);
-                return Ok("Prospection created successfully.");
+
+                if (prospectionDto.TypeActionId.HasValue)
+                {
+                    await _actionProspectionService.AddAsync(new ActionsProspection
+                    {
+                        ProspectionId = pros.Id,
+                        TypeActionId = prospectionDto.TypeActionId.Value,
+                        DateAction = DateTime.Now,
+                        Commentaire = prospectionDto.CommentaireAction,
+                        Resultat = prospectionDto.ResultatAction
+                    });
+                }
+
+                return Ok(new { message = "Prospection created successfully." });
             }
             catch (Exception ex)
             {
@@ -102,6 +138,11 @@ namespace CRM.WebAPI.Controllers
                         item.Prospect = await _prospectService.GetByIdAsync(item.ProspectId.Value);
                     }
 
+                    if (item.ClientId.HasValue)
+                    {
+                        item.Client = await _clientCermService.GetByIdAsync(item.ClientId.Value);
+                    }
+
                     if (item.UserId.HasValue)
                     {
                         item.User = await _userService.GetByIdAsync(item.UserId.Value);
@@ -123,6 +164,19 @@ namespace CRM.WebAPI.Controllers
                 if (prospection == null) return NotFound();
                 if (IsCommercial() && prospection.UserId != (await ResolveCurrentSecUserAsync(User))?.Id)
                     return NotFound();
+
+                if (prospection.StatutId.HasValue)
+                    prospection.Statut = await _statutProspectionService.GetByIdAsync(prospection.StatutId.Value);
+
+                if (prospection.ProspectId.HasValue)
+                    prospection.Prospect = await _prospectService.GetByIdAsync(prospection.ProspectId.Value);
+
+                if (prospection.ClientId.HasValue)
+                    prospection.Client = await _clientCermService.GetByIdAsync(prospection.ClientId.Value);
+
+                if (prospection.UserId.HasValue)
+                    prospection.User = await _userService.GetByIdAsync(prospection.UserId.Value);
+
                 return Ok(prospection);
             }
             catch (Exception ex)
@@ -164,6 +218,36 @@ namespace CRM.WebAPI.Controllers
             }
         }
 
+        [HttpGet("client/{clientId:int}")]
+        public async Task<IActionResult> GetByClientId(int clientId)
+        {
+            try
+            {
+                var principal = await ResolveCurrentSecUserAsync(User);
+                var prospections = await _prospectionServices.GetByClientIdAsync(clientId);
+                if (IsCommercial())
+                    prospections = prospections.Where(p => p.UserId == principal?.Id).ToList();
+
+                foreach (var item in prospections)
+                {
+                    if (item.StatutId.HasValue)
+                        item.Statut = await _statutProspectionService.GetByIdAsync(item.StatutId.Value);
+
+                    if (item.ClientId.HasValue)
+                        item.Client = await _clientCermService.GetByIdAsync(item.ClientId.Value);
+
+                    if (item.UserId.HasValue)
+                        item.User = await _userService.GetByIdAsync(item.UserId.Value);
+                }
+
+                return Ok(prospections);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message, stack = ex.StackTrace });
+            }
+        }
+
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(Guid id)
         {
@@ -193,6 +277,21 @@ namespace CRM.WebAPI.Controllers
                 if (IsCommercial() && existingProspection.UserId != principal?.Id)
                     return NotFound();
 
+                if (prospectionDto.ProspectId.HasValue == prospectionDto.ClientId.HasValue)
+                    return BadRequest("La prospection doit etre associee soit a un prospect, soit a un client.");
+
+                if (prospectionDto.ProspectId.HasValue)
+                {
+                    var prospect = await _prospectService.GetByIdAsync(prospectionDto.ProspectId.Value);
+                    if (prospect == null) return BadRequest("Invalid ProspectId: Prospect not found.");
+                }
+
+                if (prospectionDto.ClientId.HasValue)
+                {
+                    var client = await _clientCermService.GetByIdAsync(prospectionDto.ClientId.Value);
+                    if (client == null) return BadRequest("Invalid ClientId: Client not found.");
+                }
+
                 existingProspection.DateDebut = prospectionDto.DateDebut;
                 existingProspection.DateFin = prospectionDto.DateFin;
                 existingProspection.Notes = prospectionDto.Notes;
@@ -201,6 +300,7 @@ namespace CRM.WebAPI.Controllers
                     ? prospectionDto.UserId
                     : existingProspection.UserId;
                 existingProspection.ProspectId = prospectionDto.ProspectId;
+                existingProspection.ClientId = prospectionDto.ClientId;
                 await _prospectionServices.UpdateAsync(existingProspection);
                 return Ok("Prospection updated successfully.");
             }

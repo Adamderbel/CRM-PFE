@@ -153,6 +153,56 @@
   text-align: right;
 }
 
+.history-actions-column {
+  width: 170px;
+  min-width: 170px;
+  vertical-align: middle !important;
+}
+
+.history-row-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  min-height: 36px;
+  white-space: nowrap;
+}
+
+.history-details-btn {
+  height: 34px;
+  margin: 0;
+}
+
+.history-delete-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 34px;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  margin: 0;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--error);
+  cursor: pointer;
+}
+
+.history-delete-btn:hover {
+  background: var(--error-bg);
+  border-color: #fecaca;
+}
+
+.history-delete-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.history-delete-btn .material-icons {
+  font-size: 19px;
+}
+
 .text-truncate-2 {
   display: -webkit-box;
   -webkit-line-clamp: 2;
