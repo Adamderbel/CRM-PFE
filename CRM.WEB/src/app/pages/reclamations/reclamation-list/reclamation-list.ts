@@ -41,7 +41,7 @@ export class ReclamationList implements OnInit {
   filteredReclamations = computed(() => {
     let list = this.reclamations();
     const q = this.searchQuery().toLowerCase();
-    const status = this.statusFilter().toLowerCase();
+    const status = this.normalizeStatus(this.statusFilter());
 
     if (q) {
       list = list.filter((rec) =>
@@ -51,7 +51,7 @@ export class ReclamationList implements OnInit {
     }
 
     if (status) {
-      list = list.filter((rec) => (rec.statut || '').toLowerCase().includes(status));
+      list = list.filter((rec) => this.normalizeStatus(rec.statut) === status);
     }
 
     return list;
@@ -123,6 +123,14 @@ export class ReclamationList implements OnInit {
 
   nextPage(): void {
     this.currentPage.update((page) => Math.min(this.totalPages(), page + 1));
+  }
+
+  private normalizeStatus(value: string | null | undefined): string {
+    return (value || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .trim()
+      .toLowerCase();
   }
 
   openProcessModal(rec: Reclamation): void {

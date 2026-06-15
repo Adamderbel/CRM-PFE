@@ -171,6 +171,74 @@ namespace CRM.WebAPI.Controllers
             return Ok();
         }
 
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateUser(Guid id, [FromBody] UpdateUserDto request)
+        {
+            if (request == null
+                || string.IsNullOrWhiteSpace(request.Email)
+                || string.IsNullOrWhiteSpace(request.UserName)
+                || string.IsNullOrWhiteSpace(request.Role))
+            {
+                return BadRequest("Email, nom utilisateur et role sont obligatoires.");
+            }
+
+            var user = await _userManager.FindByIdAsync(id.ToString());
+            if (user == null)
+                return NotFound("Utilisateur introuvable.");
+
+            var email = request.Email.Trim();
+            var userName = request.UserName.Trim();
+            var normalizedRole = request.Role.Trim().ToUpperInvariant();
+            var validRoles = new[] { "ADMIN", "MANAGER", "COMMERCIAL" };
+
+            if (!validRoles.Contains(normalizedRole))
+                return BadRequest($"Role invalide. Les roles autorises sont : {string.Join(", ", validRoles)}");
+
+            var role = await _roleManager.FindByNameAsync(normalizedRole);
+            if (role == null || string.IsNullOrWhiteSpace(role.Name))
+                return BadRequest("Le role demande n'existe pas.");
+
+            var userWithEmail = await _userManager.FindByEmailAsync(email);
+            if (userWithEmail != null && userWithEmail.Id != id)
+                return BadRequest("Un utilisateur avec cet email existe deja.");
+
+            var userWithName = await _userManager.FindByNameAsync(userName);
+            if (userWithName != null && userWithName.Id != id)
+                return BadRequest("Un utilisateur avec ce nom d'utilisateur existe deja.");
+
+            user.Email = email;
+            user.UserName = userName;
+            user.Nom = request.Nom?.Trim() ?? string.Empty;
+            user.Prenom = request.Prenom?.Trim() ?? string.Empty;
+
+            var updateResult = await _userManager.UpdateAsync(user);
+            if (!updateResult.Succeeded)
+                return BadRequest(new { error = string.Join("; ", updateResult.Errors.Select(e => e.Description)) });
+
+            var currentRoles = await _userManager.GetRolesAsync(user);
+            if (!currentRoles.Any(currentRole => string.Equals(currentRole, role.Name, StringComparison.OrdinalIgnoreCase)))
+            {
+                var removeResult = await _userManager.RemoveFromRolesAsync(user, currentRoles);
+                if (!removeResult.Succeeded)
+                    return StatusCode(500, new { error = string.Join("; ", removeResult.Errors.Select(e => e.Description)) });
+
+                var addResult = await _userManager.AddToRoleAsync(user, role.Name);
+                if (!addResult.Succeeded)
+                    return StatusCode(500, new { error = string.Join("; ", addResult.Errors.Select(e => e.Description)) });
+            }
+
+            return Ok(new UserDto
+            {
+                Id = user.Id,
+                Email = user.Email ?? string.Empty,
+                UserName = user.UserName ?? string.Empty,
+                Nom = user.Nom,
+                Prenom = user.Prenom,
+                IsActive = user.IsActive,
+                Roles = new[] { NormalizeRoleName(role.Name) }
+            });
+        }
+
         private static string NormalizeRoleName(string? role)
         {
             var normalizedRole = role?.Trim().ToUpperInvariant();

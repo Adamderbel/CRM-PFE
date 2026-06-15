@@ -132,6 +132,53 @@
   background: var(--bg-body);
 }
 
+.editing-row {
+  background: var(--primary-bg);
+}
+
+.inline-edit-trigger {
+  width: 100%;
+  min-height: 34px;
+  padding: 6px 8px;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: text;
+}
+
+.inline-edit-trigger:hover {
+  border-color: var(--border);
+  background: var(--bg-input);
+}
+
+.inline-user-input {
+  width: 100%;
+  min-width: 120px;
+  height: 36px;
+  padding: 6px 9px;
+  border: 1px solid var(--primary);
+  border-radius: 5px;
+  background: var(--bg-input);
+  color: var(--text-primary);
+  font: inherit;
+  outline: none;
+}
+
+.inline-user-input:focus {
+  box-shadow: 0 0 0 3px rgba(0, 7, 45, 0.1);
+}
+
+.email-input {
+  min-width: 210px;
+}
+
+.inline-role-select {
+  min-width: 145px;
+}
+
 .role-select {
   min-width: 140px;
   padding: 8px 12px;

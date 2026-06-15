@@ -1,5 +1,4 @@
 <div class="page-wrapper">
-  <!-- Back Link -->
   <div class="mb-16">
     <a routerLink="/dashboard" class="btn btn-ghost" style="padding-left: 0;">
       <span class="material-icons md">arrow_back</span>
@@ -7,15 +6,13 @@
     </a>
   </div>
 
-  <!-- Page Header -->
   <div class="page-header">
     <div>
       <h1 class="page-title">Historique commercial</h1>
-      <p class="page-subtitle">Vue agrégée des actions (appels, e-mails, visites, tâches) sur toutes les prospections</p>
+      <p class="page-subtitle">Vue agrégée des actions commerciales sur les clients et les prospects</p>
     </div>
   </div>
 
-  <!-- Alerts -->
   @if (errorMessage()) {
     <div class="alert alert-error mb-24">
       <span class="material-icons">error_outline</span>
@@ -23,7 +20,6 @@
     </div>
   }
 
-  <!-- Loading State -->
   @if (isLoading()) {
     <div class="loading-container">
       <div class="spinner"></div>
@@ -31,36 +27,70 @@
     </div>
   } @else {
     <div class="table-container">
-      <!-- Empty State -->
-      @if (items().length === 0) {
+      <div class="filters-bar history-filters">
+        <div class="search-box">
+          <span class="material-icons">search</span>
+          <input
+            type="search"
+            placeholder="Rechercher par nom, commentaire, résultat..."
+            [ngModel]="searchQuery()"
+            (ngModelChange)="searchQuery.set($event)"
+          />
+        </div>
+
+        <div class="contact-type-filter" aria-label="Filtrer par type de relation">
+          <button type="button" [class.active]="contactTypeFilter() === 'all'" (click)="contactTypeFilter.set('all')">
+            Tous
+          </button>
+          <button type="button" [class.active]="contactTypeFilter() === 'prospect'" (click)="contactTypeFilter.set('prospect')">
+            Prospects
+          </button>
+          <button type="button" [class.active]="contactTypeFilter() === 'client'" (click)="contactTypeFilter.set('client')">
+            Clients
+          </button>
+        </div>
+
+        <span class="history-count">{{ filteredItems().length }} élément(s)</span>
+      </div>
+
+      @if (filteredItems().length === 0) {
         <div class="empty-state">
           <span class="material-icons empty-icon">history</span>
-          <h3>Aucune action enregistrée</h3>
-          <p>Les actions commerciales apparaîtront ici.</p>
+          <h3>Aucun résultat</h3>
+          <p>Aucune action commerciale ne correspond aux critères sélectionnés.</p>
         </div>
       }
 
-      <!-- Table -->
-      @if (items().length > 0) {
+      @if (filteredItems().length > 0) {
         <table class="table">
           <thead>
             <tr>
               <th>Date</th>
               <th>Type</th>
-              <th>Prospect</th>
+              <th>Relation</th>
+              <th>Client / Prospect</th>
               <th>Commentaire</th>
               <th>Résultat</th>
               <th style="text-align: right;">Action</th>
             </tr>
           </thead>
           <tbody>
-            @for (row of items(); track row.actionId) {
+            @for (row of filteredItems(); track row.actionId) {
               <tr>
                 <td class="fw-semibold">{{ row.dateAction | date : 'dd/MM/yyyy HH:mm' }}</td>
                 <td>
                   <span class="badge badge-info">{{ row.typeActionLibelle || '—' }}</span>
                 </td>
-                <td>{{ row.prospectNomComplet || '—' }}</td>
+                <td>
+                  <span
+                    class="badge"
+                    [class.badge-warning]="row.contactType === 'prospect'"
+                    [class.badge-success]="row.contactType === 'client'"
+                  >
+                    {{ row.contactType === 'client' ? 'Client' : row.contactType === 'prospect' ? 'Prospect' : '—' }}
+                  </span>
+                </td>
+                <td>{{ row.contactNom || row.prospectNomComplet || '—' }}</td>
                 <td>{{ row.commentaire || '—' }}</td>
                 <td>
                   <span class="badge"

@@ -29,9 +29,14 @@ namespace CRM.Entities.Crm
         [ForeignKey("idDomaineActivitee")]
         public DomaineActivites? DomaineActivite { get; set; }
 
+        [Column("CodeCRM ")]
         public string? CodeCRM { get; set; }
 
+        [Column("ClientCermId ")]
         public string? ClientCermId { get; set; }
+
+        [NotMapped]
+        public ClientCerm? ClientCerm { get; set; }
 
         public Guid? UserId { get; set; }
 

@@ -155,7 +155,7 @@ export class ProspectForm implements OnInit {
           console.error('[ProspectForm] Erreur lors de la mise à jour:', err);
           this.isSaving.set(false);
           this.notificationService.error('Erreur lors de la mise à jour du prospect.');
-          this.errorMessage.set(err?.error || 'Erreur lors de la mise à jour.');
+          this.errorMessage.set(this.getErrorMessage(err, 'Erreur lors de la mise à jour.'));
         },
       });
     } else {
@@ -181,9 +181,32 @@ export class ProspectForm implements OnInit {
           console.error('[ProspectForm] Erreur lors de la création:', err);
           this.isSaving.set(false);
           this.notificationService.error('Erreur lors de la création du prospect.');
-          this.errorMessage.set(err?.error || 'Erreur lors de la création.');
+          this.errorMessage.set(this.getErrorMessage(err, 'Erreur lors de la création.'));
         },
       });
     }
+  }
+
+  private getErrorMessage(error: any, fallback: string): string {
+    const body = error?.error;
+    if (typeof body === 'string') {
+      return body;
+    }
+
+    if (body && typeof body === 'object') {
+      const validationErrors = body.errors && typeof body.errors === 'object'
+        ? Object.values(body.errors as Record<string, unknown>)
+            .flatMap((value) => Array.isArray(value) ? value : [value])
+            .filter((value): value is string => typeof value === 'string')
+        : [];
+
+      return validationErrors.join(' ')
+        || body.detail
+        || body.message
+        || body.title
+        || fallback;
+    }
+
+    return error?.message || fallback;
   }
 }

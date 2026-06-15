@@ -262,15 +262,7 @@ export class ProspectionForm implements OnInit {
           this.isSaving.set(false);
           this.successMessage.set('Prospection mise à jour avec succès.');
           this.notificationService.success('Prospection mise à jour avec succès.');
-          setTimeout(() => {
-            if (this.isClientFixed()) {
-              this.router.navigate(['/clients']);
-            } else if (this.isProspectFixed() && this.prospectId()) {
-              this.router.navigate(['/prospections'], { queryParams: { prospectId: this.prospectId() } });
-            } else {
-              this.router.navigate(['/prospections']);
-            }
-          }, 1500);
+          setTimeout(() => this.router.navigate(['/prospections/detail', this.prospectionId()]), 1500);
         },
         error: (err) => {
           this.isSaving.set(false);
@@ -289,19 +281,11 @@ export class ProspectionForm implements OnInit {
       });
     } else {
       this.prospectionService.create(createPayload).subscribe({
-        next: () => {
+        next: (result) => {
           this.isSaving.set(false);
           this.successMessage.set('Prospection créée avec succès.');
           this.notificationService.success('Prospection créée avec succès.');
-          setTimeout(() => {
-            if (this.isClientFixed()) {
-              this.router.navigate(['/clients']);
-            } else if (this.isProspectFixed() && this.prospectId()) {
-              this.router.navigate(['/prospections'], { queryParams: { prospectId: this.prospectId() } });
-            } else {
-              this.router.navigate(['/prospections']);
-            }
-          }, 1500);
+          setTimeout(() => this.router.navigate(['/prospections/detail', result.id]), 1500);
         },
         error: (err) => {
           this.isSaving.set(false);

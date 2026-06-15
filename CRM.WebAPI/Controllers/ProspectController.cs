@@ -1,6 +1,7 @@
 using CRM.Entities.Common;
 using CRM.Entities.Crm;
 using CRM.Services;
+using CRM.Services.clientscerm;
 using CRM.WebAPI.DTOs;
 using CRM.Entities.Security;
 using Microsoft.AspNetCore.Authorization;
@@ -18,12 +19,18 @@ namespace CRM.WebAPI.Controllers
     {
         private readonly IProspectService _prospectService;
         private readonly IDomaineActiviteService _domaineActiviteService;
+        private readonly IClientCermService _clientCermService;
         private readonly UserManager<SecUser> _userManager;
 
-        public ProspectController(IProspectService prospectService, IDomaineActiviteService domaineActiviteService, UserManager<SecUser> userManager)
+        public ProspectController(
+            IProspectService prospectService,
+            IDomaineActiviteService domaineActiviteService,
+            IClientCermService clientCermService,
+            UserManager<SecUser> userManager)
         {
             _prospectService = prospectService;
             _domaineActiviteService = domaineActiviteService;
+            _clientCermService = clientCermService;
             _userManager = userManager;
         }
 
@@ -37,7 +44,7 @@ namespace CRM.WebAPI.Controllers
             foreach (var item in prospects)
             {
                  item.DomaineActivite = await _domaineActiviteService.GetByIdAsync(item.idDomaineActivitee);
-
+                 item.ClientCerm = await ResolveClientCermAsync(item.ClientCermId);
             }
             return Ok(prospects);
         }
@@ -66,6 +73,7 @@ namespace CRM.WebAPI.Controllers
                 return NotFound();
 
             prospect.DomaineActivite = await _domaineActiviteService.GetByIdAsync(prospect.idDomaineActivitee);
+            prospect.ClientCerm = await ResolveClientCermAsync(prospect.ClientCermId);
 
 
 
@@ -101,6 +109,7 @@ namespace CRM.WebAPI.Controllers
                     DateCreation = prospectDto.DateCreation ?? DateTime.Now,
                     Notes = prospectDto.Notes,
                     idDomaineActivitee = domaineId,
+                    ClientCermId = prospectDto.ClientCermId,
                     UserId = principal.Id
                 };
 
@@ -132,16 +141,28 @@ namespace CRM.WebAPI.Controllers
             existingProspect.Telephone = dto.Telephone;
             existingProspect.Source = dto.Source;
             existingProspect.Notes = dto.Notes;
+            if (dto.ClientCermId != null)
+                existingProspect.ClientCermId = dto.ClientCermId;
+
             var principal = await ResolveCurrentSecUserAsync(User);
             if (IsCommercial() && existingProspect.UserId.HasValue && existingProspect.UserId != principal?.Id)
                 return NotFound("Prospect not found.");
 
-            existingProspect.idDomaineActivitee = dto.idDomaineActivitee;
+            var domaineId = dto.IdDomaineActivite ?? dto.idDomaineActivitee;
+            if (!domaineId.HasValue)
+                return BadRequest("Le domaine d'activité est obligatoire.");
+
+            var domaine = await _domaineActiviteService.GetByIdAsync(domaineId.Value);
+            if (domaine == null)
+                return BadRequest("DomaineActivite not found.");
+
+            existingProspect.idDomaineActivitee = domaineId.Value;
 
             await _prospectService.UpdateAsync(existingProspect);
 
             // Return updated prospect with DomaineActivite populated
             existingProspect.DomaineActivite = await _domaineActiviteService.GetByIdAsync(existingProspect.idDomaineActivitee);
+            existingProspect.ClientCerm = await ResolveClientCermAsync(existingProspect.ClientCermId);
 
             return Ok(existingProspect); // Return updated prospect with all populated data
         }
@@ -165,6 +186,13 @@ namespace CRM.WebAPI.Controllers
         private bool IsCommercial()
             => string.Equals(GetCurrentRole(), "COMMERCIAL", StringComparison.OrdinalIgnoreCase)
             || string.Equals(GetCurrentRole(), "Commercial", StringComparison.OrdinalIgnoreCase);
+
+        private async Task<ClientCerm?> ResolveClientCermAsync(string? clientCermId)
+        {
+            return int.TryParse(clientCermId, out var refClient)
+                ? await _clientCermService.GetByIdAsync(refClient)
+                : null;
+        }
 
         private async Task<SecUser?> ResolveCurrentSecUserAsync(ClaimsPrincipal claimsPrincipal)
         {

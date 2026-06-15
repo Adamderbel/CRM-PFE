@@ -13,6 +13,14 @@ export interface UpdateUserRoleRequest {
   role: string;
 }
 
+export interface UpdateUserRequest {
+  email: string;
+  userName: string;
+  nom: string;
+  prenom: string;
+  role: string;
+}
+
 export interface UserStatusRequest {
   action: string;
 }

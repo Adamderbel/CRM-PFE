@@ -3,6 +3,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { DatePipe } from '@angular/common';
 import { ProspectService } from '../../../core/services/prospect.service';
 import { ProspectionService } from '../../../core/services/prospection.service';
+import { ClientCermService } from '../../../core/services/client-cerm.service';
 import { Prospect } from '../../../core/models/prospect.model';
 import { Prospection } from '../../../core/models/prospection.model';
 
@@ -24,6 +25,7 @@ export class ProspectDetail implements OnInit {
   constructor(
     private prospectService: ProspectService,
     private prospectionService: ProspectionService,
+    private clientCermService: ClientCermService,
     private route: ActivatedRoute,
     private router: Router
   ) {}
@@ -40,6 +42,7 @@ export class ProspectDetail implements OnInit {
     this.prospectService.getById(id).subscribe({
       next: (data) => {
         this.prospect.set(data);
+        this.loadAssociatedClient(data);
         this.isLoading.set(false);
         this.prospectionService.getByProspectId(id).subscribe({
           next: (list) => this.prospections.set(list ?? []),
@@ -76,6 +79,31 @@ export class ProspectDetail implements OnInit {
       next: () => {
         this.showDeleteConfirm.set(false);
         this.router.navigate(['/prospects']);
+      },
+    });
+  }
+
+  private loadAssociatedClient(prospect: Prospect): void {
+    if (prospect.clientCerm || !prospect.clientCermId) {
+      return;
+    }
+
+    this.clientCermService.getById(prospect.clientCermId).subscribe({
+      next: (client) => {
+        this.prospect.update((current) =>
+          current
+            ? {
+                ...current,
+                clientCerm: {
+                  id: client.id,
+                  nom: client.nom ?? `Client ${client.id}`,
+                },
+              }
+            : current
+        );
+      },
+      error: () => {
+        // Keep the prospect visible even if the associated CERM client is unavailable.
       },
     });
   }

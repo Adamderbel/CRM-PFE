@@ -26,6 +26,7 @@ export function normalizeProspectRow(p: Record<string, unknown> | null | undefin
   clientCermId?: number;
   codeCRM?: string;
   domaineActivite?: { id: number; activitee: string };
+  clientCerm?: { id: number; nom: string };
 } {
   if (!p) {
     return {
@@ -47,6 +48,7 @@ export function normalizeProspectRow(p: Record<string, unknown> | null | undefin
   }
   const id = p['id'] ?? p['Id'];
   const domaine = p['domaineActivite'] ?? p['DomaineActivite'];
+  const clientCerm = p['clientCerm'] ?? p['ClientCerm'];
   // Handle backend property naming: idDomaineActivitee (two e's) is the entity property name
   const domaineId = p['idDomaineActivitee'] ?? p['IdDomaineActivitee'] ?? p['idDomaineActivite'] ?? p['IdDomaineActivite'];
 
@@ -62,7 +64,18 @@ export function normalizeProspectRow(p: Record<string, unknown> | null | undefin
     idDomaineActivite: asNumber(domaineId, 0),
     clientCermId,
     codeCRM: p['codeCRM'] != null || p['CodeCRM'] != null ? asString(p['codeCRM'] ?? p['CodeCRM']) : undefined,
-    domaineActivite: domaine ? normalizeDomaineRow(domaine as Record<string, unknown>) : undefined
+    domaineActivite: domaine ? normalizeDomaineRow(domaine as Record<string, unknown>) : undefined,
+    clientCerm: clientCerm
+      ? normalizeClientCermRow(clientCerm as Record<string, unknown>)
+      : undefined
+  };
+}
+
+export function normalizeClientCermRow(c: Record<string, unknown> | null | undefined): { id: number; nom: string } {
+  if (!c) return { id: 0, nom: '' };
+  return {
+    id: asNumber(c['id'] ?? c['Id'] ?? c['refClient'] ?? c['RefClient'], 0),
+    nom: asString(c['nom'] ?? c['Nom']),
   };
 }
 

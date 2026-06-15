@@ -110,7 +110,7 @@ namespace CRM.WebAPI.Controllers
                     });
                 }
 
-                return Ok(new { message = "Prospection created successfully." });
+                return Ok(new { id = pros.Id, message = "Prospection created successfully." });
             }
             catch (Exception ex)
             {

@@ -19,6 +19,17 @@ namespace CRM.WebAPI.Controllers
     [Authorize(Roles = "COMMERCIAL,MANAGER,ADMIN")]
     public class ReclamationController : ControllerBase
     {
+        private static readonly HashSet<string> AllowedStatuses = new(StringComparer.OrdinalIgnoreCase)
+        {
+            "Nouveau",
+            "Ouverte",
+            "En cours",
+            "En attente",
+            "En attente client",
+            "Résolu",
+            "Clôturé"
+        };
+
         private readonly IReclamationService _reclamationService;
         private readonly IproduitCermService _produitCermService;
         private readonly IClientCermService _clientCermService;
@@ -188,6 +199,9 @@ namespace CRM.WebAPI.Controllers
         {
             try
             {
+                if (!IsValidStatus(reclamation.Statut))
+                    return BadRequest(new { error = "Statut de réclamation invalide." });
+
                 var principal = await ResolveCurrentSecUserAsync(User);
                 if (principal == null)
                     return Unauthorized();
@@ -223,6 +237,9 @@ namespace CRM.WebAPI.Controllers
                     CreatedAt = DateTime.UtcNow,
                     UpdatedAt = DateTime.UtcNow
                 };
+
+                if (IsClosedStatus(newReclamation.Statut))
+                    newReclamation.DateClotureReclamation = DateTime.UtcNow;
 
                 
                 await _reclamationService.AddReclamation(newReclamation);
@@ -297,6 +314,9 @@ namespace CRM.WebAPI.Controllers
         {
             try
             {
+                if (!IsValidStatus(reclamation.Statut))
+                    return BadRequest(new { error = "Statut de réclamation invalide." });
+
                 var existingReclamation = await _reclamationService.GetReclamationById(id);
                 if (existingReclamation == null)
                 {
@@ -311,7 +331,7 @@ namespace CRM.WebAPI.Controllers
                 existingReclamation.AnalyseReclamation = reclamation.AnalyseReclamation;
                 existingReclamation.Justifiee = reclamation.Justifiee;
                 existingReclamation.CommentaireJustification = reclamation.CommentaireJustification;
-                existingReclamation.Statut = reclamation.Statut; // Should pass 'En cours', 'En execution', 'Controle'
+                existingReclamation.Statut = reclamation.Statut;
                 if (reclamation.DateExecution.HasValue)
                 {
                     existingReclamation.DateExecution = reclamation.DateExecution;
@@ -322,10 +342,9 @@ namespace CRM.WebAPI.Controllers
                 }
                 existingReclamation.CommentaireControleExecution = reclamation.CommentaireControleExecution;
 
-                if (reclamation.DateClotureReclamation.HasValue)
-                {
-                    existingReclamation.DateClotureReclamation = reclamation.DateClotureReclamation;
-                }
+                existingReclamation.DateClotureReclamation = IsClosedStatus(reclamation.Statut)
+                    ? reclamation.DateClotureReclamation ?? existingReclamation.DateClotureReclamation ?? DateTime.UtcNow
+                    : null;
                 existingReclamation.Rapport = reclamation.Rapport;
                 existingReclamation.ResponsableFaute = reclamation.ResponsableFaute;
                 existingReclamation.Degats = reclamation.Degats;
@@ -348,6 +367,13 @@ namespace CRM.WebAPI.Controllers
         private bool IsCommercial()
             => string.Equals(GetCurrentRole(), "COMMERCIAL", StringComparison.OrdinalIgnoreCase)
             || string.Equals(GetCurrentRole(), "Commercial", StringComparison.OrdinalIgnoreCase);
+
+        private static bool IsValidStatus(string? status)
+            => !string.IsNullOrWhiteSpace(status) && AllowedStatuses.Contains(status.Trim());
+
+        private static bool IsClosedStatus(string? status)
+            => string.Equals(status?.Trim(), "Clôturé", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(status?.Trim(), "Résolu", StringComparison.OrdinalIgnoreCase);
 
         private async Task<SecUser?> ResolveCurrentSecUserAsync(ClaimsPrincipal claimsPrincipal)
         {

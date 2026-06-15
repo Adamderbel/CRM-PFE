@@ -101,10 +101,10 @@ export class ProspectionService {
     );
   }
 
-  create(prospection: ProspectionCreateDto): Observable<any> {
+  create(prospection: ProspectionCreateDto): Observable<{ id: string; message: string }> {
     this.loading.set(true);
     this.error.set(null);
-    return this.http.post(`${environment.apiUrl}/Prospection`, prospection, { responseType: 'text' }).pipe(
+    return this.http.post<{ id: string; message: string }>(`${environment.apiUrl}/Prospection`, prospection).pipe(
       tap(() => {
         this.loading.set(false);
         this.getAll().subscribe();

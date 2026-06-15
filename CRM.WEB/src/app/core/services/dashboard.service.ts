@@ -20,6 +20,9 @@ export interface CommercialHistoryItem {
   dateAction: string;
   typeActionLibelle?: string | null;
   prospectionId: string;
+  contactType?: 'prospect' | 'client' | null;
+  contactId?: string | null;
+  contactNom?: string | null;
   prospectNomComplet?: string | null;
   commentaire?: string | null;
   resultat?: string | null;

@@ -109,7 +109,9 @@
             </div>
             <div class="info-item">
               <span class="info-label">Client CERM Associé</span>
-              <p class="info-value">{{ prospect()!.clientCerm?.nom || 'Non lié' }}</p>
+              <p class="info-value">
+                {{ prospect()!.clientCerm?.nom || (prospect()!.clientCermId ? '#' + prospect()!.clientCermId : 'Non lié') }}
+              </p>
             </div>
           </div>
         </div>

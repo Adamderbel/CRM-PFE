@@ -52,17 +52,65 @@
       </thead>
       <tbody>
         @for (user of pagedUsers(); track user.id) {
-          <tr>
-            <td class="fw-semibold">{{ user.userName }}</td>
-            <td>{{ user.email }}</td>
-            <td>{{ user.nom }}</td>
-            <td>{{ user.prenom }}</td>
-            <td>
-              <select class="form-control form-select" style="width: auto;" [(ngModel)]="user.selectedRole" name="role-{{ user.id }}">
-                @for (role of roleOptions; track role) {
-                  <option [value]="role">{{ role }}</option>
+          <tr [class.editing-row]="editingUserId() === user.id">
+            <td class="fw-semibold">
+              @if (editingUserId() === user.id) {
+                @if (editDraft(); as draft) {
+                  <input class="inline-user-input" type="text" [(ngModel)]="draft.userName" name="username-{{ user.id }}" />
                 }
-              </select>
+              } @else {
+                <button class="inline-edit-trigger fw-semibold" type="button" title="Modifier le nom utilisateur" (click)="startEditing(user)">
+                  {{ user.userName }}
+                </button>
+              }
+            </td>
+            <td>
+              @if (editingUserId() === user.id) {
+                @if (editDraft(); as draft) {
+                  <input class="inline-user-input email-input" type="email" [(ngModel)]="draft.email" name="email-{{ user.id }}" />
+                }
+              } @else {
+                <button class="inline-edit-trigger" type="button" title="Modifier l'email" (click)="startEditing(user)">
+                  {{ user.email }}
+                </button>
+              }
+            </td>
+            <td>
+              @if (editingUserId() === user.id) {
+                @if (editDraft(); as draft) {
+                  <input class="inline-user-input" type="text" [(ngModel)]="draft.nom" name="nom-{{ user.id }}" />
+                }
+              } @else {
+                <button class="inline-edit-trigger" type="button" title="Modifier le nom" (click)="startEditing(user)">
+                  {{ user.nom || '—' }}
+                </button>
+              }
+            </td>
+            <td>
+              @if (editingUserId() === user.id) {
+                @if (editDraft(); as draft) {
+                  <input class="inline-user-input" type="text" [(ngModel)]="draft.prenom" name="prenom-{{ user.id }}" />
+                }
+              } @else {
+                <button class="inline-edit-trigger" type="button" title="Modifier le prénom" (click)="startEditing(user)">
+                  {{ user.prenom || '—' }}
+                </button>
+              }
+            </td>
+            <td>
+              @if (editingUserId() === user.id) {
+                @if (editDraft(); as draft) {
+                  <select class="inline-user-input inline-role-select" [(ngModel)]="draft.role" name="role-{{ user.id }}">
+                    @for (role of roleOptions; track role) {
+                      <option [value]="role">{{ role }}</option>
+                    }
+                  </select>
+                }
+              } @else {
+                <button class="inline-edit-trigger" type="button" title="Modifier le rôle" (click)="startEditing(user)">
+                  {{ user.selectedRole || user.roles[0] || '—' }}
+                </button>
+              }
             </td>
             <td>
               <span class="badge" [class.badge-success]="user.isActive" [class.badge-warning]="!user.isActive">
@@ -71,15 +119,24 @@
             </td>
             <td>
               <div class="table-actions" style="justify-content: flex-end;">
-                <button class="table-action-btn" style="color: var(--success);" title="Approuver" (click)="approve(user)">
+                <button class="table-action-btn" style="color: var(--success);" title="Approuver" [disabled]="editingUserId() === user.id || savingUserId() === user.id" (click)="approve(user)">
                   <span class="material-icons md">check_circle</span>
                 </button>
-                <button class="table-action-btn" style="color: var(--error);" title="Rejeter" (click)="reject(user)">
+                <button class="table-action-btn" style="color: var(--error);" title="Rejeter" [disabled]="editingUserId() === user.id || savingUserId() === user.id" (click)="reject(user)">
                   <span class="material-icons md">cancel</span>
                 </button>
-                <button class="table-action-btn edit" title="Mettre a jour le role" (click)="updateRole(user)">
-                  <span class="material-icons md">edit</span>
-                </button>
+                @if (editingUserId() === user.id) {
+                  <button class="table-action-btn edit" title="Enregistrer" [disabled]="savingUserId() === user.id" (click)="saveUser(user)">
+                    <span class="material-icons md">save</span>
+                  </button>
+                  <button class="table-action-btn" title="Annuler" [disabled]="savingUserId() === user.id" (click)="cancelEditing()">
+                    <span class="material-icons md">close</span>
+                  </button>
+                } @else {
+                  <button class="table-action-btn edit" title="Modifier l'utilisateur" (click)="startEditing(user)">
+                    <span class="material-icons md">edit</span>
+                  </button>
+                }
               </div>
             </td>
           </tr>

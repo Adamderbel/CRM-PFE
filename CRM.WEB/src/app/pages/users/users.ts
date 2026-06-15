@@ -3,7 +3,11 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { UserService } from '../../core/services/user.service';
 import { NotificationService } from '../../core/services/notification.service';
-import { CreateUserRequest, UserDto } from '../../core/models/user.model';
+import { CreateUserRequest, UpdateUserRequest, UserDto } from '../../core/models/user.model';
+
+interface UserEditDraft extends UpdateUserRequest {
+  id: string;
+}
 
 @Component({
   selector: 'app-users',
@@ -21,6 +25,9 @@ export class Users {
   roleFilter = signal('');
   showCreateModal = signal(false);
   isCreating = signal(false);
+  editingUserId = signal<string | null>(null);
+  editDraft = signal<UserEditDraft | null>(null);
+  savingUserId = signal<string | null>(null);
   pageSize = signal(10);
   currentPage = signal(1);
   pageOptions = [10, 20, 50];
@@ -170,25 +177,72 @@ export class Users {
   }
 
   updateRole(user: UserDto) {
-    if (!user.selectedRole) {
-      console.warn('[Users] Tentative de mise à jour de rôle sans rôle sélectionné');
-      this.errorMessage.set('Veuillez sélectionner un rôle.');
+    this.startEditing(user);
+  }
+
+  startEditing(user: UserDto): void {
+    if (this.savingUserId()) return;
+
+    this.editingUserId.set(user.id);
+    this.editDraft.set({
+      id: user.id,
+      userName: user.userName,
+      email: user.email,
+      nom: user.nom,
+      prenom: user.prenom,
+      role: user.selectedRole || user.roles[0] || 'COMMERCIAL',
+    });
+    this.errorMessage.set('');
+    this.successMessage.set('');
+  }
+
+  cancelEditing(): void {
+    if (this.savingUserId()) return;
+    this.editingUserId.set(null);
+    this.editDraft.set(null);
+  }
+
+  saveUser(user: UserDto): void {
+    const draft = this.editDraft();
+    if (!draft || draft.id !== user.id) {
+      this.startEditing(user);
       return;
     }
-    console.log('[Users] Mise à jour du rôle pour:', user.userName, 'Nouveau rôle:', user.selectedRole);
-    this.isLoading.set(true);
-    this.userService.updateUserRole(user.id, { role: user.selectedRole }).subscribe({
-      next: () => {
-        console.log('[Users] Rôle mis à jour avec succès');
-        this.successMessage.set(`Rôle mis à jour pour ${user.userName}.`);
-        this.notificationService.success(`Rôle mis à jour pour ${user.userName}.`);
-        this.loadUsers();
+
+    if (!draft.userName.trim() || !draft.email.trim() || !draft.role) {
+      this.errorMessage.set('Email, nom utilisateur et rôle sont obligatoires.');
+      return;
+    }
+
+    this.savingUserId.set(user.id);
+    this.errorMessage.set('');
+    this.userService.updateUser(user.id, {
+      userName: draft.userName.trim(),
+      email: draft.email.trim(),
+      nom: draft.nom.trim(),
+      prenom: draft.prenom.trim(),
+      role: draft.role,
+    }).subscribe({
+      next: (updatedUser) => {
+        const roles = (updatedUser.roles || []).map((role) => this.normalizeRole(role)).filter(Boolean);
+        this.users.update((users) =>
+          users.map((item) =>
+            item.id === user.id
+              ? { ...updatedUser, roles, selectedRole: roles[0] || draft.role }
+              : item
+          )
+        );
+        this.successMessage.set(`Utilisateur ${updatedUser.userName} mis à jour.`);
+        this.notificationService.success(`Utilisateur ${updatedUser.userName} mis à jour.`);
+        this.savingUserId.set(null);
+        this.editingUserId.set(null);
+        this.editDraft.set(null);
       },
       error: (error) => {
-        console.error('[Users] Erreur lors de la mise à jour du rôle:', error);
-        this.errorMessage.set(this.getErrorMessage(error, 'Impossible de mettre à jour le rôle.'));
-        this.notificationService.error('Impossible de mettre à jour le rôle.');
-        this.isLoading.set(false);
+        const message = this.getErrorMessage(error, 'Impossible de mettre à jour cet utilisateur.');
+        this.errorMessage.set(message);
+        this.notificationService.error(message);
+        this.savingUserId.set(null);
       },
     });
   }

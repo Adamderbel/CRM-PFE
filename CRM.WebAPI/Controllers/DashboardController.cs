@@ -193,16 +193,23 @@ namespace CRM.WebAPI.Controllers
                 var result = new List<object>();
                 foreach (var p in prospections)
                 {
-                    string? prospectName = null;
+                    string? contactName = null;
+                    string? contactType = null;
+                    string? contactId = null;
+
                     if (p.ProspectId.HasValue)
                     {
                         var prospect = await _prospectService.GetByIdAsync(p.ProspectId.Value);
-                        prospectName = $"{prospect?.Prenom} {prospect?.Nom}".Trim();
+                        contactName = $"{prospect?.Prenom} {prospect?.Nom}".Trim();
+                        contactType = "prospect";
+                        contactId = p.ProspectId.Value.ToString();
                     }
                     else if (p.ClientId.HasValue)
                     {
                         var client = await _clientCermService.GetByIdAsync(p.ClientId.Value);
-                        prospectName = client?.Nom;
+                        contactName = client?.Nom;
+                        contactType = "client";
+                        contactId = p.ClientId.Value.ToString();
                     }
 
                     result.Add(new
@@ -211,7 +218,10 @@ namespace CRM.WebAPI.Controllers
                         dateAction = p.DateDebut,
                         typeActionLibelle = "Prospection",
                         prospectionId = p.Id,
-                        prospectNomComplet = string.IsNullOrWhiteSpace(prospectName) ? null : prospectName,
+                        contactType,
+                        contactId,
+                        contactNom = string.IsNullOrWhiteSpace(contactName) ? null : contactName,
+                        prospectNomComplet = string.IsNullOrWhiteSpace(contactName) ? null : contactName,
                         commentaire = p.Notes,
                         resultat = p.StatutId?.ToString(),
                         ligneProspectionId = (string?)null

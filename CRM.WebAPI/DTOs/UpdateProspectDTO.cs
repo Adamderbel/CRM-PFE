@@ -31,8 +31,9 @@ namespace CRM.WebAPI.DTOs
         [StringLength(500, ErrorMessage = "Les notes ne peuvent pas dépasser 500 caractères.")]
         public string? Notes { get; set; }
 
-        [Required(ErrorMessage = "Le domaine d'activité est obligatoire.")]
-        public int idDomaineActivitee { get; set; }
+        public int? IdDomaineActivite { get; set; }
+
+        public int? idDomaineActivitee { get; set; }
 
         public string? ClientCermId { get; set; }
 

@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { CreateUserRequest, UpdateUserRoleRequest, UserDto, UserStatusRequest } from '../models/user.model';
+import { CreateUserRequest, UpdateUserRequest, UpdateUserRoleRequest, UserDto, UserStatusRequest } from '../models/user.model';
 
 @Injectable({ providedIn: 'root' })
 export class UserService {
@@ -22,5 +22,9 @@ export class UserService {
 
   updateUserRole(id: string, request: UpdateUserRoleRequest): Observable<any> {
     return this.http.patch<any>(`${environment.apiUrl}/users/${id}/role`, request);
+  }
+
+  updateUser(id: string, request: UpdateUserRequest): Observable<UserDto> {
+    return this.http.put<UserDto>(`${environment.apiUrl}/users/${id}`, request);
   }
 }
